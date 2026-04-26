@@ -475,3 +475,25 @@ h1, h2, h3 {
   gap: var(--s-2);
 }
 .tool-grid--errors li::before { content: "• "; color: var(--rust); }
+
+/* ---- Page ---- */
+
+.page-head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.page-head__eyebrow {
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: var(--text-4);
+  text-transform: uppercase;
+}
+.page-head__title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 400;
+  letter-spacing: 0.10em;
+  color: var(--text);
+  line-height: 1;
+}
