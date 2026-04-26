@@ -9,12 +9,19 @@ pub struct SpawnedProcess {
 }
 
 /// Spawn a process. Returns immediately; use `stream_lines` or drive `child` directly.
-pub fn spawn(bin: &Path, args: &[String], cwd: Option<&Path>) -> Result<SpawnedProcess> {
+pub fn spawn(
+    bin: &Path,
+    args: &[String],
+    cwd: Option<&Path>,
+    env: &std::collections::HashMap<String, String>,
+) -> Result<SpawnedProcess> {
     let mut cmd = Command::new(bin);
     cmd.args(args)
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
-        .stdin(Stdio::null());
+        .stdin(Stdio::null())
+        .env_clear()
+        .envs(env);
     if let Some(d) = cwd {
         cmd.current_dir(d);
     }
@@ -76,6 +83,7 @@ mod tests {
             std::path::Path::new("/bin/echo"),
             &["hello".to_string()],
             None,
+            &std::collections::HashMap::new(),
         )
         .unwrap();
         // id() returns None only after the child has already been waited on.
@@ -90,6 +98,7 @@ mod tests {
             std::path::Path::new("/bin/echo"),
             &["hello world".to_string()],
             None,
+            &std::collections::HashMap::new(),
         )
         .unwrap();
 
@@ -100,5 +109,24 @@ mod tests {
 
         assert!(status.success());
         assert_eq!(lines, vec![("hello world".to_string(), "stdout")]);
+    }
+
+    #[tokio::test]
+    async fn spawn_sees_provided_env() {
+        use std::collections::HashMap;
+        let mut env = HashMap::new();
+        env.insert("PIER_TEST_VAR".into(), "hello-pier".into());
+        let p = spawn(
+            std::path::Path::new("/usr/bin/env"),
+            &[],
+            None,
+            &env,
+        ).unwrap();
+        let mut lines: Vec<(String, &'static str)> = Vec::new();
+        let _ = stream_lines(p, |l, s| lines.push((l, s))).await.unwrap();
+        assert!(
+            lines.iter().any(|(l, _)| l == "PIER_TEST_VAR=hello-pier"),
+            "expected env var in /usr/bin/env output, got: {lines:?}"
+        );
     }
 }
