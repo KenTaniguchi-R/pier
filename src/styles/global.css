@@ -349,15 +349,15 @@ h1, h2, h3 {
 }
 .tool-tile__name {
   font-family: var(--font-display);
-  font-size: 15px;
-  font-weight: 400;
-  letter-spacing: 0.04em;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
   color: var(--text);
   flex: 1 1 auto;
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  /* Allow wrapping over ellipsis — fully readable name beats single-line clip */
+  word-break: break-word;
+  line-height: 1.25;
 }
 .tool-tile__pill { margin-left: auto; }
 .tool-tile__desc {

@@ -4,7 +4,6 @@ import type { RunStatus } from "../../domain/runRequest";
 import { Button } from "../atoms/Button";
 import { TextField } from "../atoms/TextField";
 import { Textarea } from "../atoms/Textarea";
-import { Badge } from "../atoms/Badge";
 import { DropZone } from "../molecules/DropZone";
 import { ConfirmDialog } from "../molecules/ConfirmDialog";
 import { RunStatusPill } from "../molecules/RunStatusPill";
@@ -43,8 +42,7 @@ export function ToolTile({ tool }: Props) {
     <article className="tool-tile">
       <header className="tool-tile__head">
         <span className="tool-tile__icon">{tool.icon ?? "▸"}</span>
-        <h3 className="tool-tile__name">{tool.name}</h3>
-        {tool.category && <Badge variant="neutral">{tool.category}</Badge>}
+        <h3 className="tool-tile__name" title={tool.name}>{tool.name}</h3>
         {status && <span className="tool-tile__pill"><RunStatusPill status={status} /></span>}
       </header>
       {tool.description && <p className="tool-tile__desc">{tool.description}</p>}
