@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { ToolTile } from "../ToolTile";
+import { ToolRunner } from "../ToolRunner";
 import { AppProvider } from "../../../state/AppContext";
 import { RunnerProvider } from "../../../state/RunnerContext";
 import type { Tool } from "../../../domain/tool";
@@ -20,13 +20,13 @@ function wrap(tool: Tool, runner: CommandRunner) {
   return render(
     <AppProvider>
       <RunnerProvider runner={runner}>
-        <ToolTile tool={tool} />
+        <ToolRunner tool={tool} />
       </RunnerProvider>
     </AppProvider>
   );
 }
 
-describe("ToolTile", () => {
+describe("ToolRunner", () => {
   it("renders DropZone for file input type", () => {
     const tool: Tool = { id: "t", name: "T", command: "/x", inputType: "file" };
     wrap(tool, mockRunner());
