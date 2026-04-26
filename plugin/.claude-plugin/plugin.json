@@ -1,0 +1,5 @@
+{
+  "name": "pier",
+  "description": "Author and edit tools in Pier (~/.pier/tools.json). Hot-reloads, no restart.",
+  "version": "0.1.0"
+}

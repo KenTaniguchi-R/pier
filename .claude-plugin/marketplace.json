@@ -1,0 +1,27 @@
+{
+  "name": "benri",
+  "owner": {
+    "name": "Ryusei Taniguchi",
+    "email": "taniguchi.ryusei@gmail.com"
+  },
+  "metadata": {
+    "description": "Plugins from the Benri stable. Currently: Pier — a macOS launcher for AI-generated CLI tools.",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "pier",
+      "source": "./plugin",
+      "description": "Teaches Claude how to add, modify, remove, and list tools in Pier — the macOS menu-bar launcher (~/.pier/tools.json).",
+      "version": "0.1.0",
+      "author": {
+        "name": "Ryusei Taniguchi"
+      },
+      "homepage": "https://github.com/benri/pier",
+      "repository": "https://github.com/benri/pier",
+      "license": "MIT",
+      "category": "productivity",
+      "keywords": ["pier", "launcher", "cli", "tools", "macos", "tauri"]
+    }
+  ]
+}
