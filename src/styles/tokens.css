@@ -58,6 +58,6 @@
   --dur-3: 200ms;
 
   /* Type */
-  --font-display: "Departure Mono", "JetBrains Mono", ui-monospace, "SF Mono", monospace;
+  --font-display: "JetBrains Mono", ui-monospace, "SF Mono", monospace;
   --font-body:    "JetBrains Mono", ui-monospace, "SF Mono", monospace;
 }

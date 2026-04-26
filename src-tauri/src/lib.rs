@@ -18,9 +18,13 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .manage(state::AppState::new())
         .setup(|app| {
-            // Hide from Dock on macOS — behave like Raycast/Rectangle
+            // Menu-bar/Accessory mode disabled during early dev so the window
+            // shows up like a normal Mac app. Re-enable once tray/window
+            // toggle UX is verified end-to-end:
+            // #[cfg(target_os = "macos")]
+            // app.set_activation_policy(ActivationPolicy::Accessory);
             #[cfg(target_os = "macos")]
-            app.set_activation_policy(ActivationPolicy::Accessory);
+            let _ = ActivationPolicy::Regular; // suppress unused-import warning
 
             // Start config file watcher
             if let Err(e) = crate::application::watch_config::start(app.handle().clone()) {
