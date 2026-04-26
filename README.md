@@ -35,15 +35,22 @@ Schema (abbreviated):
   "name": "Display Name",
   "command": "/absolute/path/to/binary",
   "args": ["{input}"],
-  "inputType": "file" | "text" | "folder" | "url" | "none",
-  "accepts": ["*.mp4", "*.mov"],
+  "parameters": [
+    { "id": "input", "type": "file", "accepts": [".mp4"] }
+  ],
+  "cwd": "/path/to/project",
+  "envFile": ".env",
+  "env": { "DEBUG": "1", "API_KEY": "${keychain:my-key}" },
   "description": "One line",
   "icon": "▸",
   "confirm": false,
-  "shell": false,
   "category": "media"
 }
 ```
+
+Parameter types: `file`, `folder`, `text`, `url`, `select`, `boolean`, `number`. Args reference parameters with `{paramId}`.
+
+Environment: `cwd` sets the working directory; `envFile` loads a `.env` (path relative to `cwd`); `env` provides inline overrides with `${keychain:NAME}` (macOS Keychain) and `${env:NAME}` (host env) interpolation. The audit log records *which* vars came from where, never their values (except for plain `envFile` entries).
 
 See `examples/tools.json` for a full example.
 
