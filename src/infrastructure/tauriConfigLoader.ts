@@ -1,4 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 import type { ConfigLoader } from "../application/ports";
 
 export const tauriConfigLoader: ConfigLoader = {
@@ -7,7 +8,10 @@ export const tauriConfigLoader: ConfigLoader = {
     const raw = await invoke<unknown>("load_tools_config", { path });
     return { raw, pathHint: path };
   },
-  watch(_onChange) {
-    return () => {}; // implemented in Phase 5 (hot reload, Task 16)
+  watch(onChange) {
+    const unlistenP = listen("pier://config-changed", () => onChange());
+    return () => {
+      unlistenP.then(fn => fn()).catch(() => {});
+    };
   },
 };
