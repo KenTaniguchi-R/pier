@@ -144,6 +144,23 @@ fn interpolate(
     Some((raw.to_string(), EnvSource::EnvBlock))
 }
 
+/// Production keychain lookup. Shells out to:
+///   security find-generic-password -s pier -a <key> -w
+/// Returns the password on success, None on any failure (entry missing, denied, etc.).
+///
+/// Set up: `security add-generic-password -s pier -a <key> -w <value>`
+pub fn keychain_lookup(key: &str) -> Option<String> {
+    let out = std::process::Command::new("security")
+        .args(["find-generic-password", "-s", "pier", "-a", key, "-w"])
+        .output()
+        .ok()?;
+    if !out.status.success() {
+        return None;
+    }
+    let s = String::from_utf8(out.stdout).ok()?;
+    Some(s.trim_end_matches('\n').to_string())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
