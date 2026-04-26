@@ -1,0 +1,63 @@
+:root {
+  /* Surfaces */
+  --ink-0:   #0e0d0c;
+  --ink-1:   #161514;
+  --ink-2:   #1f1d1b;
+  --ink-3:   #27241f;
+  --ink-4:   #34302a;
+
+  /* Rules */
+  --rule:    #3a3531;
+  --rule-hi: #4a443d;
+
+  /* Text */
+  --text:    #e8e3d8;
+  --text-2:  #b6ad9f;
+  --text-3:  #8a8278;
+  --text-4:  #5e574e;
+
+  /* Accents */
+  --signal:      #ff6b1a;
+  --signal-soft: #ff6b1a18;
+  --signal-edge: #ff6b1a55;
+
+  --patina:      #7eb573;
+  --patina-soft: #7eb57315;
+  --rust:        #d93f3f;
+  --rust-soft:   #d93f3f18;
+  --brass:       #d4a847;
+  --brass-soft:  #d4a84715;
+
+  /* Spacing */
+  --s-1: 2px;
+  --s-2: 4px;
+  --s-3: 8px;
+  --s-4: 12px;
+  --s-5: 16px;
+  --s-6: 24px;
+  --s-7: 32px;
+  --s-8: 48px;
+
+  /* Radii */
+  --r-0: 0;
+  --r-1: 2px;
+  --r-2: 4px;
+
+  /* Borders */
+  --b-1: 1px solid var(--rule);
+
+  /* Shadows */
+  --shadow-inset: inset 0 1px 0 rgba(255,255,255,0.025);
+  --shadow-press: inset 0 1px 0 rgba(0,0,0,0.4);
+  --shadow-pop:   0 0 0 1px var(--rule), 0 1px 0 rgba(0,0,0,0.3);
+
+  /* Motion */
+  --ease: cubic-bezier(0.2, 0.6, 0.2, 1);
+  --dur-1: 80ms;
+  --dur-2: 120ms;
+  --dur-3: 200ms;
+
+  /* Type */
+  --font-display: "Departure Mono", "JetBrains Mono", ui-monospace, "SF Mono", monospace;
+  --font-body:    "JetBrains Mono", ui-monospace, "SF Mono", monospace;
+}
