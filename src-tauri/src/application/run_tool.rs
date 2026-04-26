@@ -32,12 +32,7 @@ const DEFAULT_TIMEOUT_SECS: u64 = 300;
 pub async fn run_tool(app: AppHandle, tool: Tool, req: RunRequest) -> Result<RunId> {
     let run_id = Uuid::new_v4().to_string();
     let bin = path_resolver::resolve(&tool.command)?;
-    let input = req.input.clone().unwrap_or_default();
-    let args: Vec<String> = tool
-        .args
-        .iter()
-        .map(|a| a.replace("{input}", &input))
-        .collect();
+    let args = crate::application::arg_template::build_args(&tool, &req.values);
     let cwd = tool.cwd.as_ref().map(PathBuf::from);
     let started = now();
 
