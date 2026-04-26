@@ -1,11 +1,10 @@
-/// Stub audit module — Task 9 will implement the actual file write.
-/// This file exists so Task 8 wiring compiles and callers can use the
-/// same `audit::append(&audit::Entry::start(...))` call-site that Task 9 will fulfill.
 use anyhow::Result;
 use serde::Serialize;
-use std::path::Path;
+use std::io::Write;
+use std::path::{Path, PathBuf};
 
 #[derive(Serialize)]
+#[serde(tag = "kind", rename_all = "lowercase")]
 pub enum Entry {
     Start {
         run_id: String,
@@ -43,7 +42,45 @@ impl Entry {
     }
 }
 
-/// No-op for now. Task 9 replaces this with append-to-JSONL file logic.
-pub fn append(_entry: &Entry) -> Result<()> {
+/// Append an entry to the default audit log at ~/.pier/audit.log
+pub fn append(entry: &Entry) -> Result<()> {
+    let path = audit_path();
+    if let Some(p) = path.parent() {
+        std::fs::create_dir_all(p)?;
+    }
+    append_to(&path, entry)
+}
+
+/// Append an entry to a specific audit log file
+pub fn append_to(path: &Path, entry: &Entry) -> Result<()> {
+    let mut f = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(path)?;
+    writeln!(f, "{}", serde_json::to_string(entry)?)?;
     Ok(())
+}
+
+fn audit_path() -> PathBuf {
+    dirs::home_dir().unwrap().join(".pier").join("audit.log")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tempfile::tempdir;
+
+    #[test]
+    fn appends_jsonl_lines() {
+        let d = tempdir().unwrap();
+        let path = d.path().join("audit.log");
+        append_to(
+            &path,
+            &Entry::start("rid", "tid", std::path::Path::new("/bin/echo"), &["a".into()], 1),
+        )
+        .unwrap();
+        append_to(&path, &Entry::end("rid", "tid", Some(0), 2)).unwrap();
+        let content = std::fs::read_to_string(&path).unwrap();
+        assert_eq!(content.lines().count(), 2);
+    }
 }
