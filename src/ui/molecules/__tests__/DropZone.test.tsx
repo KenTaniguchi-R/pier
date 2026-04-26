@@ -26,7 +26,7 @@ describe("DropZone", () => {
         <DropZone onDrop={onDrop} accepts={["mp4"]} label="Drop a video here" />
       </FilePickerProvider>,
     );
-    const zone = screen.getByText("Drop a video here").closest(".dropzone")! as HTMLElement;
+    const zone = screen.getByText("Drop a video here").closest('[data-testid="dropzone"]')! as HTMLElement;
     vi.spyOn(zone, "getBoundingClientRect").mockReturnValue({
       left: 0, top: 0, right: 100, bottom: 100, width: 100, height: 100, x: 0, y: 0, toJSON: () => ({}),
     } as DOMRect);
@@ -42,7 +42,7 @@ describe("DropZone", () => {
         <DropZone onDrop={onDrop} />
       </FilePickerProvider>,
     );
-    const zone = screen.getByText(/drop a file/i).closest(".dropzone")! as HTMLElement;
+    const zone = screen.getByText(/drop a file/i).closest('[data-testid="dropzone"]')! as HTMLElement;
     vi.spyOn(zone, "getBoundingClientRect").mockReturnValue({
       left: 0, top: 0, right: 100, bottom: 100, width: 100, height: 100, x: 0, y: 0, toJSON: () => ({}),
     } as DOMRect);
@@ -59,7 +59,7 @@ describe("DropZone", () => {
         <DropZone onDrop={onDrop} accepts={["mp4"]} />
       </FilePickerProvider>,
     );
-    const zone = screen.getByText(/drop a file/i).closest(".dropzone")! as HTMLElement;
+    const zone = screen.getByText(/drop a file/i).closest('[data-testid="dropzone"]')! as HTMLElement;
     fireEvent.click(zone);
     await vi.waitFor(() => expect(onDrop).toHaveBeenCalledWith("/tmp/picked.mp4"));
     expect(pick).toHaveBeenCalledWith({ directory: undefined, accepts: ["mp4"] });

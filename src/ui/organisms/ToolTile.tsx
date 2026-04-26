@@ -39,22 +39,31 @@ export function ToolTile({ tool, hideHeader }: Props) {
   };
 
   return (
-    <article className="tool-tile">
+    <article className="border border-line rounded-[14px] bg-surface p-4 flex flex-col gap-2 shadow-1 animate-tile-in transition-[border-color,box-shadow,transform] duration-200 ease-(--ease-smooth) hover:border-line-hi hover:shadow-2">
       {!hideHeader && (
         <>
-          <header className="tool-tile__head">
-            <span className="tool-tile__icon">{tool.icon ?? "▸"}</span>
-            <h3 className="tool-tile__name" title={tool.name}>{tool.name}</h3>
-            {status && <span className="tool-tile__pill"><RunStatusPill status={status} /></span>}
+          <header className="flex items-center gap-2">
+            <span className="text-[22px] leading-none flex-none">{tool.icon ?? "▸"}</span>
+            <h3
+              className="font-display text-[17px] font-semibold tracking-[-0.005em] text-ink flex-1 min-w-0 break-words leading-[1.25]"
+              title={tool.name}
+            >
+              {tool.name}
+            </h3>
+            {status && (
+              <span className="ml-auto"><RunStatusPill status={status} /></span>
+            )}
           </header>
-          {tool.description && <p className="tool-tile__desc">{tool.description}</p>}
+          {tool.description && (
+            <p className="text-[13px] text-ink-3 leading-[1.5]">{tool.description}</p>
+          )}
         </>
       )}
       {hideHeader && status && (
-        <div className="tool-tile__status-row"><RunStatusPill status={status} /></div>
+        <div className="flex justify-end"><RunStatusPill status={status} /></div>
       )}
 
-      <div className="tool-tile__input">
+      <div className="mt-1">
         {tool.inputType === "file" && (
           <DropZone
             accepts={tool.accepts}
@@ -73,7 +82,7 @@ export function ToolTile({ tool, hideHeader }: Props) {
         )}
       </div>
 
-      <footer className="tool-tile__foot">
+      <footer className="flex justify-end">
         <Button variant="primary" disabled={!canRun} onClick={onRunClick}>Run</Button>
       </footer>
 

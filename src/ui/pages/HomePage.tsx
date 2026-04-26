@@ -80,9 +80,15 @@ export function HomePage() {
   let main;
   if (state.configErrors.length) {
     main = (
-      <div className="tool-browser tool-browser--errors">
-        <h1 className="tool-browser__title">Couldn't load your tools</h1>
-        <ul>{state.configErrors.map((e, i) => <li key={i}>{e}</li>)}</ul>
+      <div className="p-6 px-8 flex flex-col gap-3 text-danger">
+        <h1 className="font-display text-[28px] font-bold tracking-[-0.01em] leading-[1.1] text-ink">
+          Couldn't load your tools
+        </h1>
+        <ul className="list-none text-[13px] text-ink-2 mt-2">
+          {state.configErrors.map((e, i) => (
+            <li key={i} className="before:content-['•_'] before:text-danger">{e}</li>
+          ))}
+        </ul>
       </div>
     );
   } else if (selectedTool) {

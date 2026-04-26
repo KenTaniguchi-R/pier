@@ -11,18 +11,24 @@ interface Props {
 
 export function ToolBrowser({ title, subtitle, tools, onPick, emptyHint }: Props) {
   return (
-    <div className="tool-browser">
-      <header className="tool-browser__head">
-        <h1 className="tool-browser__title">{title}</h1>
-        {subtitle && <span className="tool-browser__sub">{subtitle}</span>}
+    <div className="p-6 px-8 flex flex-col gap-4">
+      <header className="flex items-baseline gap-2 pb-3 border-b border-line">
+        <h1 className="font-display text-[28px] font-bold tracking-[-0.01em] leading-[1.1] text-ink">
+          {title}
+        </h1>
+        {subtitle && (
+          <span className="font-body font-medium text-[12px] leading-none text-ink-3">
+            {subtitle}
+          </span>
+        )}
       </header>
 
       {tools.length === 0 ? (
-        <div className="tool-browser__empty">
+        <div className="p-8 text-center text-ink-3 text-[14px]">
           {emptyHint ?? "No tools match."}
         </div>
       ) : (
-        <div className="tool-browser__grid">
+        <div className="grid gap-3 grid-cols-[repeat(auto-fill,minmax(280px,1fr))]">
           {tools.map(t => (
             <ToolCard key={t.id} tool={t} onClick={() => onPick(t.id)} />
           ))}

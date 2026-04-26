@@ -5,9 +5,9 @@ interface Props {
 
 export function IconLabel({ icon, label }: Props) {
   return (
-    <span className="icon-label">
-      <span className="icon-label__icon">{icon}</span>
-      <span className="icon-label__label">{label}</span>
+    <span className="inline-flex items-center gap-2">
+      <span className="text-[18px] leading-none">{icon}</span>
+      <span className="font-body font-medium text-[14px] leading-none">{label}</span>
     </span>
   );
 }

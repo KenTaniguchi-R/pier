@@ -7,11 +7,16 @@ interface Props {
 
 export function LogLine({ line, stream, lineNumber }: Props) {
   return (
-    <div className={`log-line${stream === "stderr" ? " log-line--stderr" : ""}`}>
+    <div
+      className={
+        "flex gap-2 px-3 font-mono font-normal text-[12.5px] leading-[1.6] whitespace-pre-wrap break-words animate-logline-in " +
+        (stream === "stderr" ? "text-danger" : "text-ink-2")
+      }
+    >
       {typeof lineNumber === "number" && (
-        <span className="log-line__num">{lineNumber}</span>
+        <span className="flex-none w-8 text-right text-ink-4 select-none pr-2">{lineNumber}</span>
       )}
-      <span className="log-line__text">{line}</span>
+      <span className="flex-1">{line}</span>
     </div>
   );
 }

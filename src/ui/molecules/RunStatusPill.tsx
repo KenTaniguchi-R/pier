@@ -13,7 +13,12 @@ export function RunStatusPill({ status }: { status: RunStatus }) {
   const { variant, text } = MAP[status];
   return (
     <Badge variant={variant}>
-      {status === "running" && <span className="run-pill__dot" aria-hidden />}
+      {status === "running" && (
+        <span
+          className="inline-block w-1.5 h-1.5 rounded-full bg-current animate-run-pulse"
+          aria-hidden
+        />
+      )}
       {text}
     </Badge>
   );
