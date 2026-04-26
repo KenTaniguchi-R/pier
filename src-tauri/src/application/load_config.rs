@@ -13,23 +13,23 @@ const DEFAULT_CONFIG: &str = r#"{
   "tools": [
     {
       "id": "hello",
-      "name": "Hello, Pier",
+      "name": "Say hello",
       "command": "/bin/echo",
-      "args": ["Welcome to Pier · drag a file or click Run"],
+      "args": ["Welcome to Pier — drag a file onto a tool, or just click Run"],
       "inputType": "none",
-      "description": "Verify your install — runs /bin/echo with a greeting.",
-      "icon": "▸",
+      "description": "A quick test to make sure everything's working.",
+      "icon": "👋",
       "category": "starter",
       "confirm": false
     },
     {
       "id": "file-info",
-      "name": "File Info",
+      "name": "What's this file?",
       "command": "/usr/bin/file",
       "args": ["{input}"],
       "inputType": "file",
-      "description": "Identify a file's type via the macOS `file` utility.",
-      "icon": "▸",
+      "description": "Drop any file to see what kind it is.",
+      "icon": "📄",
       "category": "starter"
     }
   ]
