@@ -74,6 +74,7 @@ describe("ToolRunner", () => {
     expect(runner.run).toHaveBeenCalledWith(
       expect.objectContaining({ toolId: "t", values: { fmt: "mp4" } }),
       tool,
+      undefined,
     );
   });
 });

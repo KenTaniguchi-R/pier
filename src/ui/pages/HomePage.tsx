@@ -30,7 +30,7 @@ export function HomePage() {
   const reload = useCallback(async () => {
     try {
       const r = await loadConfig(tauriConfigLoader);
-      if (r.ok) dispatch({ type: "CONFIG_LOADED", tools: r.value.tools });
+      if (r.ok) dispatch({ type: "CONFIG_LOADED", tools: r.value.tools, defaults: r.value.defaults });
       else dispatch({ type: "CONFIG_ERROR", errors: r.errors });
     } catch (err) {
       dispatch({ type: "CONFIG_ERROR", errors: [String(err)] });

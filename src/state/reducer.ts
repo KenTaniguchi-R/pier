@@ -1,4 +1,4 @@
-import type { Tool } from "../domain/tool";
+import type { Tool, Defaults } from "../domain/tool";
 import type { RunStatus } from "../domain/runRequest";
 import type { Action } from "./actions";
 
@@ -13,6 +13,7 @@ export interface RunState {
 
 export interface AppState {
   tools: Tool[];
+  defaults?: Defaults;
   configErrors: string[];
   runs: Record<string, RunState>;
   selectedRunIdByTool: Record<string, string>;
@@ -20,6 +21,7 @@ export interface AppState {
 
 export const initialState: AppState = {
   tools: [],
+  defaults: undefined,
   configErrors: [],
   runs: {},
   selectedRunIdByTool: {},
@@ -28,7 +30,7 @@ export const initialState: AppState = {
 export function reducer(s: AppState, a: Action): AppState {
   switch (a.type) {
     case "CONFIG_LOADED":
-      return { ...s, tools: a.tools, configErrors: [] };
+      return { ...s, tools: a.tools, defaults: a.defaults, configErrors: [] };
     case "CONFIG_ERROR":
       return { ...s, configErrors: a.errors };
     case "RUN_STARTED":

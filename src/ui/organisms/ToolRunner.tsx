@@ -41,7 +41,7 @@ export function ToolRunner({ tool }: Props) {
   const resolvedArgs = buildArgs(tool, values);
 
   const startRun = async () => {
-    const outcome = await runner.run({ toolId: tool.id, values }, tool);
+    const outcome = await runner.run({ toolId: tool.id, values }, tool, state.defaults);
     dispatch({ type: "RUN_STARTED", runId: outcome.runId, toolId: tool.id, startedAt: outcome.startedAt });
   };
 

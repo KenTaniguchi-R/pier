@@ -1,8 +1,8 @@
-import type { Tool } from "../domain/tool";
+import type { Tool, Defaults } from "../domain/tool";
 import type { RunStatus } from "../domain/runRequest";
 
 export type Action =
-  | { type: "CONFIG_LOADED"; tools: Tool[] }
+  | { type: "CONFIG_LOADED"; tools: Tool[]; defaults?: Defaults }
   | { type: "CONFIG_ERROR"; errors: string[] }
   | { type: "RUN_STARTED"; runId: string; toolId: string; startedAt: number }
   | { type: "RUN_OUTPUT"; runId: string; line: string; stream: "stdout" | "stderr" }
