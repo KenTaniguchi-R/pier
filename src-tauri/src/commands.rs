@@ -1,5 +1,5 @@
 use crate::application::load_config::{load_config_from_path, seed_default_if_missing};
-use crate::domain::{RunRequest, Tool, ToolsConfig};
+use crate::domain::{Defaults, RunRequest, Tool, ToolsConfig};
 use std::path::PathBuf;
 
 #[tauri::command]
@@ -19,9 +19,10 @@ pub fn config_path() -> String {
 pub async fn run_tool_cmd(
     app: tauri::AppHandle,
     tool: Tool,
+    defaults: Option<Defaults>,
     request: RunRequest,
 ) -> Result<String, String> {
-    crate::application::run_tool::run_tool(app, tool, request)
+    crate::application::run_tool::run_tool(app, tool, defaults, request)
         .await
         .map_err(|e| e.to_string())
 }
