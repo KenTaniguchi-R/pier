@@ -46,6 +46,21 @@
       "icon": "🎬",
       "category": "media",
       "confirm": true
+    },
+    {
+      "id": "dubjp",
+      "name": "Dub video to Japanese",
+      "command": "/Users/you/coding/dubjp/.venv/bin/dubjp",
+      "args": ["{input}"],
+      "parameters": [
+        { "id": "input", "type": "file", "accepts": [".mp4", ".mov", ".mkv"] }
+      ],
+      "cwd": "/Users/you/coding/dubjp",
+      "envFile": ".env",
+      "description": "Project-local .env example: tool reads GEMINI_API_KEY etc. from cwd/.env at spawn time.",
+      "icon": "🎙️",
+      "category": "media",
+      "confirm": true
     }
   ]
 }
