@@ -1,10 +1,12 @@
-use crate::application::load_config::load_config_from_path;
+use crate::application::load_config::{load_config_from_path, seed_default_if_missing};
 use crate::domain::{RunRequest, Tool, ToolsConfig};
 use std::path::PathBuf;
 
 #[tauri::command]
 pub fn load_tools_config(path: String) -> Result<ToolsConfig, String> {
-    load_config_from_path(&PathBuf::from(path)).map_err(|e| e.to_string())
+    let p = PathBuf::from(path);
+    seed_default_if_missing(&p).map_err(|e| e.to_string())?;
+    load_config_from_path(&p).map_err(|e| e.to_string())
 }
 
 #[tauri::command]

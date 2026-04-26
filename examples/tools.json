@@ -1,0 +1,47 @@
+{
+  "schemaVersion": "1.0",
+  "tools": [
+    {
+      "id": "hello",
+      "name": "Hello, Pier",
+      "command": "/bin/echo",
+      "args": ["Welcome to Pier · drag a file or click Run"],
+      "inputType": "none",
+      "description": "Verify your install — runs /bin/echo with a greeting.",
+      "icon": "▸",
+      "category": "starter",
+      "confirm": false
+    },
+    {
+      "id": "file-info",
+      "name": "File Info",
+      "command": "/usr/bin/file",
+      "args": ["{input}"],
+      "inputType": "file",
+      "description": "Identify a file's type via the macOS `file` utility.",
+      "icon": "▸",
+      "category": "starter"
+    },
+    {
+      "id": "url-headers",
+      "name": "URL Headers",
+      "command": "/usr/bin/curl",
+      "args": ["-I", "-s", "{input}"],
+      "inputType": "url",
+      "description": "Fetch HTTP headers for a URL",
+      "icon": "▸",
+      "category": "web"
+    },
+    {
+      "id": "wordcount",
+      "name": "Word Count",
+      "command": "/bin/sh",
+      "args": ["-c", "echo {input} | /usr/bin/wc -w"],
+      "inputType": "text",
+      "description": "Count words in pasted text (uses shell mode)",
+      "icon": "▸",
+      "category": "text",
+      "shell": true
+    }
+  ]
+}

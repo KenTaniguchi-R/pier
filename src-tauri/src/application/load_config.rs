@@ -8,10 +8,49 @@ pub fn load_config_from_path(path: &Path) -> Result<ToolsConfig> {
     Ok(cfg)
 }
 
+const DEFAULT_CONFIG: &str = r#"{
+  "schemaVersion": "1.0",
+  "tools": [
+    {
+      "id": "hello",
+      "name": "Hello, Pier",
+      "command": "/bin/echo",
+      "args": ["Welcome to Pier · drag a file or click Run"],
+      "inputType": "none",
+      "description": "Verify your install — runs /bin/echo with a greeting.",
+      "icon": "▸",
+      "category": "starter",
+      "confirm": false
+    },
+    {
+      "id": "file-info",
+      "name": "File Info",
+      "command": "/usr/bin/file",
+      "args": ["{input}"],
+      "inputType": "file",
+      "description": "Identify a file's type via the macOS `file` utility.",
+      "icon": "▸",
+      "category": "starter"
+    }
+  ]
+}
+"#;
+
+pub fn seed_default_if_missing(path: &Path) -> Result<()> {
+    if path.exists() {
+        return Ok(());
+    }
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent).with_context(|| format!("mkdir {:?}", parent))?;
+    }
+    std::fs::write(path, DEFAULT_CONFIG).with_context(|| format!("write {:?}", path))?;
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tempfile::NamedTempFile;
+    use tempfile::{NamedTempFile, tempdir};
     use std::io::Write;
 
     #[test]
@@ -20,5 +59,26 @@ mod tests {
         write!(f, r#"{{"schemaVersion":"1.0","tools":[{{"id":"x","name":"X","command":"/bin/echo","inputType":"none"}}]}}"#).unwrap();
         let cfg = load_config_from_path(f.path()).unwrap();
         assert_eq!(cfg.tools.len(), 1);
+    }
+
+    #[test]
+    fn seeds_default_when_missing() {
+        let d = tempdir().unwrap();
+        let p = d.path().join("tools.json");
+        assert!(!p.exists());
+        seed_default_if_missing(&p).unwrap();
+        assert!(p.exists());
+        let cfg = load_config_from_path(&p).unwrap();
+        assert!(cfg.tools.iter().any(|t| t.id == "hello"));
+    }
+
+    #[test]
+    fn seed_does_nothing_when_present() {
+        let d = tempdir().unwrap();
+        let p = d.path().join("tools.json");
+        std::fs::write(&p, r#"{"schemaVersion":"1.0","tools":[]}"#).unwrap();
+        seed_default_if_missing(&p).unwrap();
+        let content = std::fs::read_to_string(&p).unwrap();
+        assert!(content.contains("\"tools\":[]"));
     }
 }
