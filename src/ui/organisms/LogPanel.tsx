@@ -15,10 +15,12 @@ function EmptyShell({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function LogPanel() {
+interface Props { toolId: string }
+
+export function LogPanel({ toolId }: Props) {
   const { state } = useApp();
-  const id = state.selectedRunId;
-  const run = id ? state.runs[id] : null;
+  const runId = state.selectedRunIdByTool[toolId];
+  const run = runId ? state.runs[runId] : null;
 
   if (!run) {
     return (
