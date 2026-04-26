@@ -35,18 +35,18 @@ impl Parameter {
 #[serde(rename_all = "camelCase")]
 pub struct ParameterBase {
     pub id: String,
-    #[serde(default)] pub label: Option<String>,
-    #[serde(default)] pub description: Option<String>,
-    #[serde(default)] pub optional: Option<bool>,
-    #[serde(default)] pub default: Option<serde_json::Value>,
-    #[serde(default)] pub flag: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")] pub label: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")] pub description: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")] pub optional: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")] pub default: Option<serde_json::Value>,
+    #[serde(default, skip_serializing_if = "Option::is_none")] pub flag: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FileParam {
     #[serde(flatten)] pub base: ParameterBase,
-    #[serde(default)] pub accepts: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")] pub accepts: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -57,7 +57,7 @@ pub struct FolderParam { #[serde(flatten)] pub base: ParameterBase }
 #[serde(rename_all = "camelCase")]
 pub struct TextParam {
     #[serde(flatten)] pub base: ParameterBase,
-    #[serde(default)] pub multiline: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")] pub multiline: Option<bool>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -79,9 +79,9 @@ pub struct BooleanParam { #[serde(flatten)] pub base: ParameterBase }
 #[serde(rename_all = "camelCase")]
 pub struct NumberParam {
     #[serde(flatten)] pub base: ParameterBase,
-    #[serde(default)] pub min: Option<f64>,
-    #[serde(default)] pub max: Option<f64>,
-    #[serde(default)] pub step: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")] pub min: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")] pub max: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")] pub step: Option<f64>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -90,17 +90,17 @@ pub struct Tool {
     pub id: String,
     pub name: String,
     pub command: String,
-    #[serde(default)] pub args: Vec<String>,
-    #[serde(default)] pub parameters: Vec<Parameter>,
-    #[serde(default)] pub accepts: Vec<String>,
-    #[serde(default)] pub description: Option<String>,
-    #[serde(default)] pub icon: Option<String>,
-    #[serde(default)] pub timeout: Option<u64>,
-    #[serde(default)] pub output_path: Option<String>,
-    #[serde(default)] pub confirm: Option<bool>,
-    #[serde(default)] pub shell: Option<bool>,
-    #[serde(default)] pub cwd: Option<String>,
-    #[serde(default)] pub category: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")] pub args: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")] pub parameters: Vec<Parameter>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")] pub accepts: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")] pub description: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")] pub icon: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")] pub timeout: Option<u64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")] pub output_path: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")] pub confirm: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")] pub shell: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")] pub cwd: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")] pub category: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
