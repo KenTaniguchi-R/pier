@@ -1,8 +1,10 @@
+import type { ParamValue } from "./tool";
+
 export type RunStatus = "pending" | "running" | "success" | "failed" | "killed";
 
 export interface RunRequest {
   toolId: string;
-  input: string | null;
+  values: Record<string, ParamValue>;
 }
 
 export interface RunOutcome {
