@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import { useApp } from "../../state/AppContext";
 import { useRunner } from "../../state/RunnerContext";
 import { AppShell } from "../templates/AppShell";
@@ -20,17 +20,26 @@ export function HomePage() {
   const { dispatch } = useApp();
   const runner = useRunner();
 
-  useEffect(() => {
-    let cancelled = false;
-    loadConfig(tauriConfigLoader).then(r => {
-      if (cancelled) return;
+  const reload = useCallback(async () => {
+    try {
+      const r = await loadConfig(tauriConfigLoader);
       if (r.ok) dispatch({ type: "CONFIG_LOADED", tools: r.value.tools });
       else dispatch({ type: "CONFIG_ERROR", errors: r.errors });
-    }).catch(err => {
-      if (!cancelled) dispatch({ type: "CONFIG_ERROR", errors: [String(err)] });
-    });
-    return () => { cancelled = true; };
+    } catch (err) {
+      dispatch({ type: "CONFIG_ERROR", errors: [String(err)] });
+    }
   }, [dispatch]);
+
+  useEffect(() => {
+    reload();
+  }, [reload]);
+
+  useEffect(() => {
+    const off = tauriConfigLoader.watch(() => {
+      reload();
+    });
+    return off;
+  }, [reload]);
 
   useEffect(() => {
     const offOut = runner.onOutput((runId, line, stream) =>
