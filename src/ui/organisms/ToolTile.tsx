@@ -10,9 +10,9 @@ import { RunStatusPill } from "../molecules/RunStatusPill";
 import { useApp } from "../../state/AppContext";
 import { useRunner } from "../../state/RunnerContext";
 
-interface Props { tool: Tool }
+interface Props { tool: Tool; hideHeader?: boolean }
 
-export function ToolTile({ tool }: Props) {
+export function ToolTile({ tool, hideHeader }: Props) {
   const { state, dispatch } = useApp();
   const runner = useRunner();
   const [input, setInput] = useState<string | null>(null);
@@ -40,12 +40,19 @@ export function ToolTile({ tool }: Props) {
 
   return (
     <article className="tool-tile">
-      <header className="tool-tile__head">
-        <span className="tool-tile__icon">{tool.icon ?? "▸"}</span>
-        <h3 className="tool-tile__name" title={tool.name}>{tool.name}</h3>
-        {status && <span className="tool-tile__pill"><RunStatusPill status={status} /></span>}
-      </header>
-      {tool.description && <p className="tool-tile__desc">{tool.description}</p>}
+      {!hideHeader && (
+        <>
+          <header className="tool-tile__head">
+            <span className="tool-tile__icon">{tool.icon ?? "▸"}</span>
+            <h3 className="tool-tile__name" title={tool.name}>{tool.name}</h3>
+            {status && <span className="tool-tile__pill"><RunStatusPill status={status} /></span>}
+          </header>
+          {tool.description && <p className="tool-tile__desc">{tool.description}</p>}
+        </>
+      )}
+      {hideHeader && status && (
+        <div className="tool-tile__status-row"><RunStatusPill status={status} /></div>
+      )}
 
       <div className="tool-tile__input">
         {tool.inputType === "file" && (
