@@ -36,9 +36,18 @@ export interface Tool {
   shell?: boolean;
   cwd?: string;
   category?: string;
+  envFile?: string;
+  env?: Record<string, string>;
+}
+
+export interface Defaults {
+  cwd?: string;
+  envFile?: string;
+  env?: Record<string, string>;
 }
 
 export interface ToolsConfig {
   schemaVersion: "1.0";
+  defaults?: Defaults;
   tools: Tool[];
 }
