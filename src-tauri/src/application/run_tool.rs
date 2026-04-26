@@ -51,7 +51,9 @@ pub async fn run_tool(
     );
     let started = now();
 
-    audit::append(&audit::Entry::start(&run_id, &tool.id, &bin, &args, started))?;
+    audit::append(&audit::Entry::start_with_env(
+        &run_id, &tool.id, &bin, &args, &resolved_env.keys, started,
+    ))?;
 
     let timeout_secs = tool.timeout.unwrap_or(DEFAULT_TIMEOUT_SECS);
     let (cancel_tx, mut cancel_rx) = tokio::sync::oneshot::channel::<()>();

@@ -11,6 +11,8 @@ pub enum Entry {
         tool_id: String,
         bin: String,
         args: Vec<String>,
+        #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
+        env_keys: std::collections::HashMap<String, crate::application::env_resolver::EnvSource>,
         ts: u64,
     },
     End {
@@ -23,11 +25,23 @@ pub enum Entry {
 
 impl Entry {
     pub fn start(run_id: &str, tool_id: &str, bin: &Path, args: &[String], ts: u64) -> Self {
+        Self::start_with_env(run_id, tool_id, bin, args, &std::collections::HashMap::new(), ts)
+    }
+
+    pub fn start_with_env(
+        run_id: &str,
+        tool_id: &str,
+        bin: &Path,
+        args: &[String],
+        env_keys: &std::collections::HashMap<String, crate::application::env_resolver::EnvSource>,
+        ts: u64,
+    ) -> Self {
         Entry::Start {
             run_id: run_id.into(),
             tool_id: tool_id.into(),
             bin: bin.to_string_lossy().into(),
             args: args.to_vec(),
+            env_keys: env_keys.clone(),
             ts,
         }
     }
@@ -82,5 +96,29 @@ mod tests {
         append_to(&path, &Entry::end("rid", "tid", Some(0), 2)).unwrap();
         let content = std::fs::read_to_string(&path).unwrap();
         assert_eq!(content.lines().count(), 2);
+    }
+
+    #[test]
+    fn start_entry_serializes_env_keys() {
+        use std::collections::HashMap;
+        use crate::application::env_resolver::EnvSource;
+        let mut keys = HashMap::new();
+        keys.insert("PATH".to_string(), EnvSource::Process);
+        keys.insert("OPENAI_API_KEY".to_string(), EnvSource::Keychain);
+        keys.insert("FROM_FILE".to_string(), EnvSource::EnvFile);
+        let entry = Entry::start_with_env(
+            "rid", "tid",
+            std::path::Path::new("/bin/echo"), &["a".into()], &keys, 1,
+        );
+        let json = serde_json::to_string(&entry).unwrap();
+        // Keys are present; no values are present.
+        assert!(json.contains("\"PATH\""));
+        assert!(json.contains("\"OPENAI_API_KEY\""));
+        assert!(json.contains("\"FROM_FILE\""));
+        assert!(json.contains("\"keychain\""));
+        assert!(json.contains("\"envfile\""));
+        assert!(json.contains("\"process\""));
+        // Definitely no secret-looking content.
+        assert!(!json.contains("sk-"));
     }
 }
