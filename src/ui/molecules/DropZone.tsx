@@ -9,11 +9,11 @@ interface Props {
 }
 
 const BASE =
-  "flex flex-col items-center justify-center gap-1 min-h-[110px] p-4 " +
-  "border-[1.5px] border-dashed rounded-[10px] cursor-pointer select-none text-center " +
+  "flex flex-col items-center justify-center gap-2 min-h-[160px] p-8 " +
+  "border-[1.5px] border-dashed rounded-[14px] cursor-pointer select-none text-center " +
   "transition-[border-color,background-color] duration-200 ease-(--ease-smooth)";
 
-const IDLE = "border-line-hi bg-bg-2 hover:border-ink-4 hover:bg-surface-2";
+const IDLE = "border-line-hi bg-surface hover:border-ink-4 hover:bg-surface-2";
 const ACTIVE = "border-accent bg-accent-soft";
 
 export function DropZone({ onDrop, accepts, directory, label }: Props) {

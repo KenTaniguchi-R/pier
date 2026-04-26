@@ -1,6 +1,19 @@
 import { useApp } from "../../state/AppContext";
 import { LogLine } from "../molecules/LogLine";
-import { RunStatusPill } from "../molecules/RunStatusPill";
+import { RunHeader } from "../molecules/RunHeader";
+import { RUN_STATUS_STYLE } from "../molecules/runStatusStyle";
+
+const SHELL =
+  "flex flex-col h-full rounded-[14px] bg-surface border border-line overflow-hidden " +
+  "border-l-[3px] transition-[border-color] duration-200 ease-(--ease-smooth)";
+
+function EmptyShell({ children }: { children: React.ReactNode }) {
+  return (
+    <div className={`${SHELL} border-l-line items-center justify-center`}>
+      <div className="text-center px-6">{children}</div>
+    </div>
+  );
+}
 
 export function LogPanel() {
   const { state } = useApp();
@@ -9,39 +22,58 @@ export function LogPanel() {
 
   if (!run) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-center">
-          <span className="block font-display text-[18px] font-semibold text-ink mb-1">
-            Pick a tool to start
-          </span>
-          <span className="block px-4 text-[14px] text-ink-3 font-body">
-            Or drop a file onto one of the tools on the left.
-          </span>
-        </div>
-      </div>
+      <EmptyShell>
+        <span className="block font-display italic text-[17px] text-ink-2 mb-1">
+          Awaiting input.
+        </span>
+        <span className="block text-[13px] text-ink-3 font-body">
+          Drop a file above, or paste, then hit Run.
+        </span>
+      </EmptyShell>
     );
   }
 
+  const edge = RUN_STATUS_STYLE[run.status].edge;
+  const isFinal = run.status === "success" || run.status === "failed" || run.status === "killed";
+  const lineCount = run.lines.length;
+
   return (
-    <section className="flex flex-col h-full">
-      <header className="flex-none flex items-center gap-2 px-4 py-3 border-b border-line">
-        <span className="font-display text-[16px] font-semibold text-ink">Output</span>
-        <RunStatusPill status={run.status} />
-        {run.exitCode !== null && run.exitCode !== 0 && (
-          <span className="ml-auto font-mono font-medium text-[12px] leading-none text-ink-3">
-            exit {run.exitCode}
+    <section className={`${SHELL} ${edge}`}>
+      <RunHeader
+        status={run.status}
+        startedAt={run.startedAt}
+        endedAt={run.endedAt}
+        exitCode={run.exitCode}
+        lineCount={lineCount}
+      />
+      <div className="flex-1 overflow-y-auto py-3 flex flex-col">
+        {lineCount === 0 && run.status === "running" && (
+          <span className="block px-5 py-3 font-mono text-[12.5px] text-ink-3 italic">
+            <span
+              className="inline-block size-1.5 rounded-pill bg-ink-4 animate-run-pulse mr-2 translate-y-[-2px]"
+              aria-hidden
+            />
+            waiting for output…
           </span>
         )}
-      </header>
-      <div className="flex-1 overflow-y-auto py-3 flex flex-col gap-px">
-        {run.lines.length === 0 && (
-          <span className="block px-4 py-8 text-[14px] text-ink-3 text-center font-body">
-            Waiting for the tool to respond…
+        {lineCount === 0 && run.status !== "running" && (
+          <span className="block px-5 py-3 font-mono text-[12.5px] text-ink-3 italic">
+            (no output)
           </span>
         )}
         {run.lines.map((l, i) => (
-          <LogLine key={i} ts={l.ts} line={l.line} stream={l.stream} lineNumber={i + 1} />
+          <LogLine key={i} line={l.line} stream={l.stream} />
         ))}
+        {isFinal && lineCount > 0 && (
+          <div
+            aria-hidden
+            className="flex items-center gap-3 px-5 pt-3 pb-1 font-mono text-[10.5px] uppercase tracking-[0.18em] text-ink-4"
+          >
+            <span className="flex-1 h-px bg-line" />
+            end
+            <span className="flex-1 h-px bg-line" />
+          </div>
+        )}
       </div>
     </section>
   );
