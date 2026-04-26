@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 pub type RunId = String;
 
@@ -8,7 +9,11 @@ pub enum RunStatus { Pending, Running, Success, Failed, Killed }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct RunRequest { pub tool_id: String, pub input: Option<String> }
+pub struct RunRequest {
+    pub tool_id: String,
+    #[serde(default)]
+    pub values: HashMap<String, serde_json::Value>,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
