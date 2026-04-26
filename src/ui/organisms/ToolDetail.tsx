@@ -1,4 +1,4 @@
-import type { Tool, InputType } from "../../domain/tool";
+import type { Tool } from "../../domain/tool";
 import { ToolRunner } from "./ToolRunner";
 import { LogPanel } from "./LogPanel";
 
@@ -7,16 +7,13 @@ interface Props {
   onBack: () => void;
 }
 
-const INPUT_LABELS: Record<InputType, string> = {
-  file: "Accepts a file",
-  folder: "Accepts a folder",
-  text: "Accepts text",
-  url: "Accepts a URL",
-  none: "No input",
-};
-
 export function ToolDetail({ tool, onBack }: Props) {
-  const eyebrow = tool.category ?? INPUT_LABELS[tool.inputType];
+  const params = tool.parameters ?? [];
+  const inputSummary =
+    params.length === 0 ? "no input"
+    : params.length === 1 ? `accepts ${params[0].type}`
+    : `${params.length} parameters`;
+  const eyebrow = tool.category ?? inputSummary;
 
   return (
     <div className="flex flex-col h-full">
@@ -60,7 +57,7 @@ export function ToolDetail({ tool, onBack }: Props) {
         </div>
 
         <section className="flex-1 min-h-[260px] flex [&>*]:w-full">
-          <LogPanel />
+          <LogPanel toolId={tool.id} />
         </section>
       </div>
     </div>
