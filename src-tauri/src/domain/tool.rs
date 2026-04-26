@@ -98,12 +98,23 @@ pub struct Tool {
     #[serde(default, skip_serializing_if = "Option::is_none")] pub shell: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")] pub cwd: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")] pub category: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")] pub env_file: Option<String>,
+    #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")] pub env: std::collections::HashMap<String, String>,
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Defaults {
+    #[serde(default, skip_serializing_if = "Option::is_none")] pub env_file: Option<String>,
+    #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")] pub env: std::collections::HashMap<String, String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")] pub cwd: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ToolsConfig {
     pub schema_version: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")] pub defaults: Option<Defaults>,
     pub tools: Vec<Tool>,
 }
 
@@ -154,5 +165,32 @@ mod tests {
           "parameters":[{"id":"q","type":"weird"}]
         }]}"#;
         assert!(serde_json::from_str::<ToolsConfig>(json).is_err());
+    }
+
+    #[test]
+    fn parses_tool_with_env_file_and_env_block() {
+        let json = r#"{"schemaVersion":"1.0","tools":[{
+          "id":"x","name":"X","command":"/x",
+          "cwd":"/tmp/proj",
+          "envFile":".env",
+          "env":{"DEBUG":"1","KEY":"${keychain:k}"}
+        }]}"#;
+        let cfg: ToolsConfig = serde_json::from_str(json).unwrap();
+        let t = &cfg.tools[0];
+        assert_eq!(t.env_file.as_deref(), Some(".env"));
+        assert_eq!(t.env.get("DEBUG").map(String::as_str), Some("1"));
+        assert_eq!(t.env.get("KEY").map(String::as_str), Some("${keychain:k}"));
+    }
+
+    #[test]
+    fn parses_top_level_defaults() {
+        let json = r#"{"schemaVersion":"1.0","defaults":{"envFile":".env"},"tools":[
+          {"id":"x","name":"X","command":"/x"}
+        ]}"#;
+        let cfg: ToolsConfig = serde_json::from_str(json).unwrap();
+        assert_eq!(
+            cfg.defaults.as_ref().and_then(|d| d.env_file.as_deref()),
+            Some(".env")
+        );
     }
 }
