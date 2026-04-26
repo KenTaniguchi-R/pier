@@ -12,9 +12,18 @@
   "app": {
     "windows": [
       {
-        "title": "pier",
-        "width": 800,
-        "height": 600
+        "label": "main",
+        "title": "Pier",
+        "width": 540,
+        "height": 680,
+        "minWidth": 480,
+        "minHeight": 560,
+        "visible": false,
+        "resizable": true,
+        "decorations": true,
+        "fullscreen": false,
+        "alwaysOnTop": false,
+        "skipTaskbar": true
       }
     ],
     "security": {
@@ -30,6 +39,9 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "macOS": {
+      "minimumSystemVersion": "12.0"
+    }
   }
 }
