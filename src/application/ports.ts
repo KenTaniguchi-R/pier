@@ -1,4 +1,4 @@
-import type { Tool } from "../domain/tool";
+import type { Tool, Defaults } from "../domain/tool";
 import type { RunOutcome, RunRequest } from "../domain/runRequest";
 
 export interface ConfigLoader {
@@ -7,7 +7,7 @@ export interface ConfigLoader {
 }
 
 export interface CommandRunner {
-  run(req: RunRequest, tool: Tool): Promise<RunOutcome>;
+  run(req: RunRequest, tool: Tool, defaults?: Defaults): Promise<RunOutcome>;
   kill(runId: string): Promise<void>;
   onOutput(cb: (runId: string, line: string, stream: "stdout" | "stderr") => void): () => void;
   onExit(cb: (runId: string, outcome: RunOutcome) => void): () => void;

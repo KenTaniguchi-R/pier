@@ -7,8 +7,8 @@ interface ExitPayload { runId: string; status: RunStatus; exitCode: number | nul
 interface OutputPayload { runId: string; line: string; stream: "stdout" | "stderr" }
 
 export const tauriCommandRunner: CommandRunner = {
-  async run(req, tool) {
-    const runId = await invoke<string>("run_tool_cmd", { tool, request: req });
+  async run(req, tool, defaults) {
+    const runId = await invoke<string>("run_tool_cmd", { tool, defaults: defaults ?? null, request: req });
     const startedAt = Math.floor(Date.now() / 1000);
     const outcome: RunOutcome = {
       runId,
