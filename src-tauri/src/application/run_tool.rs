@@ -29,11 +29,26 @@ const DEFAULT_TIMEOUT_SECS: u64 = 300;
 /// This is "SIGKILL on cancel" semantics, not SIGTERM+grace+SIGKILL. A graceful
 /// SIGTERM flow is deferred to Phase 5 (would require extracting the child PID or
 /// using `child.start_kill()` before handing the Child to `stream_lines`).
-pub async fn run_tool(app: AppHandle, tool: Tool, req: RunRequest) -> Result<RunId> {
+pub async fn run_tool(
+    app: AppHandle,
+    tool: Tool,
+    defaults: Option<Defaults>,
+    req: RunRequest,
+) -> Result<RunId> {
     let run_id = Uuid::new_v4().to_string();
     let bin = path_resolver::resolve(&tool.command)?;
     let args = crate::application::arg_template::build_args(&tool, &req.values);
-    let cwd = tool.cwd.as_ref().map(PathBuf::from);
+    let cwd = tool.cwd.as_ref()
+        .or_else(|| defaults.as_ref().and_then(|d| d.cwd.as_ref()))
+        .map(PathBuf::from);
+    let process_env: std::collections::HashMap<String, String> = std::env::vars().collect();
+    let resolved_env = crate::application::env_resolver::resolve(
+        &tool,
+        defaults.as_ref(),
+        cwd.as_deref(),
+        &process_env,
+        &crate::application::env_resolver::keychain_lookup,
+    );
     let started = now();
 
     audit::append(&audit::Entry::start(&run_id, &tool.id, &bin, &args, started))?;
@@ -56,7 +71,7 @@ pub async fn run_tool(app: AppHandle, tool: Tool, req: RunRequest) -> Result<Run
     let tool_id = tool.id.clone();
 
     tokio::spawn(async move {
-        let proc = match spawn(&bin, &args, cwd.as_deref()) {
+        let proc = match spawn(&bin, &args, cwd.as_deref(), &resolved_env.vars) {
             Ok(p) => p,
             Err(e) => {
                 eprintln!("[pier] spawn error for run {id_clone}: {e}");
