@@ -16,7 +16,6 @@ const DEFAULT_CONFIG: &str = r#"{
       "name": "Say hello",
       "command": "/bin/echo",
       "args": ["Welcome to Pier — drag a file onto a tool, or just click Run"],
-      "inputType": "none",
       "description": "A quick test to make sure everything's working.",
       "icon": "👋",
       "category": "starter",
@@ -27,7 +26,7 @@ const DEFAULT_CONFIG: &str = r#"{
       "name": "What's this file?",
       "command": "/usr/bin/file",
       "args": ["{input}"],
-      "inputType": "file",
+      "parameters": [{ "id": "input", "type": "file" }],
       "description": "Drop any file to see what kind it is.",
       "icon": "📄",
       "category": "starter"
