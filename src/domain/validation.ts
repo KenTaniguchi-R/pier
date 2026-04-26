@@ -89,32 +89,33 @@ function parseParam(p: unknown, ti: number, pi: number): ParseResult<Parameter> 
   if (errors.length) return { ok: false, errors };
 
   const type = p.type as ParamType;
+  const isSet = (v: unknown) => v !== undefined && v !== null;
 
   if (type === "select") {
     if (!Array.isArray(p.options) || (p.options as unknown[]).some(o => typeof o !== "string")) {
       errors.push(`${where}.options must be a string[]`);
-    } else if (p.default !== undefined && !(p.options as string[]).includes(p.default as string)) {
+    } else if (isSet(p.default) && !(p.options as string[]).includes(p.default as string)) {
       errors.push(`${where}.default not in options`);
     }
   }
 
   if (type === "number") {
-    if (p.default !== undefined && typeof p.default !== "number") {
+    if (isSet(p.default) && typeof p.default !== "number") {
       errors.push(`${where}.default must be a number`);
     }
     for (const k of ["min", "max", "step"] as const) {
-      if (p[k] !== undefined && typeof p[k] !== "number") {
+      if (isSet(p[k]) && typeof p[k] !== "number") {
         errors.push(`${where}.${k} must be a number`);
       }
     }
   }
 
-  if (type === "boolean" && p.default !== undefined && typeof p.default !== "boolean") {
+  if (type === "boolean" && isSet(p.default) && typeof p.default !== "boolean") {
     errors.push(`${where}.default must be a boolean`);
   }
 
   if ((type === "text" || type === "url" || type === "file" || type === "folder")
-      && p.default !== undefined && typeof p.default !== "string") {
+      && isSet(p.default) && typeof p.default !== "string") {
     errors.push(`${where}.default must be a string`);
   }
 
