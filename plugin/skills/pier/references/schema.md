@@ -27,6 +27,8 @@ Authoritative reference. Source of truth: `src/domain/tool.ts` and `src/domain/v
   confirm?: boolean,        // default false; prompts before running
   shell?: boolean,          // default false; runs through a shell if true
   cwd?: string,             // working directory
+  envFile?: string,        // path to .env (relative paths resolve against cwd)
+  env?: Record<string,string>,  // inline overrides; ${keychain:X}, ${env:X} supported
   category?: string         // free-form group label
 }
 ```
@@ -90,6 +92,29 @@ The validator rejects the whole file (no partial load) when any of these fail:
 - Path: `~/.pier/tools.json`.
 - Watcher: `notify` in the Rust backend reloads the config on save (debounced).
 - Encoding: UTF-8, 2-space indent, trailing newline. Pier doesn't enforce style, but matching it keeps git diffs sane.
+
+## Defaults (optional, top-level)
+
+```ts
+{
+  cwd?: string,
+  envFile?: string,
+  env?: Record<string,string>
+}
+```
+
+Per-tool fields override these. Resolution order at spawn time:
+1. process env
+2. defaults.envFile
+3. tool.envFile
+4. defaults.env (interpolated)
+5. tool.env (interpolated)
+
+A `${keychain:X}` or `${env:X}` reference that can't be resolved drops the var entirely (the tool sees a missing var, not an empty string).
+
+## Audit log env recording
+
+Each `start` entry includes `env_keys`: a map of var name → source tag (`process | envfile | envblock | keychain | hostenv`). Values are never recorded.
 
 ## Audit log
 

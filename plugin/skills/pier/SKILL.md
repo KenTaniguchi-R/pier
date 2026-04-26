@@ -42,6 +42,22 @@ A tool needs only `id`, `name`, `command`. Everything else is optional. Don't pa
 | `outputPath` | no | Path to read for the result file (rare; most tools just stream stdout). |
 | `shell` | no | If `true`, the command runs through a shell. Default `false`. Avoid unless you genuinely need shell features. |
 | `cwd` | no | Working directory. |
+| `envFile` | no | Path to a `.env` file. Relative paths resolve against `cwd`. Loaded at spawn time. |
+| `env` | no | Inline `{KEY: value}` map. Overrides `envFile`. Supports `${keychain:NAME}` and `${env:NAME}` interpolation. |
+
+## Top-level defaults
+
+`tools.json` accepts an optional `defaults` block to avoid repeating `cwd` / `envFile` / `env` per tool:
+
+```json
+{
+  "schemaVersion": "1.0",
+  "defaults": { "envFile": ".env" },
+  "tools": [ ... ]
+}
+```
+
+Per-tool fields override defaults. Resolution order: process env → defaults.envFile → tool.envFile → defaults.env → tool.env.
 
 ## Parameter types
 
@@ -74,6 +90,31 @@ These come straight from the validator (`src/domain/validation.ts`). Violations 
 7. `number.default`, `min`, `max`, `step` must be numbers.
 8. `boolean.default` must be a boolean.
 9. `file/folder/text/url` defaults must be strings.
+
+## Environment
+
+Pier launches subprocesses with **only** the env you give it (no shell, no inherited login env). For most projects that means setting:
+
+- `cwd` — the project root (so relative paths resolve correctly).
+- `envFile: ".env"` — Pier loads it at spawn time.
+
+For inline secrets, prefer `${keychain:NAME}` over plain values — it stays out of `tools.json`. Set the keychain entry once with:
+
+```bash
+security add-generic-password -s pier -a NAME -w
+```
+
+For tools that need direnv / 1Password / mise / sops integration, **don't** invent a new field — wrap the command:
+
+```json
+{
+  "command": "/opt/homebrew/bin/op",
+  "args": ["run", "--env-file=.env", "--", "/path/to/tool", "{input}"],
+  "cwd": "/path/to/project"
+}
+```
+
+The audit log records which vars Pier passed and *where each came from* (process / envFile / envBlock / keychain / hostEnv) — values from `env` blocks and keychain are never written to disk.
 
 ## How to do the four operations
 
