@@ -5,8 +5,8 @@ import { DropZone } from "../DropZone";
 describe("DropZone", () => {
   it("calls onDrop with first dropped file path", () => {
     const onDrop = vi.fn();
-    render(<DropZone onDrop={onDrop} accepts={["*.mp4"]} label="// DROP VIDEO" />);
-    const zone = screen.getByText("// DROP VIDEO").closest(".dropzone")!;
+    render(<DropZone onDrop={onDrop} accepts={["*.mp4"]} label="Drop a video here" />);
+    const zone = screen.getByText("Drop a video here").closest(".dropzone")!;
     const file = new File(["x"], "a.mp4", { type: "video/mp4" });
     Object.defineProperty(file, "path", { value: "/tmp/a.mp4" });
     fireEvent.drop(zone, { dataTransfer: { files: [file] } });
@@ -16,7 +16,7 @@ describe("DropZone", () => {
   it("ignores drop without files", () => {
     const onDrop = vi.fn();
     render(<DropZone onDrop={onDrop} />);
-    const zone = screen.getByText(/DROP/i).closest(".dropzone")!;
+    const zone = screen.getByText(/drop a file/i).closest(".dropzone")!;
     fireEvent.drop(zone, { dataTransfer: { files: [] } });
     expect(onDrop).not.toHaveBeenCalled();
   });

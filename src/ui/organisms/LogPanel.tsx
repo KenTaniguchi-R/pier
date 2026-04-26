@@ -10,7 +10,10 @@ export function LogPanel() {
   if (!run) {
     return (
       <div className="log-panel log-panel--empty">
-        <span className="log-panel__hint">// SELECT A TOOL TO BEGIN</span>
+        <div>
+          <span className="log-panel__hint-em">Pick a tool to start</span>
+          <span className="log-panel__hint">Or drop a file onto one of the tools on the left.</span>
+        </div>
       </div>
     );
   }
@@ -18,12 +21,14 @@ export function LogPanel() {
   return (
     <section className="log-panel">
       <header className="log-panel__head">
-        <span className="log-panel__eyebrow">// RUN · {id?.slice(0, 8)}</span>
+        <span className="log-panel__title">Output</span>
         <RunStatusPill status={run.status} />
-        {run.exitCode !== null && <span className="log-panel__exit">EXIT {run.exitCode}</span>}
+        {run.exitCode !== null && run.exitCode !== 0 && (
+          <span className="log-panel__exit">exit {run.exitCode}</span>
+        )}
       </header>
       <div className="log-panel__body">
-        {run.lines.length === 0 && <span className="log-panel__hint">// AWAITING OUTPUT…</span>}
+        {run.lines.length === 0 && <span className="log-panel__hint">Waiting for the tool to respond…</span>}
         {run.lines.map((l, i) => (
           <LogLine key={i} ts={l.ts} line={l.line} stream={l.stream} lineNumber={i + 1} />
         ))}

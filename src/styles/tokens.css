@@ -1,34 +1,33 @@
 :root {
-  /* Surfaces */
-  --ink-0:   #0e0d0c;
-  --ink-1:   #161514;
-  --ink-2:   #1f1d1b;
-  --ink-3:   #27241f;
-  --ink-4:   #34302a;
+  /* Surfaces — warm cream paper aesthetic */
+  --bg:        #fbf7f2;   /* app background, warm paper */
+  --bg-2:      #f4ede2;   /* sidebar / inset surface */
+  --surface:   #ffffff;   /* cards, elevated panels */
+  --surface-2: #fff9ef;   /* hovered card */
 
-  /* Rules */
-  --rule:    #3a3531;
-  --rule-hi: #4a443d;
+  /* Borders — soft warm rules */
+  --line:    #ece4d7;
+  --line-hi: #d9cdb8;
 
-  /* Text */
-  --text:    #e8e3d8;
-  --text-2:  #b6ad9f;
-  --text-3:  #8a8278;
-  --text-4:  #5e574e;
+  /* Text — warm near-black */
+  --ink:    #1f1a16;
+  --ink-2:  #4d4339;
+  --ink-3:  #7a6f63;
+  --ink-4:  #b6a994;
 
   /* Accents */
-  --signal:      #ff6b1a;
-  --signal-soft: #ff6b1a18;
-  --signal-edge: #ff6b1a55;
+  --accent:        #e8623c;   /* terracotta, warm + friendly */
+  --accent-soft:   #e8623c1a;
+  --accent-edge:   #e8623c66;
 
-  --patina:      #7eb573;
-  --patina-soft: #7eb57315;
-  --rust:        #d93f3f;
-  --rust-soft:   #d93f3f18;
-  --brass:       #d4a847;
-  --brass-soft:  #d4a84715;
+  --success:       #5b9e6f;   /* sage green */
+  --success-soft:  #5b9e6f1a;
+  --warning:       #d99a3c;   /* honey */
+  --warning-soft:  #d99a3c1a;
+  --danger:        #c44a3a;   /* terracotta-red */
+  --danger-soft:   #c44a3a1a;
 
-  /* Spacing */
+  /* Spacing — slightly more generous for breathing room */
   --s-1: 2px;
   --s-2: 4px;
   --s-3: 8px;
@@ -38,26 +37,30 @@
   --s-7: 32px;
   --s-8: 48px;
 
-  /* Radii */
-  --r-0: 0;
-  --r-1: 2px;
-  --r-2: 4px;
+  /* Radii — soft, friendly */
+  --r-1: 6px;
+  --r-2: 10px;
+  --r-3: 14px;
+  --r-pill: 999px;
 
   /* Borders */
-  --b-1: 1px solid var(--rule);
+  --b-1: 1px solid var(--line);
 
-  /* Shadows */
-  --shadow-inset: inset 0 1px 0 rgba(255,255,255,0.025);
-  --shadow-press: inset 0 1px 0 rgba(0,0,0,0.4);
-  --shadow-pop:   0 0 0 1px var(--rule), 0 1px 0 rgba(0,0,0,0.3);
+  /* Shadows — soft, paper-on-paper */
+  --shadow-1: 0 1px 0 rgba(31, 26, 22, 0.04);
+  --shadow-2: 0 1px 2px rgba(31, 26, 22, 0.05), 0 2px 8px rgba(31, 26, 22, 0.04);
+  --shadow-3: 0 4px 16px rgba(31, 26, 22, 0.08), 0 1px 3px rgba(31, 26, 22, 0.06);
+  --shadow-pop: 0 12px 40px rgba(31, 26, 22, 0.18);
 
   /* Motion */
   --ease: cubic-bezier(0.2, 0.6, 0.2, 1);
-  --dur-1: 80ms;
-  --dur-2: 120ms;
-  --dur-3: 200ms;
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --dur-1: 100ms;
+  --dur-2: 180ms;
+  --dur-3: 260ms;
 
   /* Type */
-  --font-display: "JetBrains Mono", ui-monospace, "SF Mono", monospace;
-  --font-body:    "JetBrains Mono", ui-monospace, "SF Mono", monospace;
+  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
+  --font-body:    "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono:    "JetBrains Mono", ui-monospace, "SF Mono", monospace;
 }

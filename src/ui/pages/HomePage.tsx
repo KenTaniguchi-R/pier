@@ -10,8 +10,8 @@ import { tauriConfigLoader } from "../../infrastructure/tauriConfigLoader";
 function Header() {
   return (
     <div className="page-head">
-      <span className="page-head__eyebrow">// LAUNCHER · 0.1.0</span>
-      <h1 className="page-head__title">PIER</h1>
+      <h1 className="page-head__title">Pier</h1>
+      <span className="page-head__sub">Your toolbox</span>
     </div>
   );
 }

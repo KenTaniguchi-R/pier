@@ -52,11 +52,11 @@ export function ToolTile({ tool }: Props) {
           <DropZone
             accepts={tool.accepts}
             onDrop={p => setInput(p)}
-            label={input ? `// ${input.split("/").pop()}` : undefined}
+            label={input ? input.split("/").pop() : undefined}
           />
         )}
         {tool.inputType === "folder" && (
-          <DropZone onDrop={p => setInput(p)} label={input ? `// ${input}` : "// DROP FOLDER"} />
+          <DropZone onDrop={p => setInput(p)} label={input ? input : "Drop a folder here"} />
         )}
         {tool.inputType === "text" && (
           <Textarea value={input ?? ""} onChange={e => setInput(e.target.value)} placeholder="Paste text…" />

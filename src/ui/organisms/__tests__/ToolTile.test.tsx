@@ -30,7 +30,7 @@ describe("ToolTile", () => {
   it("renders DropZone for file input type", () => {
     const tool: Tool = { id: "t", name: "T", command: "/x", inputType: "file" };
     wrap(tool, mockRunner());
-    expect(screen.getByText(/DROP/i)).toBeInTheDocument();
+    expect(screen.getByText(/drop a file/i)).toBeInTheDocument();
   });
 
   it("disables Run when no input is provided", () => {
@@ -43,7 +43,7 @@ describe("ToolTile", () => {
     const tool: Tool = { id: "t", name: "T", command: "/x", inputType: "none" };
     wrap(tool, mockRunner());
     await userEvent.click(screen.getByRole("button", { name: /run/i }));
-    expect(screen.getByText(/CONFIRM EXECUTION/i)).toBeInTheDocument();
+    expect(screen.getByText(/run this tool/i)).toBeInTheDocument();
   });
 
   it("skips confirm and runs when tool.confirm === false", async () => {

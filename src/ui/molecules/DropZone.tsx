@@ -28,8 +28,8 @@ export function DropZone({ onDrop, accepts, label }: Props) {
     handle(f?.path);
   };
 
-  const acceptStr = accepts?.length ? accepts.join(" ") : "FILE";
-  const text = (label ?? `// DROP ${acceptStr.toUpperCase()}`);
+  const acceptHint = accepts?.length ? accepts.join(", ") : null;
+  const text = label ?? "Drop a file here";
 
   return (
     <div
@@ -42,6 +42,9 @@ export function DropZone({ onDrop, accepts, label }: Props) {
       tabIndex={0}
     >
       <span className="dropzone__text">{text}</span>
+      <span className="dropzone__sub">
+        {active ? "Release to add" : acceptHint ? `or click to choose · ${acceptHint}` : "or click to choose"}
+      </span>
       <input
         ref={inputRef}
         type="file"
