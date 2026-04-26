@@ -75,7 +75,7 @@ function parseTool(t: unknown, idx: number): ParseResult<Tool> {
   }
 
   if (errors.length) return { ok: false, errors };
-  return { ok: true, value: { ...(t as Tool), parameters } };
+  return { ok: true, value: { ...(t as unknown as Tool), parameters } };
 }
 
 function parseParam(p: unknown, ti: number, pi: number): ParseResult<Parameter> {

@@ -44,7 +44,6 @@ export function ToolRunner({ tool }: Props) {
     const outcome = await runner.run({ toolId: tool.id, values }, tool);
     setLatestRunId(outcome.runId);
     dispatch({ type: "RUN_STARTED", runId: outcome.runId, toolId: tool.id, startedAt: outcome.startedAt });
-    dispatch({ type: "SELECT_RUN", runId: outcome.runId });
   };
 
   const onRunClick = () => {

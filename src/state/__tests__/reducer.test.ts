@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { reducer, initialState } from "../reducer";
 import type { Tool } from "../../domain/tool";
 
-const t: Tool = { id: "x", name: "X", command: "/x", inputType: "none" };
+const t: Tool = { id: "x", name: "X", command: "/x" };
 
 describe("reducer", () => {
   it("CONFIG_LOADED stores tools and clears errors", () => {
@@ -20,7 +20,7 @@ describe("reducer", () => {
   it("RUN_STARTED creates a run entry and selects it", () => {
     const s = reducer(initialState, { type: "RUN_STARTED", runId: "r1", toolId: "x", startedAt: 1 });
     expect(s.runs["r1"].status).toBe("running");
-    expect(s.selectedRunId).toBe("r1");
+    expect(s.selectedRunIdByTool["x"]).toBe("r1");
   });
 
   it("RUN_OUTPUT appends a log line", () => {
@@ -43,8 +43,18 @@ describe("reducer", () => {
     expect(s.runs["r1"].endedAt).toBe(2);
   });
 
-  it("SELECT_RUN sets selectedRunId", () => {
-    const s = reducer(initialState, { type: "SELECT_RUN", runId: "abc" });
-    expect(s.selectedRunId).toBe("abc");
+  it("RUN_STARTED for a second run on the same tool replaces the selection", () => {
+    let s = reducer(initialState, { type: "RUN_STARTED", runId: "r1", toolId: "x", startedAt: 1 });
+    s = reducer(s, { type: "RUN_STARTED", runId: "r2", toolId: "x", startedAt: 2 });
+    expect(s.selectedRunIdByTool["x"]).toBe("r2");
+    expect(s.runs["r1"]).toBeDefined();
+    expect(s.runs["r2"]).toBeDefined();
+  });
+
+  it("RUN_STARTED tracks selection per tool independently", () => {
+    let s = reducer(initialState, { type: "RUN_STARTED", runId: "r1", toolId: "x", startedAt: 1 });
+    s = reducer(s, { type: "RUN_STARTED", runId: "r2", toolId: "y", startedAt: 2 });
+    expect(s.selectedRunIdByTool["x"]).toBe("r1");
+    expect(s.selectedRunIdByTool["y"]).toBe("r2");
   });
 });
