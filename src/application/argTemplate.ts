@@ -1,4 +1,12 @@
-import type { Tool, Parameter, ParamValue } from "../domain/tool";
+import type { Tool, ParamValue } from "../domain/tool";
+
+const PLACEHOLDER = /^\{([a-zA-Z_][\w-]*)\}$/;
+
+const isEmpty = (v: ParamValue | undefined) =>
+  v === undefined || v === null || v === "" || (typeof v === "number" && Number.isNaN(v));
+
+const stringify = (v: ParamValue | undefined) =>
+  v === undefined || v === null ? "" : String(v);
 
 export function buildArgs(tool: Tool, values: Record<string, ParamValue>): string[] {
   const params = tool.parameters ?? [];
@@ -7,14 +15,15 @@ export function buildArgs(tool: Tool, values: Record<string, ParamValue>): strin
 
   // Pass 1: positional args with {id} substitution.
   for (const raw of tool.args ?? []) {
-    const placeholder = matchPlaceholder(raw);
-    if (placeholder) {
-      const p = paramById.get(placeholder);
-      const v = values[placeholder];
-      if (isEmpty(v) && p?.optional) continue; // drop entire entry
-      out.push(raw.replace(`{${placeholder}}`, stringify(v)));
+    const m = raw.match(PLACEHOLDER);
+    if (!m) { out.push(raw); continue; }
+    const name = m[1];
+    const v = values[name];
+    if (isEmpty(v)) {
+      if (paramById.get(name)?.optional) continue;
+      out.push("");
     } else {
-      out.push(raw);
+      out.push(stringify(v));
     }
   }
 
@@ -32,19 +41,3 @@ export function buildArgs(tool: Tool, values: Record<string, ParamValue>): strin
 
   return out;
 }
-
-function matchPlaceholder(s: string): string | null {
-  const m = s.match(/^\{([a-zA-Z_][\w-]*)\}$/);
-  return m ? m[1] : null;
-}
-
-function isEmpty(v: ParamValue | undefined): boolean {
-  return v === undefined || v === null || v === "" || (typeof v === "number" && Number.isNaN(v));
-}
-
-function stringify(v: ParamValue | undefined): string {
-  if (v === undefined || v === null) return "";
-  return String(v);
-}
-
-export type { Parameter };

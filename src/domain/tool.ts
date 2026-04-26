@@ -32,7 +32,6 @@ export interface Tool {
   description?: string;
   icon?: string;
   timeout?: number;
-  outputPath?: string;
   confirm?: boolean;
   shell?: boolean;
   cwd?: string;

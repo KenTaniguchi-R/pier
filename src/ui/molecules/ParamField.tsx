@@ -13,10 +13,11 @@ interface Props {
   onChange: (v: ParamValue) => void;
 }
 
+const paramLabel = (p: Parameter) => (p.label ?? p.id.replace(/[-_]+/g, " ")).toUpperCase();
+
 export function ParamField({ param, index, value, onChange }: Props) {
   const counter = String(index + 1).padStart(2, "0");
-  const label = (param.label ?? humanize(param.id)).toUpperCase();
-  const optional = param.optional === true;
+  const label = paramLabel(param);
 
   return (
     <div
@@ -32,14 +33,14 @@ export function ParamField({ param, index, value, onChange }: Props) {
             {label}
           </span>
           <span className="flex-1 h-px bg-line" />
-          {optional && (
+          {param.optional && (
             <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-ink-4">
               ◦ optional
             </span>
           )}
         </div>
 
-        {renderField(param, value, onChange)}
+        <ParamWidget param={param} value={value} onChange={onChange} label={label} />
 
         {param.description && (
           <span className="font-display italic text-[13px] leading-[1.45] text-ink-3">
@@ -51,7 +52,14 @@ export function ParamField({ param, index, value, onChange }: Props) {
   );
 }
 
-function renderField(p: Parameter, value: ParamValue | undefined, onChange: (v: ParamValue) => void) {
+interface WidgetProps {
+  param: Parameter;
+  value: ParamValue | undefined;
+  onChange: (v: ParamValue) => void;
+  label: string;
+}
+
+function ParamWidget({ param: p, value, onChange, label }: WidgetProps) {
   const str = (value ?? "") as string;
 
   switch (p.type) {
@@ -59,18 +67,12 @@ function renderField(p: Parameter, value: ParamValue | undefined, onChange: (v: 
       return (
         <DropZone
           accepts={p.accepts}
-          onDrop={path => onChange(path)}
+          onDrop={onChange}
           label={str ? str.split("/").pop() : undefined}
         />
       );
     case "folder":
-      return (
-        <DropZone
-          directory
-          onDrop={path => onChange(path)}
-          label={str || undefined}
-        />
-      );
+      return <DropZone directory onDrop={onChange} label={str || undefined} />;
     case "text":
       return p.multiline ? (
         <Textarea value={str} onChange={e => onChange(e.target.value)} placeholder="Paste text…" />
@@ -79,10 +81,7 @@ function renderField(p: Parameter, value: ParamValue | undefined, onChange: (v: 
       );
     case "url":
       return (
-        <TextField
-          value={str} onChange={e => onChange(e.target.value)}
-          placeholder="https://…"
-        />
+        <TextField value={str} onChange={e => onChange(e.target.value)} placeholder="https://…" />
       );
     case "select":
       return (
@@ -96,7 +95,7 @@ function renderField(p: Parameter, value: ParamValue | undefined, onChange: (v: 
     case "boolean":
       return (
         <Checkbox
-          label={(p.label ?? humanize(p.id)).toUpperCase()}
+          label={label}
           checked={value === true}
           onChange={e => onChange(e.target.checked)}
         />
@@ -107,15 +106,8 @@ function renderField(p: Parameter, value: ParamValue | undefined, onChange: (v: 
           aria-label={p.id}
           value={value === undefined || value === "" ? "" : (value as number)}
           min={p.min} max={p.max} step={p.step}
-          onChange={e => {
-            const n = e.target.value === "" ? "" : Number(e.target.value);
-            onChange(n as ParamValue);
-          }}
+          onChange={e => onChange(e.target.value === "" ? "" : Number(e.target.value))}
         />
       );
   }
-}
-
-function humanize(id: string): string {
-  return id.replace(/[-_]+/g, " ").trim();
 }
