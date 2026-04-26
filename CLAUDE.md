@@ -56,6 +56,21 @@ The flow to extend (e.g. new field on `Tool`, new run option) typically touches:
 - The macOS tray uses `icon_as_template(true)`; tray icons must be monochrome PNGs.
 - `ActivationPolicy::Accessory` (true menu-bar mode) is currently disabled in `lib.rs` — the window shows like a regular app during early dev. Re-enable once tray UX is verified.
 
+## Styling — Tailwind CSS v4 (CSS-first)
+
+Pier uses Tailwind v4 with the Vite plugin. There is no `tailwind.config.js` and no `postcss.config.js` — config lives entirely in CSS.
+
+- Single entry: `src/styles/tailwind.css`. It does `@import "tailwindcss";` then declares design tokens inside an `@theme { ... }` block. All colors/radii/shadows/fonts/animations are defined there and surface as utilities (e.g. `--color-bg` → `bg-bg`, `--radius-2` → `rounded-2`, `--shadow-pop` → `shadow-pop`, `--animate-tile-in` → `animate-tile-in`).
+- Use utility classes inline in JSX. Atoms with variants (`Button`, `Badge`, `TextField`, `Textarea`) keep a `BASE` string + `VARIANTS` map at the top of the file — extend those rather than scattering classes.
+- Keep tokens in `@theme`. Don't hardcode hex values in components.
+
+**v4 syntax — these are the things v3 muscle memory gets wrong:**
+- No `tailwind.config.js`. No `@tailwind base/components/utilities` directives. Use `@import "tailwindcss"` and `@theme { ... }`.
+- Opacity is a slash modifier: `bg-accent/50`, NOT `bg-opacity-50` or `bg-accent bg-opacity-50`.
+- Arbitrary CSS variables in utilities use `(--var)` syntax: `ease-(--ease-smooth)`, NOT `ease-[var(--ease-smooth)]` (both work, the parens form is v4-idiomatic).
+- Container queries are built-in (no plugin).
+- Custom keyframes go inside `@theme` next to their `--animate-*` token.
+
 ## Project docs (Obsidian)
 
 Design docs and planning notes live in the user's Obsidian vault at `~/Obsidian/projects/pier/` (symlink to the iCloud vault). Read these for product context, decisions, and scope — keep them in sync when scope or architecture shifts:

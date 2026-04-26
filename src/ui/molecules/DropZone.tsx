@@ -57,6 +57,7 @@ export function DropZone({ onDrop, accepts, directory, label }: Props) {
   return (
     <div
       ref={zoneRef}
+      data-testid="dropzone"
       className={`${BASE} ${active ? ACTIVE : IDLE}`}
       onClick={onClick}
       role="button"
