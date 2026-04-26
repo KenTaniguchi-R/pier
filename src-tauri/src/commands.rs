@@ -1,5 +1,5 @@
 use crate::application::load_config::load_config_from_path;
-use crate::domain::ToolsConfig;
+use crate::domain::{RunRequest, Tool, ToolsConfig};
 use std::path::PathBuf;
 
 #[tauri::command]
@@ -11,4 +11,22 @@ pub fn load_tools_config(path: String) -> Result<ToolsConfig, String> {
 pub fn config_path() -> String {
     let home = dirs::home_dir().expect("home dir");
     home.join(".pier").join("tools.json").to_string_lossy().into()
+}
+
+#[tauri::command]
+pub async fn run_tool_cmd(
+    app: tauri::AppHandle,
+    tool: Tool,
+    request: RunRequest,
+) -> Result<String, String> {
+    crate::application::run_tool::run_tool(app, tool, request)
+        .await
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn kill_run_cmd(app: tauri::AppHandle, run_id: String) -> Result<(), String> {
+    crate::application::run_tool::kill_run(app, run_id)
+        .await
+        .map_err(|e| e.to_string())
 }
