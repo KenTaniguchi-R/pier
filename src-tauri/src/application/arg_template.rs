@@ -7,21 +7,20 @@ pub fn build_args(tool: &Tool, values: &HashMap<String, Value>) -> Vec<String> {
     let by_id: HashMap<&str, &Parameter> =
         tool.parameters.iter().map(|p| (p.id(), p)).collect();
 
-    // Pass 1: positional args.
+    // Pass 1: positional args with {id} substitution.
     for raw in &tool.args {
-        if let Some(name) = match_placeholder(raw) {
-            let v = values.get(name);
-            let empty = is_empty(v);
-            if empty {
-                if by_id.get(name).map(|p| p.optional()).unwrap_or(false) {
-                    continue;
-                }
-                out.push(raw.replace(&format!("{{{}}}", name), ""));
-            } else {
-                out.push(raw.replace(&format!("{{{}}}", name), &stringify(v)));
-            }
-        } else {
+        let Some(name) = match_placeholder(raw) else {
             out.push(raw.clone());
+            continue;
+        };
+        let v = values.get(name);
+        if is_empty(v) {
+            if by_id.get(name).map(|p| p.optional()).unwrap_or(false) {
+                continue;
+            }
+            out.push(String::new());
+        } else {
+            out.push(stringify(v));
         }
     }
 

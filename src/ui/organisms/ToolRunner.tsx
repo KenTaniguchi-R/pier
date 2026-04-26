@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { Tool, ParamValue } from "../../domain/tool";
+import type { Tool, Parameter, ParamValue } from "../../domain/tool";
 import { Button } from "../atoms/Button";
 import { ParamField } from "../molecules/ParamField";
 import { ConfirmDialog } from "../molecules/ConfirmDialog";
@@ -9,48 +9,43 @@ import { buildArgs } from "../../application/argTemplate";
 
 interface Props { tool: Tool }
 
+function defaultValue(p: Parameter): ParamValue {
+  if (p.default !== undefined) return p.default;
+  if (p.type === "boolean") return false;
+  if (p.type === "select") return p.options[0] ?? "";
+  return "";
+}
+
 function initialValues(tool: Tool): Record<string, ParamValue> {
-  const out: Record<string, ParamValue> = {};
-  for (const p of tool.parameters ?? []) {
-    if (p.default !== undefined) out[p.id] = p.default;
-    else if (p.type === "boolean") out[p.id] = false;
-    else if (p.type === "select") out[p.id] = p.options[0] ?? "";
-    else out[p.id] = "";
-  }
-  return out;
+  return Object.fromEntries((tool.parameters ?? []).map(p => [p.id, defaultValue(p)]));
 }
 
 function isFilled(v: ParamValue | undefined): boolean {
-  if (v === undefined || v === null) return false;
   if (typeof v === "string") return v !== "";
-  return true;
+  return v !== undefined && v !== null;
 }
 
 export function ToolRunner({ tool }: Props) {
   const { state, dispatch } = useApp();
   const runner = useRunner();
   const [values, setValues] = useState<Record<string, ParamValue>>(() => initialValues(tool));
-  const [latestRunId, setLatestRunId] = useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
-  const status = latestRunId ? state.runs[latestRunId]?.status ?? null : null;
+  const runId = state.selectedRunIdByTool[tool.id];
+  const status = runId ? state.runs[runId]?.status ?? null : null;
   const params = tool.parameters ?? [];
-  const allRequiredFilled = params.every(p => p.optional === true || isFilled(values[p.id]));
-  const canRun = allRequiredFilled && status !== "running";
+  const canRun =
+    status !== "running" &&
+    params.every(p => p.optional === true || isFilled(values[p.id]));
 
   const resolvedArgs = buildArgs(tool, values);
 
   const startRun = async () => {
     const outcome = await runner.run({ toolId: tool.id, values }, tool);
-    setLatestRunId(outcome.runId);
     dispatch({ type: "RUN_STARTED", runId: outcome.runId, toolId: tool.id, startedAt: outcome.startedAt });
   };
 
-  const onRunClick = () => {
-    if (tool.confirm === false) startRun();
-    else setConfirmOpen(true);
-  };
-
+  const onRunClick = () => (tool.confirm === false ? startRun() : setConfirmOpen(true));
   const setValue = (id: string, v: ParamValue) => setValues(prev => ({ ...prev, [id]: v }));
 
   return (

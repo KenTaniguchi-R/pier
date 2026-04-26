@@ -13,7 +13,7 @@ pub enum Parameter {
 }
 
 impl Parameter {
-    fn base(&self) -> &ParameterBase {
+    pub fn base(&self) -> &ParameterBase {
         match self {
             Parameter::File(p)    => &p.base,
             Parameter::Folder(p)  => &p.base,
@@ -24,7 +24,6 @@ impl Parameter {
             Parameter::Number(p)  => &p.base,
         }
     }
-
     pub fn id(&self) -> &str { &self.base().id }
     pub fn flag(&self) -> Option<&str> { self.base().flag.as_deref() }
     pub fn optional(&self) -> bool { self.base().optional.unwrap_or(false) }
@@ -92,11 +91,9 @@ pub struct Tool {
     pub command: String,
     #[serde(default, skip_serializing_if = "Vec::is_empty")] pub args: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")] pub parameters: Vec<Parameter>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")] pub accepts: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")] pub description: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")] pub icon: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")] pub timeout: Option<u64>,
-    #[serde(default, skip_serializing_if = "Option::is_none")] pub output_path: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")] pub confirm: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")] pub shell: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")] pub cwd: Option<String>,
