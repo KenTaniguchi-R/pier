@@ -2613,6 +2613,7 @@ dependencies = [
  "tauri",
  "tauri-build",
  "tauri-plugin-opener",
+ "tempfile",
 ]
 
 [[package]]
