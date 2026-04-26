@@ -55,3 +55,16 @@ The flow to extend (e.g. new field on `Tool`, new run option) typically touches:
 - Don't import `@tauri-apps/api` outside `src/infrastructure/`. UI/state code goes through `application/ports.ts`.
 - The macOS tray uses `icon_as_template(true)`; tray icons must be monochrome PNGs.
 - `ActivationPolicy::Accessory` (true menu-bar mode) is currently disabled in `lib.rs` — the window shows like a regular app during early dev. Re-enable once tray UX is verified.
+
+## Project docs (Obsidian)
+
+Design docs and planning notes live in the user's Obsidian vault at `~/Obsidian/projects/pier/` (symlink to the iCloud vault). Read these for product context, decisions, and scope — keep them in sync when scope or architecture shifts:
+
+- `README.md` — overview, problem/solution, audience strategy
+- `v0.1-scope.md` — current scope
+- `tools-schema.md` — `tools.json` schema reference
+- `architecture-decisions.md` — ADRs
+- `design-system.md` — UI/design notes
+- `implementation-plan.md` — build plan
+
+The vault has its own `CLAUDE.md` with required conventions (frontmatter, wikilinks, MOC updates) — follow them when editing vault notes. Prefer the `obsidian` skill for vault operations.
