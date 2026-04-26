@@ -5,7 +5,7 @@ describe("loadConfig", () => {
   it("returns parsed ToolsConfig when loader returns valid raw", async () => {
     const loader = {
       load: vi.fn().mockResolvedValue({
-        raw: { schemaVersion: "1.0", tools: [{ id: "a", name: "A", command: "/a", inputType: "none" }] },
+        raw: { schemaVersion: "1.0", tools: [{ id: "a", name: "A", command: "/a" }] },
         pathHint: "/x",
       }),
       watch: vi.fn(),

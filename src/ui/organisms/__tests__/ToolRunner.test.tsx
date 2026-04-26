@@ -27,30 +27,53 @@ function wrap(tool: Tool, runner: CommandRunner) {
 }
 
 describe("ToolRunner", () => {
-  it("renders DropZone for file input type", () => {
-    const tool: Tool = { id: "t", name: "T", command: "/x", inputType: "file" };
+  it("renders DropZone for a file parameter", () => {
+    const tool: Tool = {
+      id: "t", name: "T", command: "/x",
+      parameters: [{ id: "input", type: "file" }],
+    };
     wrap(tool, mockRunner());
     expect(screen.getByText(/drop a file/i)).toBeInTheDocument();
   });
 
-  it("disables Run when no input is provided", () => {
-    const tool: Tool = { id: "t", name: "T", command: "/x", inputType: "url" };
+  it("disables Run when a required parameter has no value", () => {
+    const tool: Tool = {
+      id: "t", name: "T", command: "/x",
+      parameters: [{ id: "url", type: "url" }],
+    };
     wrap(tool, mockRunner());
     expect(screen.getByRole("button", { name: /run/i })).toBeDisabled();
   });
 
-  it("opens confirm dialog when Run clicked (default confirm)", async () => {
-    const tool: Tool = { id: "t", name: "T", command: "/x", inputType: "none" };
+  it("opens confirm dialog when Run clicked (no parameters, default confirm)", async () => {
+    const tool: Tool = { id: "t", name: "T", command: "/x" };
     wrap(tool, mockRunner());
     await userEvent.click(screen.getByRole("button", { name: /run/i }));
     expect(screen.getByText(/run this tool/i)).toBeInTheDocument();
   });
 
   it("skips confirm and runs when tool.confirm === false", async () => {
-    const tool: Tool = { id: "t", name: "T", command: "/x", inputType: "none", confirm: false };
+    const tool: Tool = { id: "t", name: "T", command: "/x", confirm: false };
     const runner = mockRunner();
     wrap(tool, runner);
     await userEvent.click(screen.getByRole("button", { name: /run/i }));
     expect(runner.run).toHaveBeenCalledOnce();
+  });
+
+  it("passes typed values to the runner", async () => {
+    const tool: Tool = {
+      id: "t", name: "T", command: "/x", confirm: false,
+      parameters: [
+        { id: "fmt", type: "select", options: ["mp4", "webm"], default: "mp4" },
+      ],
+    };
+    const runner = mockRunner();
+    wrap(tool, runner);
+    await userEvent.click(screen.getByRole("button", { name: /run/i }));
+    await vi.waitFor(() => expect(runner.run).toHaveBeenCalled());
+    expect(runner.run).toHaveBeenCalledWith(
+      expect.objectContaining({ toolId: "t", values: { fmt: "mp4" } }),
+      tool,
+    );
   });
 });
