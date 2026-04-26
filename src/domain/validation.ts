@@ -10,12 +10,52 @@ export type ParseResult<T> =
   | { ok: true; value: T }
   | { ok: false; errors: string[] };
 
+function parseStringMap(
+  v: unknown,
+  where: string,
+  errors: string[],
+): Record<string, string> | undefined {
+  if (v === undefined) return undefined;
+  if (!isRecord(v)) { errors.push(`${where} must be an object`); return undefined; }
+  const out: Record<string, string> = {};
+  for (const [k, val] of Object.entries(v)) {
+    if (typeof val !== "string") {
+      errors.push(`${where}.${k} must be a string`);
+      continue;
+    }
+    out[k] = val;
+  }
+  return out;
+}
+
 export function parseToolsConfig(input: unknown): ParseResult<ToolsConfig> {
   const errors: string[] = [];
   if (!isRecord(input)) return { ok: false, errors: ["root not an object"] };
   if (input.schemaVersion !== "1.0") errors.push("schemaVersion must be '1.0'");
   if (!Array.isArray(input.tools)) errors.push("tools must be an array");
   if (errors.length) return { ok: false, errors };
+
+  let defaults: import("./tool").Defaults | undefined;
+  if ((input as Record<string, unknown>).defaults !== undefined) {
+    const d = (input as Record<string, unknown>).defaults;
+    if (!isRecord(d)) {
+      errors.push("defaults must be an object");
+    } else {
+      const localErrs: string[] = [];
+      if (d.cwd !== undefined && typeof d.cwd !== "string") localErrs.push("defaults.cwd must be a string");
+      if (d.envFile !== undefined && typeof d.envFile !== "string") localErrs.push("defaults.envFile must be a string");
+      const env = parseStringMap(d.env, "defaults.env", localErrs);
+      if (localErrs.length === 0) {
+        defaults = {
+          cwd: d.cwd as string | undefined,
+          envFile: d.envFile as string | undefined,
+          env,
+        };
+      } else {
+        errors.push(...localErrs);
+      }
+    }
+  }
 
   const tools: Tool[] = [];
   const seen = new Set<string>();
@@ -27,7 +67,7 @@ export function parseToolsConfig(input: unknown): ParseResult<ToolsConfig> {
     tools.push(r.value);
   });
   if (errors.length) return { ok: false, errors };
-  return { ok: true, value: { schemaVersion: "1.0", tools } };
+  return { ok: true, value: { schemaVersion: "1.0", defaults, tools } };
 }
 
 function parseTool(t: unknown, idx: number): ParseResult<Tool> {
@@ -74,8 +114,13 @@ function parseTool(t: unknown, idx: number): ParseResult<Tool> {
     });
   }
 
+  if (t.envFile !== undefined && typeof t.envFile !== "string") {
+    errors.push(`tools[${idx}].envFile must be a string`);
+  }
+  const env = parseStringMap(t.env, `tools[${idx}].env`, errors);
+
   if (errors.length) return { ok: false, errors };
-  return { ok: true, value: { ...(t as unknown as Tool), parameters } };
+  return { ok: true, value: { ...(t as unknown as Tool), parameters, env } };
 }
 
 function parseParam(p: unknown, ti: number, pi: number): ParseResult<Parameter> {

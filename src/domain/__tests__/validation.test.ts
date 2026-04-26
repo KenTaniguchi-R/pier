@@ -98,6 +98,57 @@ describe("parseToolsConfig — parameters", () => {
     });
   });
 
+  it("accepts envFile and env on a tool", () => {
+    const r = parseToolsConfig({
+      schemaVersion: "1.0",
+      tools: [{
+        id: "x", name: "X", command: "/x",
+        envFile: ".env",
+        env: { DEBUG: "1", KEY: "${keychain:k}" },
+      }],
+    });
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.value.tools[0].envFile).toBe(".env");
+      expect(r.value.tools[0].env?.DEBUG).toBe("1");
+    }
+  });
+
+  it("rejects env values that aren't strings", () => {
+    const r = parseToolsConfig({
+      schemaVersion: "1.0",
+      tools: [{ id: "x", name: "X", command: "/x", env: { K: 123 } as never }],
+    });
+    expect(r.ok).toBe(false);
+  });
+
+  it("rejects envFile that isn't a string", () => {
+    const r = parseToolsConfig({
+      schemaVersion: "1.0",
+      tools: [{ id: "x", name: "X", command: "/x", envFile: 5 as never }],
+    });
+    expect(r.ok).toBe(false);
+  });
+
+  it("accepts top-level defaults block", () => {
+    const r = parseToolsConfig({
+      schemaVersion: "1.0",
+      defaults: { envFile: ".env", env: { DEBUG: "1" } },
+      tools: [{ id: "x", name: "X", command: "/x" }],
+    });
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.value.defaults?.envFile).toBe(".env");
+  });
+
+  it("rejects defaults.env with non-string values", () => {
+    const r = parseToolsConfig({
+      schemaVersion: "1.0",
+      defaults: { env: { K: true } as never },
+      tools: [],
+    });
+    expect(r.ok).toBe(false);
+  });
+
   it("accepts a valid file + select + boolean tool", () => {
     ok({
       schemaVersion: "1.0",
