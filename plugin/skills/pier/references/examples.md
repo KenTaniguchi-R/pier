@@ -89,6 +89,61 @@ Notes:
 }
 ```
 
+## 6. Project with a `.env` file
+
+```json
+{
+  "id": "dubjp",
+  "name": "Dub video to Japanese",
+  "command": "/Users/you/coding/dubjp/.venv/bin/dubjp",
+  "args": ["{input}"],
+  "parameters": [{ "id": "input", "type": "file" }],
+  "cwd": "/Users/you/coding/dubjp",
+  "envFile": ".env",
+  "icon": "🎙️",
+  "category": "media",
+  "confirm": true
+}
+```
+
+`dubjp` reads `GEMINI_API_KEY` etc. from its project `.env`. Pier loads the file once per spawn and merges it into the child env.
+
+## 7. Inline secret from macOS Keychain
+
+```json
+{
+  "id": "ask-openai",
+  "name": "Ask OpenAI",
+  "command": "/Users/you/.local/bin/oai",
+  "args": ["{prompt}"],
+  "parameters": [{ "id": "prompt", "type": "text", "multiline": true }],
+  "env": { "OPENAI_API_KEY": "${keychain:openai}" }
+}
+```
+
+One-time setup:
+
+```bash
+security add-generic-password -s pier -a openai -w
+```
+
+The key never appears in `tools.json` or in the audit log.
+
+## 8. Wrap with another env tool (direnv / 1Password / mise / sops)
+
+When you need an existing secret manager, don't invent a Pier feature — wrap:
+
+```json
+{
+  "command": "/opt/homebrew/bin/op",
+  "args": ["run", "--env-file=.env", "--", "/path/to/tool", "{input}"],
+  "cwd": "/path/to/project",
+  "parameters": [{ "id": "input", "type": "file" }]
+}
+```
+
+Same pattern works for `direnv exec . --`, `mise exec --`, `dotenvx run --`, etc.
+
 ## Picking absolute paths quickly
 
 ```bash
