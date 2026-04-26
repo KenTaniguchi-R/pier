@@ -15,14 +15,14 @@ export interface AppState {
   tools: Tool[];
   configErrors: string[];
   runs: Record<string, RunState>;
-  selectedRunId: string | null;
+  selectedRunIdByTool: Record<string, string>;
 }
 
 export const initialState: AppState = {
   tools: [],
   configErrors: [],
   runs: {},
-  selectedRunId: null,
+  selectedRunIdByTool: {},
 };
 
 export function reducer(s: AppState, a: Action): AppState {
@@ -34,7 +34,7 @@ export function reducer(s: AppState, a: Action): AppState {
     case "RUN_STARTED":
       return {
         ...s,
-        selectedRunId: a.runId,
+        selectedRunIdByTool: { ...s.selectedRunIdByTool, [a.toolId]: a.runId },
         runs: {
           ...s.runs,
           [a.runId]: {
@@ -72,7 +72,5 @@ export function reducer(s: AppState, a: Action): AppState {
         },
       };
     }
-    case "SELECT_RUN":
-      return { ...s, selectedRunId: a.runId };
   }
 }
