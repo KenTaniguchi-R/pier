@@ -10,6 +10,8 @@
     "core:window:allow-hide",
     "core:window:allow-set-focus",
     "core:event:default",
-    "opener:default"
+    "opener:default",
+    "dialog:default",
+    "core:webview:default"
   ]
 }

@@ -16,3 +16,16 @@ export interface CommandRunner {
 export interface AuditLogger {
   append(entry: object): Promise<void>;
 }
+
+export interface DragPosition { x: number; y: number }
+export type DragDropEvent =
+  | { kind: "over"; position: DragPosition }
+  | { kind: "leave" }
+  | { kind: "drop"; paths: string[]; position: DragPosition };
+
+export interface FilePicker {
+  /** Subscribe to native drag-drop events from the host webview. */
+  onDragDrop(cb: (e: DragDropEvent) => void): () => void;
+  /** Open a native file picker. Returns absolute path or null if cancelled. */
+  pick(opts: { directory?: boolean; accepts?: string[] }): Promise<string | null>;
+}

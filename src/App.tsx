@@ -1,13 +1,17 @@
 import { AppProvider } from "./state/AppContext";
 import { RunnerProvider } from "./state/RunnerContext";
+import { FilePickerProvider } from "./state/FilePickerContext";
 import { HomePage } from "./ui/pages/HomePage";
 import { tauriCommandRunner } from "./infrastructure/tauriCommandRunner";
+import { tauriFilePicker } from "./infrastructure/tauriFilePicker";
 
 export default function App() {
   return (
     <AppProvider>
       <RunnerProvider runner={tauriCommandRunner}>
-        <HomePage />
+        <FilePickerProvider picker={tauriFilePicker}>
+          <HomePage />
+        </FilePickerProvider>
       </RunnerProvider>
     </AppProvider>
   );

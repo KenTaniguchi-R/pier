@@ -63,7 +63,7 @@ export function ToolTile({ tool, hideHeader }: Props) {
           />
         )}
         {tool.inputType === "folder" && (
-          <DropZone onDrop={p => setInput(p)} label={input ? input : "Drop a folder here"} />
+          <DropZone directory onDrop={p => setInput(p)} label={input ?? undefined} />
         )}
         {tool.inputType === "text" && (
           <Textarea value={input ?? ""} onChange={e => setInput(e.target.value)} placeholder="Paste text…" />
