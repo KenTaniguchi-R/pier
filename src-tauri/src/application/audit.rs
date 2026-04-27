@@ -24,10 +24,6 @@ pub enum Entry {
 }
 
 impl Entry {
-    pub fn start(run_id: &str, tool_id: &str, bin: &Path, args: &[String], ts: u64) -> Self {
-        Self::start_with_env(run_id, tool_id, bin, args, &std::collections::HashMap::new(), ts)
-    }
-
     pub fn start_with_env(
         run_id: &str,
         tool_id: &str,
@@ -56,7 +52,12 @@ impl Entry {
     }
 }
 
-/// Replace argv entries that exactly match a `secret: true` parameter's value with `[REDACTED]`.
+/// Redacts argv elements whose stringified value matches a `secret: true` parameter.
+///
+/// Relies on the invariant that `arg_template::build_args` emits each parameter
+/// value as its OWN argv element (never inlined into a composite like
+/// `--header=Bearer <secret>`). If a future feature changes that contract,
+/// this redaction will silently fail — update both together.
 pub fn redact_args(
     args: &[String],
     parameters: &[crate::domain::tool::Parameter],
@@ -117,7 +118,14 @@ mod tests {
         let path = d.path().join("audit.log");
         append_to(
             &path,
-            &Entry::start("rid", "tid", std::path::Path::new("/bin/echo"), &["a".into()], 1),
+            &Entry::start_with_env(
+                "rid",
+                "tid",
+                std::path::Path::new("/bin/echo"),
+                &["a".into()],
+                &std::collections::HashMap::new(),
+                1,
+            ),
         )
         .unwrap();
         append_to(&path, &Entry::end("rid", "tid", Some(0), 2)).unwrap();

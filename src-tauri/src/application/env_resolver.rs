@@ -2,17 +2,24 @@ use crate::domain::{Defaults, Tool};
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
-/// Env keys that spawned tools inherit from Pier's process by default. Anything
-/// else (API keys, AWS creds, etc.) must be opted into via `${env:X}` in the
-/// tool's `env` block. Plus any `LC_*` locale keys, copied dynamically.
-pub const BASELINE_KEYS: &[&str] = &["PATH", "HOME", "USER", "LANG", "TERM", "TMPDIR", "SHELL"];
+/// Static env keys that spawned tools inherit from Pier's process by default.
+/// Anything else (API keys, AWS creds, etc.) must be opted into via `${env:X}`
+/// in the tool's `env` block.
+///
+/// This is the *static* portion of the baseline only. `LC_*` locale keys are
+/// added dynamically inside `baseline_env` (because their names vary —
+/// `LC_ALL`, `LC_CTYPE`, `LC_NUMERIC`, etc.). Always go through `baseline_env`
+/// to get the full baseline; never iterate this constant directly outside that
+/// function.
+// LC_* keys are added dynamically below — don't bypass baseline_env()
+pub const BASELINE_STATIC_KEYS: &[&str] = &["PATH", "HOME", "USER", "LANG", "TERM", "TMPDIR", "SHELL"];
 
-/// Filter `full` down to BASELINE_KEYS plus any `LC_*` locale keys. Used to
-/// build the seed env passed to spawned tools, while interpolation still sees
-/// the full process env.
+/// Filter `full` down to BASELINE_STATIC_KEYS plus any `LC_*` locale keys. Used
+/// to build the seed env passed to spawned tools, while interpolation still
+/// sees the full process env.
 pub fn baseline_env(full: &HashMap<String, String>) -> HashMap<String, String> {
     let mut out: HashMap<String, String> = HashMap::new();
-    for k in BASELINE_KEYS {
+    for k in BASELINE_STATIC_KEYS {
         if let Some(v) = full.get(*k) {
             out.insert((*k).to_string(), v.clone());
         }
