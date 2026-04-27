@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "pier",
+  "productName": "Pier",
   "version": "0.1.2",
   "identifier": "dev.taniguchi.pier",
   "build": {
@@ -42,7 +42,7 @@
       "icons/icon.ico"
     ],
     "macOS": {
-      "minimumSystemVersion": "12.0"
+      "minimumSystemVersion": "13.0"
     }
   },
   "plugins": {
