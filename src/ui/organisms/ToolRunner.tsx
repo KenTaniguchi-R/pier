@@ -7,6 +7,7 @@ import { RunControl } from "../molecules/RunControl";
 import { useApp } from "../../state/AppContext";
 import { useRunner } from "../../state/RunnerContext";
 import { buildArgs } from "../../application/argTemplate";
+import { findBlocker, blockerLabel } from "../../application/runBlocker";
 
 interface Props { tool: Tool }
 
@@ -21,11 +22,6 @@ function initialValues(tool: Tool): Record<string, ParamValue> {
   return Object.fromEntries((tool.parameters ?? []).map(p => [p.id, defaultValue(p)]));
 }
 
-function isFilled(v: ParamValue | undefined): boolean {
-  if (typeof v === "string") return v !== "";
-  return v !== undefined && v !== null;
-}
-
 export function ToolRunner({ tool }: Props) {
   const { state, dispatch } = useApp();
   const runner = useRunner();
@@ -37,7 +33,9 @@ export function ToolRunner({ tool }: Props) {
   const params = tool.parameters ?? [];
   const required = params.filter(p => !p.advanced);
   const advanced = params.filter(p => p.advanced);
-  const canRun = params.every(p => p.optional === true || isFilled(values[p.id]));
+
+  const blocker = findBlocker(params, values);
+  const canRun = !blocker;
 
   const resolvedArgs = buildArgs(tool, values);
 
@@ -69,7 +67,13 @@ export function ToolRunner({ tool }: Props) {
       {params.length > 0 && <span className="block h-px bg-line mt-1" />}
 
       <footer className="flex justify-end">
-        <RunControl running={isRunning} canRun={canRun} onRun={onRunClick} onStop={stopRun} />
+        <RunControl
+          running={isRunning}
+          canRun={canRun}
+          onRun={onRunClick}
+          onStop={stopRun}
+          blockedReason={blocker ? blockerLabel(blocker) : undefined}
+        />
       </footer>
 
       <ConfirmDialog

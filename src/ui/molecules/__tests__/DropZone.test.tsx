@@ -18,18 +18,23 @@ function makePicker() {
 }
 
 describe("DropZone", () => {
-  it("calls onDrop when a native drop fires inside the zone", () => {
-    const onDrop = vi.fn();
-    const { picker, fire } = makePicker();
+  function mountZone(props: { onDrop: (p: string) => void; accepts?: string[] }, picker: FilePicker): HTMLElement {
     render(
       <FilePickerProvider picker={picker}>
-        <DropZone onDrop={onDrop} accepts={["mp4"]} label="Drop a video here" />
+        <DropZone {...props} />
       </FilePickerProvider>,
     );
-    const zone = screen.getByText("Drop a video here").closest('[data-testid="dropzone"]')! as HTMLElement;
+    const zone = screen.getByTestId("dropzone");
     vi.spyOn(zone, "getBoundingClientRect").mockReturnValue({
       left: 0, top: 0, right: 100, bottom: 100, width: 100, height: 100, x: 0, y: 0, toJSON: () => ({}),
     } as DOMRect);
+    return zone;
+  }
+
+  it("calls onDrop when a native drop fires inside the zone", () => {
+    const onDrop = vi.fn();
+    const { picker, fire } = makePicker();
+    mountZone({ onDrop, accepts: ["mp4"] }, picker);
     fire({ kind: "drop", paths: ["/tmp/a.mp4"], position: { x: 50, y: 50 } });
     expect(onDrop).toHaveBeenCalledWith("/tmp/a.mp4");
   });
@@ -37,15 +42,7 @@ describe("DropZone", () => {
   it("ignores drops outside the zone", () => {
     const onDrop = vi.fn();
     const { picker, fire } = makePicker();
-    render(
-      <FilePickerProvider picker={picker}>
-        <DropZone onDrop={onDrop} />
-      </FilePickerProvider>,
-    );
-    const zone = screen.getByText(/drop a file/i).closest('[data-testid="dropzone"]')! as HTMLElement;
-    vi.spyOn(zone, "getBoundingClientRect").mockReturnValue({
-      left: 0, top: 0, right: 100, bottom: 100, width: 100, height: 100, x: 0, y: 0, toJSON: () => ({}),
-    } as DOMRect);
+    mountZone({ onDrop }, picker);
     fire({ kind: "drop", paths: ["/tmp/x"], position: { x: 500, y: 500 } });
     expect(onDrop).not.toHaveBeenCalled();
   });
@@ -54,12 +51,7 @@ describe("DropZone", () => {
     const onDrop = vi.fn();
     const { picker, pick } = makePicker();
     pick.mockResolvedValueOnce("/tmp/picked.mp4");
-    render(
-      <FilePickerProvider picker={picker}>
-        <DropZone onDrop={onDrop} accepts={["mp4"]} />
-      </FilePickerProvider>,
-    );
-    const zone = screen.getByText(/drop a file/i).closest('[data-testid="dropzone"]')! as HTMLElement;
+    const zone = mountZone({ onDrop, accepts: ["mp4"] }, picker);
     fireEvent.click(zone);
     await vi.waitFor(() => expect(onDrop).toHaveBeenCalledWith("/tmp/picked.mp4"));
     expect(pick).toHaveBeenCalledWith({ directory: undefined, accepts: ["mp4"] });
