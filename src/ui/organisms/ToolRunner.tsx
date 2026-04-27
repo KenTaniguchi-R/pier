@@ -1,9 +1,9 @@
 import { useState } from "react";
 import type { Tool, Parameter, ParamValue } from "../../domain/tool";
-import { Button } from "../atoms/Button";
 import { ParamField } from "../molecules/ParamField";
 import { AdvancedDisclosure } from "../molecules/AdvancedDisclosure";
 import { ConfirmDialog } from "../molecules/ConfirmDialog";
+import { RunControl } from "../molecules/RunControl";
 import { useApp } from "../../state/AppContext";
 import { useRunner } from "../../state/RunnerContext";
 import { buildArgs } from "../../application/argTemplate";
@@ -33,13 +33,11 @@ export function ToolRunner({ tool }: Props) {
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   const runId = state.selectedRunIdByTool[tool.id];
-  const status = runId ? state.runs[runId]?.status ?? null : null;
+  const isRunning = runId ? state.runs[runId]?.status === "running" : false;
   const params = tool.parameters ?? [];
   const required = params.filter(p => !p.advanced);
   const advanced = params.filter(p => p.advanced);
-  const canRun =
-    status !== "running" &&
-    params.every(p => p.optional === true || isFilled(values[p.id]));
+  const canRun = params.every(p => p.optional === true || isFilled(values[p.id]));
 
   const resolvedArgs = buildArgs(tool, values);
 
@@ -48,6 +46,7 @@ export function ToolRunner({ tool }: Props) {
     dispatch({ type: "RUN_STARTED", runId: outcome.runId, toolId: tool.id, startedAt: outcome.startedAt });
   };
 
+  const stopRun = () => { if (runId) runner.kill(runId); };
   const onRunClick = () => (tool.confirm === false ? startRun() : setConfirmOpen(true));
   const setValue = (id: string, v: ParamValue) => setValues(prev => ({ ...prev, [id]: v }));
 
@@ -70,7 +69,7 @@ export function ToolRunner({ tool }: Props) {
       {params.length > 0 && <span className="block h-px bg-line mt-1" />}
 
       <footer className="flex justify-end">
-        <Button variant="primary" disabled={!canRun} onClick={onRunClick}>Run</Button>
+        <RunControl running={isRunning} canRun={canRun} onRun={onRunClick} onStop={stopRun} />
       </footer>
 
       <ConfirmDialog
