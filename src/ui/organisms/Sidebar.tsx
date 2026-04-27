@@ -1,4 +1,9 @@
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Home, HelpCircle } from "lucide-react";
 import type { Tool } from "../../domain/tool";
+import type { RunningEntry } from "../../state/reducer";
+import { SidebarItem } from "../molecules/SidebarItem";
+import { SidebarCategoryGroup } from "../molecules/SidebarCategoryGroup";
 
 export type Selection =
   | { kind: "all" }
@@ -12,28 +17,131 @@ interface Props {
   onQueryChange: (q: string) => void;
   selection: Selection;
   onSelect: (s: Selection) => void;
+  running?: RunningEntry[];
+}
+
+function formatElapsed(ms: number): string {
+  const s = Math.max(0, Math.floor(ms / 1000));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  if (h > 0) return `${h}h ${m.toString().padStart(2, "0")}m`;
+  return `${m}:${sec.toString().padStart(2, "0")}`;
 }
 
 const titleCase = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
-const ITEM_BASE =
-  "relative flex items-center gap-2 w-full px-3 py-[9px] border border-transparent bg-transparent " +
-  "rounded-[10px] cursor-pointer font-body font-medium text-[13px] leading-[1.2] text-left " +
-  "transition-[background-color,color] duration-100 ease-(--ease-smooth) " +
-  "hover:bg-surface hover:text-ink";
+const STORAGE_KEY = "pier:sidebar:expanded";
 
-const ITEM_ACTIVE =
-  "bg-surface text-ink border-line " +
-  "before:content-[''] before:absolute before:-left-[3px] before:top-2 before:bottom-2 before:w-[3px] before:rounded-[2px] before:bg-accent";
+function loadPersisted(): Set<string> {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return new Set();
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? new Set(arr.filter((x): x is string => typeof x === "string")) : new Set();
+  } catch {
+    return new Set();
+  }
+}
 
-export function Sidebar({ tools, query, onQueryChange, selection, onSelect }: Props) {
-  const categories = Array.from(
-    new Set(tools.map(t => t.category).filter((c): c is string => !!c))
-  ).sort();
+function persist(s: Set<string>) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([...s]));
+  } catch {
+    // noop — sandboxed contexts
+  }
+}
+
+export function Sidebar({ tools, query, onQueryChange, selection, onSelect, running = [] }: Props) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (running.length === 0) return;
+    const id = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(id);
+  }, [running.length]);
+
+  const toolById = useMemo(() => {
+    const m = new Map<string, Tool>();
+    for (const t of tools) m.set(t.id, t);
+    return m;
+  }, [tools]);
+
+  const categories = useMemo(
+    () =>
+      Array.from(
+        new Set(tools.map(t => t.category).filter((c): c is string => !!c))
+      ).sort(),
+    [tools]
+  );
+
+  const [expanded, setExpanded] = useState<Set<string>>(loadPersisted);
+  const userCollapsedThisSession = useRef<Set<string>>(new Set());
+  const didColdLaunchExpand = useRef(false);
+
+  // Cold-launch: auto-expand the parent of the active tool, once.
+  useEffect(() => {
+    if (didColdLaunchExpand.current) return;
+    if (selection.kind !== "tool") return;
+    const tool = tools.find(t => t.id === selection.id);
+    if (!tool?.category) return;
+    didColdLaunchExpand.current = true;
+    setExpanded(prev => {
+      if (prev.has(tool.category!)) return prev;
+      const next = new Set(prev);
+      next.add(tool.category!);
+      persist(next);
+      return next;
+    });
+  }, [selection, tools]);
+
+  // Within-session: auto-expand parent of newly selected tool, unless user
+  // explicitly collapsed it this session.
+  useEffect(() => {
+    if (selection.kind !== "tool") return;
+    const tool = tools.find(t => t.id === selection.id);
+    if (!tool?.category) return;
+    if (userCollapsedThisSession.current.has(tool.category)) return;
+    setExpanded(prev => {
+      if (prev.has(tool.category!)) return prev;
+      const next = new Set(prev);
+      next.add(tool.category!);
+      persist(next);
+      return next;
+    });
+  }, [selection, tools]);
+
+  const toggleCategory = (cat: string) => {
+    setExpanded(prev => {
+      const next = new Set(prev);
+      if (next.has(cat)) {
+        next.delete(cat);
+        userCollapsedThisSession.current.add(cat);
+      } else {
+        next.add(cat);
+        userCollapsedThisSession.current.delete(cat);
+      }
+      persist(next);
+      return next;
+    });
+    onSelect({ kind: "category", name: cat });
+  };
 
   const isAll = selection.kind === "all";
   const isHelp = selection.kind === "help";
   const selectedCat = selection.kind === "category" ? selection.name : null;
+  const activeToolId = selection.kind === "tool" ? selection.id : null;
+
+  const toolsByCategory = useMemo(() => {
+    const m = new Map<string, Tool[]>();
+    for (const t of tools) {
+      if (!t.category) continue;
+      const list = m.get(t.category) ?? [];
+      list.push(t);
+      m.set(t.category, list);
+    }
+    for (const list of m.values()) list.sort((a, b) => a.name.localeCompare(b.name));
+    return m;
+  }, [tools]);
 
   return (
     <nav className="flex flex-col w-full h-full">
@@ -49,68 +157,82 @@ export function Sidebar({ tools, query, onQueryChange, selection, onSelect }: Pr
       </div>
 
       <ul className="flex-1 list-none px-2 m-0 overflow-y-auto flex flex-col gap-[2px]">
+        {running.length > 0 && (
+          <>
+            <li className="px-3 pt-2 pb-1 text-[10px] uppercase tracking-[0.08em] font-semibold text-ink-4">
+              Running
+              <span className="ml-1 text-ink-3">({running.length})</span>
+            </li>
+            {running.map(entry => {
+              const tool = toolById.get(entry.toolId);
+              if (!tool) return null;
+              const active = selection.kind === "tool" && selection.id === entry.toolId;
+              return (
+                <li key={entry.runId}>
+                  <button
+                    type="button"
+                    onClick={() => onSelect({ kind: "tool", id: entry.toolId })}
+                    className={
+                      "group relative flex items-center gap-2 w-full px-3 py-[7px] border border-transparent rounded-[10px] cursor-pointer text-left " +
+                      "font-body font-medium text-[13px] leading-[1.2] text-ink-2 " +
+                      "transition-[background-color,color] duration-100 ease-(--ease-smooth) " +
+                      "hover:bg-surface hover:text-ink " +
+                      (active ? "bg-surface text-ink border-line" : "")
+                    }
+                  >
+                    <span
+                      className="flex-none w-1.5 h-1.5 rounded-full bg-accent"
+                      aria-hidden
+                    />
+                    <span className="flex-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
+                      {tool.name}
+                    </span>
+                    <span className="flex-none font-mono tabular-nums text-[11px] text-ink-3">
+                      {formatElapsed(now - entry.startedAt)}
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+            <li className="h-px bg-line mx-2 my-2" aria-hidden />
+          </>
+        )}
+
         <li>
-          <button
-            type="button"
-            className={`${ITEM_BASE} text-ink-2 ${isAll ? ITEM_ACTIVE : ""}`}
+          <SidebarItem
+            icon={<Home size={14} strokeWidth={2} />}
+            label="All tools"
+            active={isAll}
             onClick={() => onSelect({ kind: "all" })}
-          >
-            <span
-              className={`flex-none w-[18px] text-center text-[14px] ${isAll ? "text-accent" : "text-ink-3"}`}
-              aria-hidden
-            >
-              ⌂
-            </span>
-            <span className="flex-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
-              All tools
-            </span>
-          </button>
+          />
         </li>
 
         {categories.length > 0 && (
           <li className="h-px bg-line mx-2 my-2" aria-hidden />
         )}
 
-        {categories.map(c => {
-          const active = selectedCat === c;
-          return (
-            <li key={c}>
-              <button
-                type="button"
-                className={`${ITEM_BASE} text-ink-2 ${active ? ITEM_ACTIVE : ""}`}
-                onClick={() => onSelect({ kind: "category", name: c })}
-              >
-                <span
-                  className={`flex-none w-[18px] text-center text-[14px] ${active ? "text-accent" : "text-ink-3"}`}
-                  aria-hidden
-                >
-                  ▸
-                </span>
-                <span className="flex-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
-                  {titleCase(c)}
-                </span>
-              </button>
-            </li>
-          );
-        })}
+        {categories.map(c => (
+          <SidebarCategoryGroup
+            key={c}
+            category={c}
+            label={titleCase(c)}
+            tools={toolsByCategory.get(c) ?? []}
+            expanded={expanded.has(c)}
+            categoryActive={selectedCat === c}
+            activeToolId={activeToolId}
+            onToggle={() => toggleCategory(c)}
+            onPickTool={id => onSelect({ kind: "tool", id })}
+          />
+        ))}
       </ul>
 
       <div className="flex-none px-2 pt-2 pb-1 border-t border-line">
-        <button
-          type="button"
-          className={`${ITEM_BASE} text-ink-2 ${isHelp ? ITEM_ACTIVE : ""}`}
+        <SidebarItem
+          icon={<HelpCircle size={14} strokeWidth={2} />}
+          label="Setup with Claude"
+          active={isHelp}
           onClick={() => onSelect({ kind: "help" })}
-        >
-          <span
-            className={`flex-none w-[18px] text-center text-[14px] ${isHelp ? "text-accent" : "text-ink-3"}`}
-            aria-hidden
-          >
-            ?
-          </span>
-          <span className="flex-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
-            Setup with Claude
-          </span>
-        </button>
+        />
       </div>
 
       <div className="flex-none px-4 py-2 border-t border-line">

@@ -8,6 +8,7 @@ import { ToolDetail } from "../organisms/ToolDetail";
 import { SkillGuide } from "../organisms/SkillGuide";
 import { loadConfig } from "../../application/loadConfig";
 import { tauriConfigLoader } from "../../infrastructure/tauriConfigLoader";
+import { runningRuns, runningToolIds } from "../../state/reducer";
 import type { Tool } from "../../domain/tool";
 
 const titleCase = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
@@ -56,6 +57,8 @@ export function HomePage() {
   }, [runner, dispatch]);
 
   const tools = state.tools;
+  const running = useMemo(() => runningRuns(state), [state]);
+  const runningIds = useMemo(() => runningToolIds(state), [state]);
 
   const filteredTools = useMemo(() => {
     const q = query.trim();
@@ -108,6 +111,7 @@ export function HomePage() {
         subtitle={browserSub}
         tools={filteredTools}
         onPick={(id) => setSelection({ kind: "tool", id })}
+        runningToolIds={runningIds}
         emptyHint={
           tools.length === 0
             ? "No tools yet. Edit ~/.pier/tools.json to add one."
@@ -126,6 +130,7 @@ export function HomePage() {
           onQueryChange={setQuery}
           selection={selection}
           onSelect={(s) => setSelection(s)}
+          running={running}
         />
       }
       main={main}

@@ -93,3 +93,30 @@ export function reducer(s: AppState, a: Action): AppState {
 export function runOutputText(r: RunState): string {
   return r.lines.map((l) => l.line).join("\n");
 }
+
+export interface RunningEntry {
+  runId: string;
+  toolId: string;
+  startedAt: number;
+}
+
+/** All currently-running runs, oldest first. */
+export function runningRuns(s: AppState): RunningEntry[] {
+  const out: RunningEntry[] = [];
+  for (const [runId, r] of Object.entries(s.runs)) {
+    if (r.status === "running") {
+      out.push({ runId, toolId: r.toolId, startedAt: r.startedAt });
+    }
+  }
+  out.sort((a, b) => a.startedAt - b.startedAt);
+  return out;
+}
+
+/** Set of toolIds with at least one running run. */
+export function runningToolIds(s: AppState): Set<string> {
+  const set = new Set<string>();
+  for (const r of Object.values(s.runs)) {
+    if (r.status === "running") set.add(r.toolId);
+  }
+  return set;
+}
