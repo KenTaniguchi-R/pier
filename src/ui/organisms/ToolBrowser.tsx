@@ -7,9 +7,10 @@ interface Props {
   tools: Tool[];
   onPick: (id: string) => void;
   emptyHint?: string;
+  runningToolIds?: ReadonlySet<string>;
 }
 
-export function ToolBrowser({ title, subtitle, tools, onPick, emptyHint }: Props) {
+export function ToolBrowser({ title, subtitle, tools, onPick, emptyHint, runningToolIds }: Props) {
   return (
     <div className="p-6 px-8 flex flex-col gap-4">
       <header className="flex items-baseline gap-2 pb-3 border-b border-line">
@@ -30,7 +31,12 @@ export function ToolBrowser({ title, subtitle, tools, onPick, emptyHint }: Props
       ) : (
         <div className="grid gap-3 grid-cols-[repeat(auto-fill,minmax(280px,1fr))]">
           {tools.map(t => (
-            <ToolCard key={t.id} tool={t} onClick={() => onPick(t.id)} />
+            <ToolCard
+              key={t.id}
+              tool={t}
+              onClick={() => onPick(t.id)}
+              running={runningToolIds?.has(t.id) ?? false}
+            />
           ))}
         </div>
       )}
