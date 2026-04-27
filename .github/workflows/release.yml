@@ -1,0 +1,81 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  release:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Rust universal targets
+        run: rustup target add aarch64-apple-darwin x86_64-apple-darwin
+
+      - name: Install npm deps
+        run: npm ci
+
+      - name: Build with tauri-action
+        id: tauri
+        uses: tauri-apps/tauri-action@v0
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: Pier ${{ github.ref_name }}
+          releaseBody: "See CHANGELOG.md."
+          releaseDraft: false
+          prerelease: false
+          args: --target universal-apple-darwin
+
+      - name: Ad-hoc codesign the app bundle
+        run: |
+          APP_PATH=$(find src-tauri/target/universal-apple-darwin/release/bundle/macos -maxdepth 2 -name "*.app" | head -n1)
+          echo "Codesigning: $APP_PATH"
+          codesign --force --deep --sign - "$APP_PATH"
+          codesign --verify --deep --strict "$APP_PATH"
+
+      - name: Re-tarball codesigned bundle
+        run: |
+          APP_PATH=$(find src-tauri/target/universal-apple-darwin/release/bundle/macos -maxdepth 2 -name "*.app" | head -n1)
+          DIR=$(dirname "$APP_PATH")
+          NAME=$(basename "$APP_PATH" .app)
+          (cd "$DIR" && tar czf "${NAME}_universal.app.tar.gz" "$(basename "$APP_PATH")")
+
+      - name: Generate latest.json
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          PUB_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          APP_PATH=$(find src-tauri/target/universal-apple-darwin/release/bundle/macos -maxdepth 2 -name "*.app" | head -n1)
+          DIR=$(dirname "$APP_PATH")
+          NAME=$(basename "$APP_PATH" .app)
+          TARBALL="${DIR}/${NAME}_universal.app.tar.gz"
+          SIG_FILE="${TARBALL}.sig"
+          if [ ! -f "$SIG_FILE" ]; then echo "Missing $SIG_FILE"; exit 1; fi
+          SIG=$(cat "$SIG_FILE")
+          NOTES=$(awk '/^## /{if(p)exit; p=1} p' CHANGELOG.md 2>/dev/null || echo "Release ${VERSION}")
+          URL="https://github.com/${GITHUB_REPOSITORY}/releases/download/${GITHUB_REF_NAME}/${NAME}_universal.app.tar.gz"
+          jq -n --arg version "$VERSION" --arg pubDate "$PUB_DATE" --arg notes "$NOTES" --arg sig "$SIG" --arg url "$URL" \
+            '{ version:$version, pub_date:$pubDate, notes:$notes,
+               platforms: { "darwin-aarch64": {signature:$sig, url:$url},
+                            "darwin-x86_64":  {signature:$sig, url:$url} } }' \
+            > latest.json
+
+      - name: Upload artifacts to release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          files: |
+            latest.json
+            src-tauri/target/universal-apple-darwin/release/bundle/macos/*.app.tar.gz
+            src-tauri/target/universal-apple-darwin/release/bundle/macos/*.app.tar.gz.sig
