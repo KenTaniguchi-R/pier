@@ -14,6 +14,12 @@ function setTrayBadge(has: boolean) {
   }
 }
 
+function notifyUpdateReady(version: string) {
+  if (typeof window !== "undefined" && "__TAURI_INTERNALS__" in window) {
+    void invoke("notify_update_ready_cmd", { version });
+  }
+}
+
 export interface UpdateController {
   state: UpdateState;
   manualCheck: () => Promise<void>;
@@ -66,6 +72,7 @@ export function useUpdater(): UpdateController {
           await checker.installAndRelaunch((p) => dispatch({ type: "progress", progress: p }));
           dispatch({ type: "set", state: { kind: "ready", info } });
           setTrayBadge(true);
+          notifyUpdateReady(info.version);
         } catch (err) {
           dispatch({ type: "set", state: { kind: "error", message: String(err), lastInfo: info } });
         }
@@ -126,6 +133,7 @@ export function useUpdater(): UpdateController {
       await checker.installAndRelaunch((p) => dispatch({ type: "progress", progress: p }));
       dispatch({ type: "set", state: { kind: "ready", info } });
       setTrayBadge(true);
+      notifyUpdateReady(info.version);
     } catch (err) {
       dispatch({ type: "set", state: { kind: "error", message: String(err), lastInfo: info } });
     }

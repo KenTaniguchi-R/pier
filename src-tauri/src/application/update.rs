@@ -51,6 +51,22 @@ pub fn is_translocated() -> Result<bool> {
     Ok(exe.to_string_lossy().contains("AppTranslocation"))
 }
 
+use tauri_plugin_notification::NotificationExt;
+
+pub fn notify_update_ready(app: &tauri::AppHandle, version: &str) -> Result<()> {
+    let visible = app
+        .get_webview_window("main")
+        .and_then(|w| w.is_visible().ok())
+        .unwrap_or(false);
+    if visible { return Ok(()); }
+    app.notification()
+        .builder()
+        .title("Pier update ready")
+        .body(format!("Pier {version} is ready to install."))
+        .show()?;
+    Ok(())
+}
+
 pub fn set_tray_badge(app: &tauri::AppHandle, has_update: bool) -> Result<()> {
     let bytes: &[u8] = if has_update {
         include_bytes!("../../icons/tray-icon-update@2x.png")

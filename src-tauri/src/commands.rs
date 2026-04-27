@@ -103,3 +103,8 @@ pub fn is_translocated_cmd() -> Result<bool, String> {
 pub fn set_tray_badge_cmd(app: tauri::AppHandle, has_update: bool) -> Result<(), String> {
     update_app::set_tray_badge(&app, has_update).map_err(|e| e.to_string())
 }
+
+#[tauri::command]
+pub fn notify_update_ready_cmd(app: tauri::AppHandle, version: String) -> Result<(), String> {
+    update_app::notify_update_ready(&app, &version).map_err(|e| e.to_string())
+}
