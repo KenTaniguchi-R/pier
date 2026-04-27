@@ -39,7 +39,6 @@ A tool needs only `id`, `name`, `command`. Everything else is optional. Don't pa
 | `category` | no | Free-form group (e.g. `media`, `web`, `starter`). |
 | `confirm` | no | `true` requires a confirm-dialog before run. Default `false`. Set for destructive or expensive tools. |
 | `timeout` | no | Seconds. Kills the process after this. |
-| `outputPath` | no | Path to read for the result file (rare; most tools just stream stdout). |
 | `shell` | no | If `true`, the command runs through a shell. Default `false`. Avoid unless you genuinely need shell features. |
 | `cwd` | no | Working directory. |
 | `envFile` | no | Path to a `.env` file. Relative paths resolve against `cwd`. Loaded at spawn time. |
@@ -61,7 +60,7 @@ Per-tool fields override defaults. Resolution order: process env → defaults.en
 
 ## Parameter types
 
-Each parameter is `{ id, type, ... }`. The `id` must be unique within the tool and must match every `{placeholder}` you put in `args`. Allowed `type` values:
+Each parameter is `{ id, label, type, ... }`. The `id` must be unique within the tool and must match every `{placeholder}` you put in `args`. `label` is required — it's what the user sees above the input. Allowed `type` values:
 
 | `type` | Extra fields | Used for |
 |---|---|---|
@@ -73,9 +72,11 @@ Each parameter is `{ id, type, ... }`. The `id` must be unique within the tool a
 | `boolean` | `default?: boolean`, `flag?: string` | Checkbox. If `flag` is set and the box is checked, that string is appended to `args` automatically — you do **not** put `{paramId}` in `args` for boolean+flag pairs. |
 | `number` | `min?`, `max?`, `step?`, `default?: number` | Numeric input. |
 
-All parameters also accept: `label`, `description`, `optional`, `default`, `flag`.
+All parameters also accept: `help` (one-line hint shown under the field), `optional`, `advanced`, `default`, `flag`.
 
 `optional: true` lets the user leave it blank. For optional parameters bound by `flag`, Pier omits both the flag and the value when blank — clean for `ffmpeg`-style optional switches.
+
+`advanced: true` hides the parameter behind the "Advanced" disclosure in the run panel. Use it for power-user knobs (bitrate, verbosity, model overrides) so the default UI stays plain-language and uncluttered. Required parameters should generally not be `advanced`.
 
 ## Schema validation rules to respect
 
@@ -84,12 +85,13 @@ These come straight from the validator (`src/domain/validation.ts`). Violations 
 1. `schemaVersion` is the literal string `"1.0"`. Do not change it.
 2. Tool `id` must be unique across the file.
 3. Parameter `id` must be unique within the tool.
-4. Every `{placeholder}` in `args` must reference a defined parameter.
-5. The legacy field `inputType` is no longer supported — never write it. Use `parameters` instead.
-6. `select.default`, if set, must be in `options`.
-7. `number.default`, `min`, `max`, `step` must be numbers.
-8. `boolean.default` must be a boolean.
-9. `file/folder/text/url` defaults must be strings.
+4. Every parameter must have a non-empty `label` — Pier rejects the file otherwise.
+5. Every `{placeholder}` in `args` must reference a defined parameter.
+6. The legacy field `inputType` is no longer supported — never write it. Use `parameters` instead.
+7. `select.default`, if set, must be in `options`.
+8. `number.default`, `min`, `max`, `step` must be numbers.
+9. `boolean.default` must be a boolean.
+10. `file/folder/text/url` defaults must be strings.
 
 ## Environment
 

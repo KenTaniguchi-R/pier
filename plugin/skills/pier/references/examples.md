@@ -25,7 +25,7 @@ No `parameters` block. Click Run, see output.
   "name": "What's this file?",
   "command": "/usr/bin/file",
   "args": ["{input}"],
-  "parameters": [{ "id": "input", "type": "file" }],
+  "parameters": [{ "id": "input", "label": "File", "type": "file" }],
   "description": "Drop any file to see what kind it is.",
   "icon": "📄"
 }
@@ -41,7 +41,7 @@ The `{input}` placeholder is replaced with the dropped file's absolute path.
   "name": "URL headers",
   "command": "/usr/bin/curl",
   "args": ["-I", "-s", "{url}"],
-  "parameters": [{ "id": "url", "type": "url" }],
+  "parameters": [{ "id": "url", "label": "URL", "type": "url" }],
   "icon": "🌐",
   "category": "web"
 }
@@ -56,10 +56,10 @@ The `{input}` placeholder is replaced with the dropped file's absolute path.
   "command": "/opt/homebrew/bin/ffmpeg",
   "args": ["-y", "-i", "{input}", "out.{format}"],
   "parameters": [
-    { "id": "input",   "type": "file",   "accepts": [".mov", ".mp4", ".webm"] },
-    { "id": "format",  "type": "select", "options": ["mp4", "webm", "mov"], "default": "mp4" },
-    { "id": "bitrate", "type": "text",   "flag": "-b:v", "optional": true, "description": "e.g. 5000k" },
-    { "id": "verbose", "type": "boolean","flag": "-v",   "optional": true }
+    { "id": "input",   "label": "Video",   "type": "file",   "accepts": [".mov", ".mp4", ".webm"] },
+    { "id": "format",  "label": "Format",  "type": "select", "options": ["mp4", "webm", "mov"], "default": "mp4" },
+    { "id": "bitrate", "label": "Bitrate", "type": "text",   "flag": "-b:v", "optional": true, "advanced": true, "help": "e.g. 5000k" },
+    { "id": "verbose", "label": "Verbose", "type": "boolean","flag": "-v",   "optional": true, "advanced": true }
   ],
   "icon": "🎬",
   "category": "media",
@@ -81,8 +81,8 @@ Notes:
   "command": "/usr/bin/find",
   "args": ["{folder}", "-type", "f", "-size", "+{size}M"],
   "parameters": [
-    { "id": "folder", "type": "folder" },
-    { "id": "size",   "type": "number", "default": 100, "min": 1, "step": 10 }
+    { "id": "folder", "label": "Folder",      "type": "folder" },
+    { "id": "size",   "label": "Min size MB", "type": "number", "default": 100, "min": 1, "step": 10 }
   ],
   "icon": "🔍",
   "category": "files"
@@ -97,7 +97,7 @@ Notes:
   "name": "Dub video to Japanese",
   "command": "/Users/you/coding/dubjp/.venv/bin/dubjp",
   "args": ["{input}"],
-  "parameters": [{ "id": "input", "type": "file" }],
+  "parameters": [{ "id": "input", "label": "Video", "type": "file" }],
   "cwd": "/Users/you/coding/dubjp",
   "envFile": ".env",
   "icon": "🎙️",
@@ -116,7 +116,7 @@ Notes:
   "name": "Ask OpenAI",
   "command": "/Users/you/.local/bin/oai",
   "args": ["{prompt}"],
-  "parameters": [{ "id": "prompt", "type": "text", "multiline": true }],
+  "parameters": [{ "id": "prompt", "label": "Prompt", "type": "text", "multiline": true }],
   "env": { "OPENAI_API_KEY": "${keychain:openai}" }
 }
 ```
@@ -138,7 +138,7 @@ When you need an existing secret manager, don't invent a Pier feature — wrap:
   "command": "/opt/homebrew/bin/op",
   "args": ["run", "--env-file=.env", "--", "/path/to/tool", "{input}"],
   "cwd": "/path/to/project",
-  "parameters": [{ "id": "input", "type": "file" }]
+  "parameters": [{ "id": "input", "label": "File", "type": "file" }]
 }
 ```
 

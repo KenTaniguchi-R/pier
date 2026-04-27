@@ -23,7 +23,6 @@ Authoritative reference. Source of truth: `src/domain/tool.ts` and `src/domain/v
   description?: string,
   icon?: string,            // emoji or short string
   timeout?: number,         // seconds
-  outputPath?: string,      // path Pier reads to surface a result file
   confirm?: boolean,        // default false; prompts before running
   shell?: boolean,          // default false; runs through a shell if true
   cwd?: string,             // working directory
@@ -38,9 +37,10 @@ Authoritative reference. Source of truth: `src/domain/tool.ts` and `src/domain/v
 ```ts
 {
   id: string,             // required, unique within the tool
-  label?: string,         // UI label; defaults to id
-  description?: string,
+  label: string,          // required, UI label shown above the input
+  help?: string,          // one-line hint shown under the field
   optional?: boolean,     // user may leave blank
+  advanced?: boolean,     // hide behind the "Advanced" disclosure in the run panel
   default?: ParamValue,
   flag?: string           // CLI flag prepended when this param has a value
 }
@@ -72,12 +72,13 @@ The validator rejects the whole file (no partial load) when any of these fail:
 6. The legacy field `inputType` is rejected with an explicit error.
 7. `parameters`, if present, must be an array.
 8. Parameter `id`s must be unique within a tool.
-9. Parameter `type` must be one of: `file`, `folder`, `text`, `url`, `select`, `boolean`, `number`.
-10. Every `{name}` placeholder in `args` must reference a defined parameter `id`.
-11. `select.options` must be `string[]`. `select.default`, if set, must be in `options`.
-12. `number.default`, `min`, `max`, `step` must be numbers.
-13. `boolean.default` must be a boolean.
-14. `file/folder/text/url` defaults must be strings.
+9. Each parameter must have a non-empty `label` string.
+10. Parameter `type` must be one of: `file`, `folder`, `text`, `url`, `select`, `boolean`, `number`.
+11. Every `{name}` placeholder in `args` must reference a defined parameter `id`.
+12. `select.options` must be `string[]`. `select.default`, if set, must be in `options`.
+13. `number.default`, `min`, `max`, `step` must be numbers.
+14. `boolean.default` must be a boolean.
+15. `file/folder/text/url` defaults must be strings.
 
 ## Placeholder substitution
 
