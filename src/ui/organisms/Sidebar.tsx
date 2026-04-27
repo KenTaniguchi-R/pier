@@ -4,6 +4,8 @@ import type { Tool } from "../../domain/tool";
 import type { RunningEntry } from "../../state/reducer";
 import { SidebarItem } from "../molecules/SidebarItem";
 import { SidebarCategoryGroup } from "../molecules/SidebarCategoryGroup";
+import { SidebarRunningRow } from "../molecules/SidebarRunningRow";
+import { useNow } from "../molecules/elapsed";
 
 export type Selection =
   | { kind: "all" }
@@ -18,15 +20,6 @@ interface Props {
   selection: Selection;
   onSelect: (s: Selection) => void;
   running?: RunningEntry[];
-}
-
-function formatElapsed(ms: number): string {
-  const s = Math.max(0, Math.floor(ms / 1000));
-  const h = Math.floor(s / 3600);
-  const m = Math.floor((s % 3600) / 60);
-  const sec = s % 60;
-  if (h > 0) return `${h}h ${m.toString().padStart(2, "0")}m`;
-  return `${m}:${sec.toString().padStart(2, "0")}`;
 }
 
 const titleCase = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
@@ -53,12 +46,7 @@ function persist(s: Set<string>) {
 }
 
 export function Sidebar({ tools, query, onQueryChange, selection, onSelect, running = [] }: Props) {
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    if (running.length === 0) return;
-    const id = window.setInterval(() => setNow(Date.now()), 1000);
-    return () => window.clearInterval(id);
-  }, [running.length]);
+  const now = useNow(running.length > 0);
 
   const toolById = useMemo(() => {
     const m = new Map<string, Tool>();
@@ -160,8 +148,7 @@ export function Sidebar({ tools, query, onQueryChange, selection, onSelect, runn
         {running.length > 0 && (
           <>
             <li className="px-3 pt-2 pb-1 text-[10px] uppercase tracking-[0.08em] font-semibold text-ink-4">
-              Running
-              <span className="ml-1 text-ink-3">({running.length})</span>
+              Running <span className="text-ink-3">({running.length})</span>
             </li>
             {running.map(entry => {
               const tool = toolById.get(entry.toolId);
@@ -169,28 +156,13 @@ export function Sidebar({ tools, query, onQueryChange, selection, onSelect, runn
               const active = selection.kind === "tool" && selection.id === entry.toolId;
               return (
                 <li key={entry.runId}>
-                  <button
-                    type="button"
+                  <SidebarRunningRow
+                    label={tool.name}
+                    startedAt={entry.startedAt}
+                    now={now}
+                    active={active}
                     onClick={() => onSelect({ kind: "tool", id: entry.toolId })}
-                    className={
-                      "group relative flex items-center gap-2 w-full px-3 py-[7px] border border-transparent rounded-[10px] cursor-pointer text-left " +
-                      "font-body font-medium text-[13px] leading-[1.2] text-ink-2 " +
-                      "transition-[background-color,color] duration-100 ease-(--ease-smooth) " +
-                      "hover:bg-surface hover:text-ink " +
-                      (active ? "bg-surface text-ink border-line" : "")
-                    }
-                  >
-                    <span
-                      className="flex-none w-1.5 h-1.5 rounded-full bg-accent"
-                      aria-hidden
-                    />
-                    <span className="flex-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
-                      {tool.name}
-                    </span>
-                    <span className="flex-none font-mono tabular-nums text-[11px] text-ink-3">
-                      {formatElapsed(now - entry.startedAt)}
-                    </span>
-                  </button>
+                  />
                 </li>
               );
             })}

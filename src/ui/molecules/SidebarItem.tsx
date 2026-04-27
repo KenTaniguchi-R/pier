@@ -3,6 +3,7 @@ import type { ReactNode, MouseEvent } from "react";
 interface Props {
   icon?: ReactNode;
   leading?: ReactNode;
+  trailing?: ReactNode;
   label: string;
   active?: boolean;
   nested?: boolean;
@@ -26,7 +27,7 @@ const NESTED =
 
 const NESTED_ACTIVE = "bg-accent/10 text-ink";
 
-export function SidebarItem({ icon, leading, label, active, nested, onClick }: Props) {
+export function SidebarItem({ icon, leading, trailing, label, active, nested, onClick }: Props) {
   const variant = nested
     ? `${NESTED} ${active ? NESTED_ACTIVE : ""}`
     : `${TOP} ${active ? TOP_ACTIVE : ""}`;
@@ -47,6 +48,7 @@ export function SidebarItem({ icon, leading, label, active, nested, onClick }: P
       <span className="flex-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
         {label}
       </span>
+      {trailing}
     </button>
   );
 }

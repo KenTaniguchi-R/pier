@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { reducer, initialState } from "../reducer";
+import { reducer, initialState, runningRuns, runningToolIds } from "../reducer";
 import type { Tool } from "../../domain/tool";
 
 const t: Tool = { id: "x", name: "X", command: "/x" };
@@ -83,5 +83,29 @@ describe("reducer", () => {
     s = reducer(s, { type: "RUN_STARTED", runId: "r2", toolId: "y", startedAt: 2 });
     expect(s.selectedRunIdByTool["x"]).toBe("r1");
     expect(s.selectedRunIdByTool["y"]).toBe("r2");
+  });
+});
+
+describe("runningRuns / runningToolIds selectors", () => {
+  it("returns empty when nothing has started", () => {
+    expect(runningRuns(initialState)).toEqual([]);
+    expect(runningToolIds(initialState).size).toBe(0);
+  });
+
+  it("includes only running entries, sorted oldest first", () => {
+    let s = reducer(initialState, { type: "RUN_STARTED", runId: "r2", toolId: "y", startedAt: 200 });
+    s = reducer(s, { type: "RUN_STARTED", runId: "r1", toolId: "x", startedAt: 100 });
+    s = reducer(s, { type: "RUN_STARTED", runId: "r3", toolId: "z", startedAt: 300 });
+    s = reducer(s, { type: "RUN_EXIT", runId: "r2", status: "success", exitCode: 0, endedAt: 400 });
+
+    expect(runningRuns(s).map(r => r.runId)).toEqual(["r1", "r3"]);
+    expect([...runningToolIds(s)].sort()).toEqual(["x", "z"]);
+  });
+
+  it("treats multiple concurrent runs of one tool as a single tool id", () => {
+    let s = reducer(initialState, { type: "RUN_STARTED", runId: "r1", toolId: "x", startedAt: 1 });
+    s = reducer(s, { type: "RUN_STARTED", runId: "r2", toolId: "x", startedAt: 2 });
+    expect(runningRuns(s)).toHaveLength(2);
+    expect(runningToolIds(s).size).toBe(1);
   });
 });
