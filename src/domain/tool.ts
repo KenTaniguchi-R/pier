@@ -4,9 +4,10 @@ export type ParamValue = string | number | boolean;
 
 interface ParameterBase {
   id: string;
-  label?: string;
-  description?: string;
+  label: string;
+  help?: string;
   optional?: boolean;
+  advanced?: boolean;
   default?: ParamValue;
   flag?: string;
 }
