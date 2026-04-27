@@ -2,6 +2,29 @@ use crate::domain::{Defaults, Tool};
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
+/// Env keys that spawned tools inherit from Pier's process by default. Anything
+/// else (API keys, AWS creds, etc.) must be opted into via `${env:X}` in the
+/// tool's `env` block. Plus any `LC_*` locale keys, copied dynamically.
+pub const BASELINE_KEYS: &[&str] = &["PATH", "HOME", "USER", "LANG", "TERM", "TMPDIR", "SHELL"];
+
+/// Filter `full` down to BASELINE_KEYS plus any `LC_*` locale keys. Used to
+/// build the seed env passed to spawned tools, while interpolation still sees
+/// the full process env.
+pub fn baseline_env(full: &HashMap<String, String>) -> HashMap<String, String> {
+    let mut out: HashMap<String, String> = HashMap::new();
+    for k in BASELINE_KEYS {
+        if let Some(v) = full.get(*k) {
+            out.insert((*k).to_string(), v.clone());
+        }
+    }
+    for (k, v) in full {
+        if k.starts_with("LC_") && !out.contains_key(k) {
+            out.insert(k.clone(), v.clone());
+        }
+    }
+    out
+}
+
 /// Gate over which `${keychain:X}` keys a tool may resolve. Computed at config
 /// load (`ToolRegistry::keychain_keys_for`) and consulted before every keychain
 /// lookup so a malicious tool definition can't enumerate other tools' secrets.
@@ -63,22 +86,28 @@ pub fn resolve(
 ) -> ResolvedEnv {
     // Default: allow all (used only by tests / older call sites; production
     // goes through `run_tool` which always passes a per-tool allowlist).
-    resolve_with_allowlist(tool, defaults, cwd, process_env, keychain_lookup, &AllowAll)
+    resolve_with_allowlist(tool, defaults, cwd, process_env, process_env, keychain_lookup, &AllowAll)
 }
 
+/// Like `resolve`, but takes a separate `seed_env` (Layer 1, the starting map
+/// that becomes the spawned tool's inherited env) and `interp_env` (the lookup
+/// table for `${env:X}` interpolation). In production `seed_env` is a baselined
+/// subset while `interp_env` is the full process env, so a tool only inherits
+/// what it explicitly opted into.
 pub fn resolve_with_allowlist(
     tool: &Tool,
     defaults: Option<&Defaults>,
     cwd: Option<&Path>,
-    process_env: &HashMap<String, String>,
+    seed_env: &HashMap<String, String>,
+    interp_env: &HashMap<String, String>,
     keychain_lookup: &dyn Fn(&str) -> Option<String>,
     allow: &dyn KeychainAllow,
 ) -> ResolvedEnv {
     let mut vars: HashMap<String, String> = HashMap::new();
     let mut keys: HashMap<String, EnvSource> = HashMap::new();
 
-    // Layer 1: process env
-    for (k, v) in process_env {
+    // Layer 1: seed env (baselined process env in production)
+    for (k, v) in seed_env {
         vars.insert(k.clone(), v.clone());
         keys.insert(k.clone(), EnvSource::Process);
     }
@@ -97,11 +126,11 @@ pub fn resolve_with_allowlist(
 
     // Layer 4: defaults env block
     if let Some(d) = defaults {
-        apply_env_block(&d.env, process_env, keychain_lookup, allow, &mut vars, &mut keys);
+        apply_env_block(&d.env, interp_env, keychain_lookup, allow, &mut vars, &mut keys);
     }
 
     // Layer 5: tool env block (overrides defaults)
-    apply_env_block(&tool.env, process_env, keychain_lookup, allow, &mut vars, &mut keys);
+    apply_env_block(&tool.env, interp_env, keychain_lookup, allow, &mut vars, &mut keys);
 
     ResolvedEnv { vars, keys }
 }
@@ -295,7 +324,8 @@ mod tests {
         let tool: Tool = serde_json::from_str(json).unwrap();
         let kc = |_: &str| Some("would-be-leaked".to_string());
         let allow: HashSet<String> = HashSet::new();
-        let r = resolve_with_allowlist(&tool, None, None, &HashMap::new(), &kc, &allow);
+        let env = HashMap::new();
+        let r = resolve_with_allowlist(&tool, None, None, &env, &env, &kc, &allow);
         assert!(!r.vars.contains_key("K"), "blocked key must not appear in env");
     }
 
@@ -306,8 +336,29 @@ mod tests {
         let kc = |k: &str| if k == "secret" { Some("v".to_string()) } else { None };
         let mut allow: HashSet<String> = HashSet::new();
         allow.insert("secret".to_string());
-        let r = resolve_with_allowlist(&tool, None, None, &HashMap::new(), &kc, &allow);
+        let env = HashMap::new();
+        let r = resolve_with_allowlist(&tool, None, None, &env, &env, &kc, &allow);
         assert_eq!(r.vars.get("K").map(String::as_str), Some("v"));
+    }
+
+    #[test]
+    fn baseline_env_keeps_only_allowlisted_keys() {
+        let mut full = HashMap::new();
+        full.insert("PATH".into(), "/usr/bin".into());
+        full.insert("HOME".into(), "/Users/test".into());
+        full.insert("LANG".into(), "en_US.UTF-8".into());
+        full.insert("LC_ALL".into(), "en_US.UTF-8".into());
+        full.insert("TMPDIR".into(), "/tmp".into());
+        full.insert("OPENAI_API_KEY".into(), "sk-leak".into());
+        full.insert("AWS_SECRET_ACCESS_KEY".into(), "leak".into());
+        let base = baseline_env(&full);
+        assert_eq!(base.get("PATH").map(String::as_str), Some("/usr/bin"));
+        assert_eq!(base.get("HOME").map(String::as_str), Some("/Users/test"));
+        assert_eq!(base.get("LANG").map(String::as_str), Some("en_US.UTF-8"));
+        assert_eq!(base.get("LC_ALL").map(String::as_str), Some("en_US.UTF-8"));
+        assert_eq!(base.get("TMPDIR").map(String::as_str), Some("/tmp"));
+        assert!(!base.contains_key("OPENAI_API_KEY"));
+        assert!(!base.contains_key("AWS_SECRET_ACCESS_KEY"));
     }
 
     #[test]

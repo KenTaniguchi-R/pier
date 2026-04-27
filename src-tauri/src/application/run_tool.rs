@@ -56,12 +56,14 @@ async fn spawn_and_stream(
     let cwd = tool.cwd.as_ref()
         .or_else(|| defaults.as_ref().and_then(|d| d.cwd.as_ref()))
         .map(PathBuf::from);
-    let process_env: HashMap<String, String> = std::env::vars().collect();
+    let full_env: HashMap<String, String> = std::env::vars().collect();
+    let process_env = crate::application::env_resolver::baseline_env(&full_env);
     let resolved_env = crate::application::env_resolver::resolve_with_allowlist(
         &tool,
         defaults.as_ref(),
         cwd.as_deref(),
         &process_env,
+        &full_env,
         &crate::application::env_resolver::keychain_lookup,
         &allow,
     );
