@@ -100,6 +100,7 @@ pub fn run() {
             commands::install_update_cmd,
             commands::is_translocated_cmd,
             commands::set_tray_badge_cmd,
+            commands::notify_update_ready_cmd,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
