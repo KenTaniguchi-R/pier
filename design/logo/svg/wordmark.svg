@@ -1,0 +1,11 @@
+<!-- Wordmark "pier" — uses Inter (system fallback) with a square cursor i-dot.
+     Embed/convert to outlines in Figma before shipping so it doesn't depend on the user's font stack. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 160" font-family="Inter, 'Inter Display', system-ui, -apple-system, sans-serif" font-weight="600">
+  <!-- p i e r with the i-dot omitted (we draw it as a square below) -->
+  <text x="40" y="120" font-size="140" letter-spacing="-6" fill="#1A2230">p</text>
+  <!-- stem of i without dot: use a custom glyph to avoid the round dot -->
+  <rect x="170" y="60" width="18" height="60" fill="#1A2230" />
+  <!-- square cursor i-dot -->
+  <rect x="170" y="34" width="18" height="18" fill="#1A2230" />
+  <text x="200" y="120" font-size="140" letter-spacing="-6" fill="#1A2230">er</text>
+</svg>

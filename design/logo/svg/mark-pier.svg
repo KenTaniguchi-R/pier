@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" stroke="#1A2230" stroke-width="4" stroke-linecap="square" stroke-linejoin="miter">
+  <!-- deck on top -->
+  <line x1="10" y1="28" x2="54" y2="28" stroke-width="5" />
+  <!-- three pilings hanging below the deck (varying heights) -->
+  <line x1="18" y1="28" x2="18" y2="46" />
+  <line x1="32" y1="28" x2="32" y2="50" />
+  <line x1="46" y1="28" x2="46" y2="44" />
+  <!-- waterline -->
+  <line x1="6" y1="54" x2="58" y2="54" stroke-width="2" opacity="0.55" />
+</svg>

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" stroke="#1A2230" stroke-width="6" stroke-linecap="square" stroke-linejoin="miter">
+  <!-- bracket: top, right edge, bottom -->
+  <path d="M22 16 H42 V40 H22" />
+  <!-- piling dropping below the bracket into water -->
+  <line x1="42" y1="40" x2="42" y2="50" />
+  <!-- waterline -->
+  <line x1="14" y1="54" x2="50" y2="54" stroke-width="3" />
+</svg>

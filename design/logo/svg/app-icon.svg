@@ -1,0 +1,24 @@
+<!-- 1024x1024 macOS app icon. Squircle + bracket-pier mark + amber dock light. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- macOS-correct squircle (continuous curvature, ~22.37% corner radius) -->
+  <defs>
+    <clipPath id="squircle">
+      <path d="M512 0
+               C 232 0 0 232 0 512
+               C 0 792 232 1024 512 1024
+               C 792 1024 1024 792 1024 512
+               C 1024 232 792 0 512 0 Z" />
+    </clipPath>
+  </defs>
+  <g clip-path="url(#squircle)">
+    <rect width="1024" height="1024" fill="#1A2230" />
+    <!-- bracket-pier in warm off-white -->
+    <g fill="none" stroke="#F2EDE4" stroke-width="48" stroke-linecap="square" stroke-linejoin="miter">
+      <path d="M440 320 H640 V640 H440" />
+      <line x1="640" y1="640" x2="640" y2="800" />
+      <line x1="280" y1="848" x2="744" y2="848" stroke-width="24" opacity="0.55" />
+    </g>
+    <!-- amber dock light on top of the deck -->
+    <circle cx="640" cy="296" r="22" fill="#E8B872" />
+  </g>
+</svg>
