@@ -43,5 +43,13 @@
     "macOS": {
       "minimumSystemVersion": "12.0"
     }
+  },
+  "plugins": {
+    "updater": {
+      "endpoints": [
+        "https://github.com/KenTaniguchi-R/pier/releases/latest/download/latest.json"
+      ],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDExMUI5Q0YxNDI0RTgwQTUKUldTbGdFNUM4WndiRWV6YkQrMnljZVdoS0YyVDNlVVpOK2FWc2IydGdLU2dFU1lmQ3pVYWRUNlQK"
+    }
   }
 }

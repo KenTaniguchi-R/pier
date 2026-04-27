@@ -4,7 +4,7 @@ interface Props {
   icon?: ReactNode;
   title: string;
   subtitle?: string;
-  control: ReactNode;
+  control?: ReactNode;
 }
 
 /** A single row inside a SettingsSection: icon · title/subtitle · control. */
@@ -26,7 +26,7 @@ export function SettingsRow({ icon, title, subtitle, control }: Props) {
           </div>
         )}
       </div>
-      <div className="flex-none">{control}</div>
+      {control !== undefined && <div className="flex-none">{control}</div>}
     </div>
   );
 }

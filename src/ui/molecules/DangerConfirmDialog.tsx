@@ -1,5 +1,6 @@
 import { AlertTriangle } from "lucide-react";
 import { Button } from "../atoms/Button";
+import { useDialogA11y } from "./useDialogA11y";
 
 interface Props {
   open: boolean;
@@ -28,14 +29,17 @@ export function DangerConfirmDialog({
   onConfirm,
   onCancel,
 }: Props) {
+  const panelRef = useDialogA11y({ open, onEscape: onCancel });
   if (!open) return null;
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(31,26,22,0.32)] backdrop-blur-[4px] animate-overlay-in"
       role="dialog"
       aria-modal
+      aria-labelledby="dcd-title"
+      aria-describedby="dcd-msg"
     >
-      <div className="bg-surface border border-line rounded-[14px] w-[min(440px,calc(100%-32px))] shadow-pop overflow-hidden animate-panel-in">
+      <div ref={panelRef} className="bg-surface border border-line rounded-[14px] w-[min(440px,calc(100%-32px))] shadow-pop overflow-hidden animate-panel-in">
         <header className="px-6 pt-6 pb-2 flex items-start gap-3">
           <span className="flex-none mt-0.5 inline-flex items-center justify-center w-8 h-8 rounded-pill bg-danger-soft text-danger">
             <AlertTriangle size={16} strokeWidth={2} />
@@ -44,12 +48,12 @@ export function DangerConfirmDialog({
             <span className="block font-mono text-[10px] uppercase tracking-[0.18em] text-ink-3 mb-1">
               {kicker}
             </span>
-            <h2 className="font-display text-[22px] font-semibold text-ink tracking-[-0.005em]">
+            <h2 id="dcd-title" className="font-display text-[22px] font-semibold text-ink tracking-[-0.005em]">
               {title}
             </h2>
           </div>
         </header>
-        <p className="px-6 pb-4 font-body text-[13px] leading-[1.55] text-ink-2">
+        <p id="dcd-msg" className="px-6 pb-4 font-body text-[13px] leading-[1.55] text-ink-2">
           {message}
         </p>
         <footer className="flex justify-end gap-2 px-6 py-3 pb-4 border-t border-line bg-bg">

@@ -10,6 +10,7 @@ pub struct RunHandle {
 pub struct AppState {
     pub running: Mutex<HashMap<RunId, RunHandle>>,
     pub registry: Arc<ToolRegistry>,
+    pub settings_lock: tokio::sync::Mutex<()>,
 }
 
 impl AppState {
@@ -17,6 +18,7 @@ impl AppState {
         Self {
             running: Mutex::new(HashMap::new()),
             registry: Arc::new(ToolRegistry::new()),
+            settings_lock: tokio::sync::Mutex::new(()),
         }
     }
 }

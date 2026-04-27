@@ -21,6 +21,8 @@ pub fn run() {
             tauri_plugin_autostart::MacosLauncher::LaunchAgent,
             None,
         ))
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(tauri_plugin_notification::init())
         .manage(state::AppState::new())
         .setup(|app| {
             // Menu-bar/Accessory mode disabled during early dev so the window
@@ -93,6 +95,12 @@ pub fn run() {
             commands::save_settings,
             commands::history_stats_cmd,
             commands::clear_history_cmd,
+            commands::patch_settings_cmd,
+            commands::check_update_cmd,
+            commands::install_update_cmd,
+            commands::is_translocated_cmd,
+            commands::set_tray_badge_cmd,
+            commands::notify_update_ready_cmd,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
