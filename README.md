@@ -6,16 +6,15 @@ Pier surfaces the small CLI tools you (or Claude Code) generate as drag-drop til
 
 ## Status
 
-Personal-use alpha. macOS only. Bundles are ad-hoc codesigned but **not Apple-notarized**, so first launch needs a one-time Gatekeeper override (instructions below). After that, the in-app updater handles every future version silently.
+Personal-use alpha. macOS only. Releases (v0.1.2+) are signed with a Developer ID Application certificate (Benri LLC) and notarized by Apple, so installs open without Gatekeeper warnings. The in-app updater handles every future version silently.
 
 ## Install (macOS)
 
 1. Grab the latest **`Pier_x.y.z_universal.dmg`** from the [Releases page](https://github.com/KenTaniguchi-R/pier/releases/latest).
 2. Open the DMG and drag **Pier.app** to **Applications**.
-3. **First launch** — right-click Pier in Applications → **Open** → **Open Anyway**. (Apple shows this for any app whose developer hasn't paid for notarization. You only do it once.)
-4. Pier lives in your menu bar. Click the icon to open the window.
+3. Launch Pier from Applications. It lives in your menu bar — click the icon to open the window.
 
-After v0.2.0, future updates download silently in the background and prompt you to install + restart — no DMG dance.
+Future updates download silently in the background and prompt you to install + restart — no DMG dance.
 
 ### Build from source (developers only)
 
