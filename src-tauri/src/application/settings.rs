@@ -73,7 +73,7 @@ mod tests {
     fn round_trips_through_disk() {
         let d = tempdir().unwrap();
         let p = d.path().join("settings.json");
-        let s = Settings { launch_at_login: true };
+        let s = Settings { launch_at_login: true, ..Default::default() };
         save_to(&p, &s).unwrap();
         let loaded = load_from(&p).unwrap();
         assert_eq!(loaded, s);
