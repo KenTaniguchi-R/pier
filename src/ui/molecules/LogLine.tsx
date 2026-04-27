@@ -1,6 +1,8 @@
+import type { Stream } from "../../domain/runRequest";
+
 interface Props {
   line: string;
-  stream: "stdout" | "stderr";
+  stream: Stream;
 }
 
 export function LogLine({ line, stream }: Props) {

@@ -97,13 +97,14 @@ pub async fn run_tool(
         let id_for_lines = id_clone.clone();
         let app_for_lines = app_clone.clone();
 
-        let stream_fut = stream_lines(proc, move |line, stream| {
+        let stream_fut = stream_lines(proc, move |seg| {
             let _ = app_for_lines.emit(
                 "pier://output",
                 OutputEvent {
                     run_id: id_for_lines.clone(),
-                    line,
-                    stream: stream.to_string(),
+                    line: seg.text,
+                    stream: seg.stream.to_string(),
+                    transient: seg.transient,
                 },
             );
         });

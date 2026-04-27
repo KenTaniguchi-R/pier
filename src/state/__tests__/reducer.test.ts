@@ -35,14 +35,31 @@ describe("reducer", () => {
 
   it("RUN_OUTPUT appends a log line", () => {
     let s = reducer(initialState, { type: "RUN_STARTED", runId: "r1", toolId: "x", startedAt: 1 });
-    s = reducer(s, { type: "RUN_OUTPUT", runId: "r1", line: "hi", stream: "stdout" });
+    s = reducer(s, { type: "RUN_OUTPUT", runId: "r1", line: "hi", stream: "stdout", transient: false });
     expect(s.runs["r1"].lines).toHaveLength(1);
     expect(s.runs["r1"].lines[0].line).toBe("hi");
   });
 
   it("RUN_OUTPUT for unknown runId is no-op", () => {
-    const s = reducer(initialState, { type: "RUN_OUTPUT", runId: "ghost", line: "?", stream: "stdout" });
+    const s = reducer(initialState, { type: "RUN_OUTPUT", runId: "ghost", line: "?", stream: "stdout", transient: false });
     expect(s).toEqual(initialState);
+  });
+
+  it("RUN_OUTPUT collapses consecutive transient segments into one row", () => {
+    let s = reducer(initialState, { type: "RUN_STARTED", runId: "r1", toolId: "x", startedAt: 1 });
+    s = reducer(s, { type: "RUN_OUTPUT", runId: "r1", line: "10%", stream: "stdout", transient: true });
+    s = reducer(s, { type: "RUN_OUTPUT", runId: "r1", line: "50%", stream: "stdout", transient: true });
+    s = reducer(s, { type: "RUN_OUTPUT", runId: "r1", line: "100%", stream: "stdout", transient: false });
+    expect(s.runs["r1"].lines).toHaveLength(1);
+    expect(s.runs["r1"].lines[0].line).toBe("100%");
+    expect(s.runs["r1"].lines[0].transient).toBe(false);
+  });
+
+  it("RUN_OUTPUT does not collapse a transient stderr onto a transient stdout", () => {
+    let s = reducer(initialState, { type: "RUN_STARTED", runId: "r1", toolId: "x", startedAt: 1 });
+    s = reducer(s, { type: "RUN_OUTPUT", runId: "r1", line: "out", stream: "stdout", transient: true });
+    s = reducer(s, { type: "RUN_OUTPUT", runId: "r1", line: "err", stream: "stderr", transient: true });
+    expect(s.runs["r1"].lines.map(l => l.line)).toEqual(["out", "err"]);
   });
 
   it("RUN_EXIT updates status and exit code", () => {

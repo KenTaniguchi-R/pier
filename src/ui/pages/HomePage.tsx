@@ -46,8 +46,8 @@ export function HomePage() {
   }, [reload]);
 
   useEffect(() => {
-    const offOut = runner.onOutput((runId, line, stream) =>
-      dispatch({ type: "RUN_OUTPUT", runId, line, stream })
+    const offOut = runner.onOutput((runId, line, stream, transient) =>
+      dispatch({ type: "RUN_OUTPUT", runId, line, stream, transient })
     );
     const offExit = runner.onExit((runId, o) =>
       dispatch({ type: "RUN_EXIT", runId, status: o.status, exitCode: o.exitCode, endedAt: o.endedAt ?? 0 })
