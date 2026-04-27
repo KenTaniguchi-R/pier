@@ -12,14 +12,14 @@ jobs:
   release:
     runs-on: macos-14
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
 
       - name: Install Rust universal targets
         run: rustup target add aarch64-apple-darwin x86_64-apple-darwin
@@ -35,7 +35,7 @@ jobs:
       # - creates the GitHub Release and uploads all three.
       - name: Build + release with tauri-action
         id: tauri
-        uses: tauri-apps/tauri-action@v0
+        uses: tauri-apps/tauri-action@84b9d35b5fc46c1e45415bdb6144030364f7ebc5 # v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
@@ -52,21 +52,30 @@ jobs:
         env:
           REF_NAME: ${{ github.ref_name }}
           REPO: ${{ github.repository }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
           VERSION="${REF_NAME#v}"
           PUB_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)
           BUNDLE_DIR="src-tauri/target/universal-apple-darwin/release/bundle/macos"
-          TARBALL=$(find "$BUNDLE_DIR" -maxdepth 1 -name "*.app.tar.gz" | head -n1)
-          SIG_FILE="${TARBALL}.sig"
-          if [ ! -f "$TARBALL" ] || [ ! -f "$SIG_FILE" ]; then
-            echo "Missing tarball or sig under $BUNDLE_DIR" >&2
+          # The on-disk tarball + sig (whatever name Tauri produced locally)
+          SIG_FILE=$(find "$BUNDLE_DIR" -maxdepth 1 -name "*.app.tar.gz.sig" | head -n1)
+          if [ ! -f "$SIG_FILE" ]; then
+            echo "Missing .app.tar.gz.sig under $BUNDLE_DIR" >&2
             ls -la "$BUNDLE_DIR" || true
             exit 1
           fi
           SIG=$(cat "$SIG_FILE")
           NOTES=$(awk '/^## /{if(p)exit; p=1} p' CHANGELOG.md 2>/dev/null || echo "Release ${VERSION}")
-          URL="https://github.com/${REPO}/releases/download/${REF_NAME}/$(basename "$TARBALL")"
+          # The actual asset URL on the GitHub Release (tauri-action renames on upload)
+          URL=$(gh release view "$REF_NAME" --repo "$REPO" --json assets \
+                  --jq '.assets[] | select(.name | endswith(".app.tar.gz")) | .url' \
+                | head -n1)
+          if [ -z "$URL" ]; then
+            echo "Could not resolve asset URL from release" >&2
+            gh release view "$REF_NAME" --repo "$REPO" --json assets --jq '.assets[].name' || true
+            exit 1
+          fi
           jq -n \
             --arg version "$VERSION" \
             --arg pubDate "$PUB_DATE" \
@@ -79,7 +88,7 @@ jobs:
             > latest.json
 
       - name: Attach latest.json to release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
         with:
           tag_name: ${{ github.ref_name }}
           files: latest.json
