@@ -9,3 +9,4 @@ pub mod settings;
 pub mod history_admin;
 pub mod tool_registry;
 pub mod watch_config;
+pub mod update;

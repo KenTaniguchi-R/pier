@@ -80,3 +80,21 @@ pub async fn patch_settings_cmd(
 ) -> Result<Settings, String> {
     settings_app::patch(&app, patch).await.map_err(|e| e.to_string())
 }
+
+use crate::application::update as update_app;
+use crate::domain::UpdateInfo;
+
+#[tauri::command]
+pub async fn check_update_cmd(app: tauri::AppHandle) -> Result<Option<UpdateInfo>, String> {
+    update_app::check(&app).await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn install_update_cmd(app: tauri::AppHandle) -> Result<(), String> {
+    update_app::install_and_relaunch(&app).await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn is_translocated_cmd() -> Result<bool, String> {
+    update_app::is_translocated().map_err(|e| e.to_string())
+}
