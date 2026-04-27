@@ -56,6 +56,9 @@ export interface UrlOpener {
 export interface SettingsAdapter {
   load(): Promise<import("../domain/settings").Settings>;
   save(settings: import("../domain/settings").Settings): Promise<void>;
+  patch(
+    partial: import("../domain/settings").DeepPartial<import("../domain/settings").Settings>,
+  ): Promise<import("../domain/settings").Settings>;
   historyStats(): Promise<import("../domain/settings").HistoryStats>;
   clearHistory(): Promise<void>;
 }
@@ -65,4 +68,17 @@ export interface FilePicker {
   onDragDrop(cb: (e: DragDropEvent) => void): () => void;
   /** Open a native file picker. Returns absolute path or null if cancelled. */
   pick(opts: { directory?: boolean; accepts?: string[] }): Promise<string | null>;
+}
+
+import type { UpdateInfo, UpdateProgress } from "../domain/update";
+
+export interface UpdateChecker {
+  check(): Promise<UpdateInfo | null>;
+  installAndRelaunch(onProgress: (p: UpdateProgress) => void): Promise<void>;
+  isTranslocated(): Promise<boolean>;
+  setTrayBadge(hasUpdate: boolean): void;
+  notifyReady(version: string): void;
+  /** Subscribe to changes in the main window's visibility (true = visible). */
+  onWindowVisibilityChange(cb: (visible: boolean) => void): () => void;
+  isWindowVisible(): Promise<boolean>;
 }
