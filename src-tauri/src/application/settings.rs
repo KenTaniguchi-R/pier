@@ -1,8 +1,8 @@
+use crate::application::autostart;
 use crate::domain::Settings;
 use anyhow::Result;
 use std::path::{Path, PathBuf};
 use tauri::Manager;
-use tauri_plugin_autostart::ManagerExt;
 
 pub fn settings_path() -> PathBuf {
     dirs::home_dir()
@@ -38,24 +38,23 @@ pub fn save_to(path: &Path, settings: &Settings) -> Result<()> {
 }
 
 /// Load persisted settings, then reconcile with OS truth where applicable.
-/// `launch_at_login` is taken from the autostart plugin since the LaunchAgent
-/// can be removed externally.
-pub fn current(app: &tauri::AppHandle) -> Result<Settings> {
+/// `launch_at_login` is taken from `SMAppService` since the user can disable
+/// the entry directly in System Settings → Login Items.
+pub fn current(_app: &tauri::AppHandle) -> Result<Settings> {
     let mut s = load()?;
-    if let Ok(enabled) = app.autolaunch().is_enabled() {
+    if let Ok(enabled) = autostart::is_enabled() {
         s.launch_at_login = enabled;
     }
     Ok(s)
 }
 
 /// Persist settings and apply the OS-side effects (autostart toggle).
-pub fn apply(app: &tauri::AppHandle, settings: &Settings) -> Result<()> {
+pub fn apply(_app: &tauri::AppHandle, settings: &Settings) -> Result<()> {
     save(settings)?;
-    let autolaunch = app.autolaunch();
     if settings.launch_at_login {
-        autolaunch.enable()?;
+        autostart::enable()?;
     } else {
-        autolaunch.disable()?;
+        autostart::disable()?;
     }
     Ok(())
 }
@@ -100,11 +99,10 @@ pub async fn patch(app: &tauri::AppHandle, patch: Value) -> Result<Settings> {
     let state = app.state::<crate::state::AppState>();
     let _guard = state.settings_lock.lock().await;
     let merged = patch_with(&settings_path(), patch)?;
-    let autolaunch = app.autolaunch();
     if merged.launch_at_login {
-        let _ = autolaunch.enable();
+        let _ = autostart::enable();
     } else {
-        let _ = autolaunch.disable();
+        let _ = autostart::disable();
     }
     Ok(merged)
 }

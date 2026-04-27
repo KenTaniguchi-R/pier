@@ -1,5 +1,6 @@
 pub mod arg_template;
 pub mod audit;
+pub mod autostart;
 pub mod env_resolver;
 pub mod history;
 pub mod history_admin;
