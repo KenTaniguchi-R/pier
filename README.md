@@ -6,18 +6,27 @@ Pier surfaces the small CLI tools you (or Claude Code) generate as drag-drop til
 
 ## Status
 
-v0.1 — personal-use alpha. Unsigned DMG.
+Personal-use alpha. macOS only. Bundles are ad-hoc codesigned but **not Apple-notarized**, so first launch needs a one-time Gatekeeper override (instructions below). After that, the in-app updater handles every future version silently.
 
 ## Install (macOS)
 
+1. Grab the latest **`Pier_x.y.z_universal.dmg`** from the [Releases page](https://github.com/KenTaniguchi-R/pier/releases/latest).
+2. Open the DMG and drag **Pier.app** to **Applications**.
+3. **First launch** — right-click Pier in Applications → **Open** → **Open Anyway**. (Apple shows this for any app whose developer hasn't paid for notarization. You only do it once.)
+4. Pier lives in your menu bar. Click the icon to open the window.
+
+After v0.2.0, future updates download silently in the background and prompt you to install + restart — no DMG dance.
+
+### Build from source (developers only)
+
 ```bash
-git clone https://github.com/<your-org>/pier
+git clone https://github.com/KenTaniguchi-R/pier
 cd pier
 npm install
 npm run tauri build
 ```
 
-The unsigned DMG lands in `src-tauri/target/release/bundle/dmg/`. Drag to Applications. First launch: right-click → Open → Open Anyway (Gatekeeper unsigned-app dance).
+Output: `src-tauri/target/release/bundle/dmg/Pier_*.dmg`.
 
 ## Usage
 
