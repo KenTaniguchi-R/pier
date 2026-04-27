@@ -56,7 +56,7 @@ describe("parseToolsConfig — parameters", () => {
     fail({
       schemaVersion: "1.0",
       tools: [{ id: "x", name: "X", command: "/x",
-        parameters: [{ id: "format", type: "select" }] }],
+        parameters: [{ id: "format", label: "Format", type: "select" }] }],
     });
   });
 
@@ -65,8 +65,8 @@ describe("parseToolsConfig — parameters", () => {
       schemaVersion: "1.0",
       tools: [{ id: "x", name: "X", command: "/x",
         parameters: [
-          { id: "a", type: "text" },
-          { id: "a", type: "text" },
+          { id: "a", label: "A", type: "text" },
+          { id: "a", label: "A", type: "text" },
         ] }],
     });
     expect(errs.join(" ")).toMatch(/duplicate.*parameter/i);
@@ -77,7 +77,7 @@ describe("parseToolsConfig — parameters", () => {
       schemaVersion: "1.0",
       tools: [{ id: "x", name: "X", command: "/x",
         args: ["{ghost}"],
-        parameters: [{ id: "real", type: "text" }] }],
+        parameters: [{ id: "real", label: "Real", type: "text" }] }],
     });
     expect(errs.join(" ")).toMatch(/ghost/);
   });
@@ -86,7 +86,7 @@ describe("parseToolsConfig — parameters", () => {
     fail({
       schemaVersion: "1.0",
       tools: [{ id: "x", name: "X", command: "/x",
-        parameters: [{ id: "f", type: "select", options: ["a", "b"], default: "c" }] }],
+        parameters: [{ id: "f", label: "Format", type: "select", options: ["a", "b"], default: "c" }] }],
     });
   });
 
@@ -94,7 +94,7 @@ describe("parseToolsConfig — parameters", () => {
     fail({
       schemaVersion: "1.0",
       tools: [{ id: "x", name: "X", command: "/x",
-        parameters: [{ id: "n", type: "number", default: "five" }] }],
+        parameters: [{ id: "n", label: "Number", type: "number", default: "five" }] }],
     });
   });
 
@@ -158,11 +158,49 @@ describe("parseToolsConfig — parameters", () => {
         command: "/usr/bin/ffmpeg",
         args: ["-i", "{input}"],
         parameters: [
-          { id: "input", type: "file", accepts: [".mov"] },
-          { id: "fmt", type: "select", options: ["mp4", "webm"], default: "mp4" },
-          { id: "dry", type: "boolean", flag: "--dry-run", optional: true },
+          { id: "input", label: "Input file", type: "file", accepts: [".mov"] },
+          { id: "fmt", label: "Format", type: "select", options: ["mp4", "webm"], default: "mp4" },
+          { id: "dry", label: "Dry run", type: "boolean", flag: "--dry-run", optional: true },
         ],
       }],
     });
+  });
+});
+
+describe("parseToolsConfig — label requirement", () => {
+  it("rejects a parameter that omits label", () => {
+    const result = parseToolsConfig({
+      schemaVersion: "1.0",
+      tools: [{
+        id: "t", name: "T", command: "/x",
+        parameters: [{ id: "input", type: "file" }],
+      }],
+    });
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.errors.some(e => /label/.test(e) && /input/.test(e))).toBe(true);
+    }
+  });
+
+  it("accepts a parameter with label", () => {
+    const result = parseToolsConfig({
+      schemaVersion: "1.0",
+      tools: [{
+        id: "t", name: "T", command: "/x",
+        parameters: [{ id: "input", label: "Input file", type: "file" }],
+      }],
+    });
+    expect(result.ok).toBe(true);
+  });
+
+  it("accepts a parameter with advanced: true", () => {
+    const result = parseToolsConfig({
+      schemaVersion: "1.0",
+      tools: [{
+        id: "t", name: "T", command: "/x",
+        parameters: [{ id: "fmt", label: "Format", type: "select", options: ["a"], advanced: true }],
+      }],
+    });
+    expect(result.ok).toBe(true);
   });
 });

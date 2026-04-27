@@ -128,6 +128,9 @@ function parseParam(p: unknown, ti: number, pi: number): ParseResult<Parameter> 
   if (!isRecord(p)) return { ok: false, errors: [`${where} not an object`] };
   const errors: string[] = [];
   if (typeof p.id !== "string" || !p.id) errors.push(`${where}.id required string`);
+  if (typeof p.label !== "string" || !p.label) {
+    errors.push(`${where}.label required string (parameter id: ${typeof p.id === "string" ? p.id : "?"})`);
+  }
   if (!PARAM_TYPES.includes(p.type as ParamType)) {
     errors.push(`${where}.type must be one of ${PARAM_TYPES.join(", ")}`);
   }
