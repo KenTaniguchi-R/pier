@@ -1,7 +1,7 @@
 {
   "name": "pier",
   "private": true,
-  "version": "0.1.1",
+  "version": "0.1.2",
   "license": "MIT",
   "description": "Tauri-based macOS menu-bar launcher for personal CLI tools",
   "repository": {

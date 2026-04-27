@@ -2,6 +2,10 @@
 
 All notable changes to Pier are documented here.
 
+## v0.1.2 — 2026-04-27
+
+Releases are now signed with a Developer ID Application certificate (Benri LLC) and notarized by Apple. Fresh installs no longer trigger the Gatekeeper "unidentified developer" warning, and the auto-updater hands off properly notarized bundles. No user-facing feature changes.
+
 ## v0.1.1 — 2026-04-27
 
 First working release. v0.1.0 was tagged but its `latest.json` had a wrong asset URL — the on-disk tarball name didn't match the uploaded asset name after `tauri-action`'s rename, so the auto-updater would 404 on every check. Fixed by resolving the actual asset URL from the GitHub Release at workflow time.
