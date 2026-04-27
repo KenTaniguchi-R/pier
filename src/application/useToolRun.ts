@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Tool, Parameter, ParamValue } from "../domain/tool";
 import { useApp } from "../state/AppContext";
 import { useRunner } from "../state/RunnerContext";
@@ -24,8 +24,8 @@ export interface ToolRunController {
   startedAt: number | null;
   canRun: boolean;
   blockedReason?: string;
-  resolvedArgs: string[];
 
+  resolvedArgs: string[];
   confirmOpen: boolean;
   cancelConfirm: () => void;
   acceptConfirm: () => void;
@@ -69,23 +69,11 @@ export function useToolRun(tool: Tool): ToolRunController {
   const cancelConfirm = () => setConfirmOpen(false);
   const acceptConfirm = () => { setConfirmOpen(false); startRun(true); };
 
-  // Cmd+Enter to run, Cmd+. to stop. Skip while typing in a textarea or composing.
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (!e.metaKey || e.isComposing) return;
-      const target = e.target as HTMLElement | null;
-      const inTextarea = target?.tagName === "TEXTAREA";
-
-      if (e.key === "Enter" && canRun && !isRunning && !confirmOpen && !inTextarea) {
-        e.preventDefault();
-        onRunClick();
-      } else if (e.key === "." && isRunning) {
-        e.preventDefault();
-        stopRun();
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+  useRunShortcuts({
+    canRun: !!canRun && !confirmOpen && !isRunning,
+    isRunning: !!isRunning,
+    onRun: onRunClick,
+    onStop: stopRun,
   });
 
   return {
@@ -102,4 +90,39 @@ export function useToolRun(tool: Tool): ToolRunController {
     onRunClick,
     stopRun,
   };
+}
+
+/**
+ * Window-level keyboard shortcuts for the tool runner:
+ *   ⌘↵ — run when ready, ⌘. — stop when running.
+ *
+ * Ignored while typing in a textarea or during IME composition.
+ * Single binding via a callback ref so handlers always see the latest state.
+ */
+function useRunShortcuts(opts: {
+  canRun: boolean;
+  isRunning: boolean;
+  onRun: () => void;
+  onStop: () => void;
+}) {
+  const optsRef = useRef(opts);
+  optsRef.current = opts;
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!e.metaKey || e.isComposing) return;
+      const inTextarea = (e.target as HTMLElement | null)?.tagName === "TEXTAREA";
+      const { canRun, isRunning, onRun, onStop } = optsRef.current;
+
+      if (e.key === "Enter" && canRun && !inTextarea) {
+        e.preventDefault();
+        onRun();
+      } else if (e.key === "." && isRunning) {
+        e.preventDefault();
+        onStop();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 }
