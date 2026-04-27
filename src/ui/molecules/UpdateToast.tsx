@@ -1,13 +1,24 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Toast } from "./Toast";
 import { useUpdaterState } from "../../state/UpdaterStateContext";
 import { UpdateDialog } from "./UpdateDialog";
 
+function useDocumentVisible(): boolean {
+  const [v, setV] = useState<boolean>(typeof document === "undefined" ? true : !document.hidden);
+  useEffect(() => {
+    const onVis = () => setV(!document.hidden);
+    document.addEventListener("visibilitychange", onVis);
+    return () => document.removeEventListener("visibilitychange", onVis);
+  }, []);
+  return v;
+}
+
 export function UpdateToast() {
   const ctrl = useUpdaterState();
   const [open, setOpen] = useState(false);
+  const visible = useDocumentVisible();
 
-  if (ctrl.state.kind === "ready") {
+  if (ctrl.state.kind === "ready" && visible) {
     const info = ctrl.state.info;
     return (
       <>
@@ -18,12 +29,15 @@ export function UpdateToast() {
       </>
     );
   }
-  if (ctrl.state.kind === "error" && ctrl.state.lastInfo) {
+  if (ctrl.state.kind === "error" && ctrl.state.lastInfo && visible) {
     return (
       <Toast open variant="error" action={{ label: "Retry", onClick: () => ctrl.install() }} onDismiss={ctrl.dismissError}>
         Update failed: {ctrl.state.message}
       </Toast>
     );
+  }
+  if (ctrl.state.kind === "ready") {
+    return <UpdateDialog open={open} onClose={() => setOpen(false)} />;
   }
   return null;
 }
