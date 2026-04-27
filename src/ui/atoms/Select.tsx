@@ -1,4 +1,5 @@
 import { SelectHTMLAttributes } from "react";
+import { ChevronDown } from "lucide-react";
 
 interface Props extends SelectHTMLAttributes<HTMLSelectElement> {
   options: string[];
@@ -23,9 +24,7 @@ export function Select({ options, className = "", ...rest }: Props) {
           <option key={o} value={o}>{o}</option>
         ))}
       </select>
-      <svg className={CHEVRON} viewBox="0 0 12 12" aria-hidden>
-        <path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
+      <ChevronDown className={CHEVRON} aria-hidden />
     </span>
   );
 }
