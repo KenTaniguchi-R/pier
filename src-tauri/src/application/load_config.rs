@@ -26,7 +26,7 @@ const DEFAULT_CONFIG: &str = r#"{
       "name": "What's this file?",
       "command": "/usr/bin/file",
       "args": ["{input}"],
-      "parameters": [{ "id": "input", "type": "file" }],
+      "parameters": [{ "id": "input", "label": "File", "type": "file" }],
       "description": "Drop any file to see what kind it is.",
       "icon": "📄",
       "category": "starter"
