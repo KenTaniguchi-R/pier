@@ -7,14 +7,6 @@ pub type RunId = String;
 #[serde(rename_all = "lowercase")]
 pub enum RunStatus { Pending, Running, Success, Failed, Killed }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct RunRequest {
-    pub tool_id: String,
-    #[serde(default)]
-    pub values: HashMap<String, serde_json::Value>,
-}
-
 /// IPC payload for `run_tool_cmd`. The Tool itself is NEVER sent from the
 /// webview; the backend looks it up by id from the ToolRegistry.
 #[derive(Debug, Clone, Deserialize, Serialize)]

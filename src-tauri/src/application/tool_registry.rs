@@ -2,10 +2,14 @@ use crate::domain::{Tool, ToolsConfig};
 use std::collections::HashMap;
 use std::sync::RwLock;
 
-/// Single source of truth for the loaded tools.json. Paths are pre-resolved,
-/// keychain allowlists are precomputed. The IPC layer never accepts a `Tool`
-/// from the webview — it always reads through this registry.
+/// Single source of truth for the loaded tools.json. The IPC layer never
+/// accepts a `Tool` from the webview — it always reads through this registry.
+///
+/// Later tasks add: pre-resolved absolute command paths (Task 5) and per-tool
+/// keychain allowlists (Task 3). For now this is just an in-memory id → Tool map.
 pub struct ToolRegistry {
+    // Inner critical sections are panic-free (HashMap ops + clones), so the lock
+    // cannot be poisoned in practice — `.unwrap()` on guard acquisition is safe.
     inner: RwLock<Inner>,
 }
 

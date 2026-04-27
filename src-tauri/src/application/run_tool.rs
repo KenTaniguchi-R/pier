@@ -6,12 +6,27 @@ use crate::state::{AppState, RunHandle};
 use anyhow::{anyhow, Result};
 use std::collections::HashMap;
 use std::path::PathBuf;
-use std::sync::Arc;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use tauri::{AppHandle, Emitter, Manager};
 use uuid::Uuid;
 
 const DEFAULT_TIMEOUT_SECS: u64 = 300;
+
+/// Resolve a tool by id and check that the confirm gate is satisfied.
+/// Pure (no AppHandle); used directly by tests, and called by run_tool.
+pub(crate) fn validate_run(
+    registry: &ToolRegistry,
+    tool_id: &str,
+    confirmed: bool,
+) -> Result<Tool> {
+    let tool = registry
+        .get(tool_id)
+        .ok_or_else(|| anyhow!("unknown tool: {tool_id}"))?;
+    if tool.confirm.unwrap_or(false) && !confirmed {
+        return Err(anyhow!("confirmation required for tool: {tool_id}"));
+    }
+    Ok(tool)
+}
 
 /// Public entry — looks the tool up in the registry attached to AppState.
 pub async fn run_tool(
@@ -21,39 +36,21 @@ pub async fn run_tool(
     confirmed: bool,
 ) -> Result<RunId> {
     let registry = app.state::<AppState>().registry.clone();
-    run_tool_with_registry(Some(app), registry, tool_id, values, confirmed).await
-}
-
-/// Test-friendly variant. `app` is None in unit tests where we only exercise the
-/// pre-spawn validation (unknown tool, confirm rejection). Spawning paths still
-/// require a live AppHandle and run via the public `run_tool` in integration tests.
-pub async fn run_tool_with_registry(
-    app: Option<AppHandle>,
-    registry: Arc<ToolRegistry>,
-    tool_id: String,
-    values: HashMap<String, serde_json::Value>,
-    confirmed: bool,
-) -> Result<RunId> {
-    let tool = registry.get(&tool_id).ok_or_else(|| anyhow!("unknown tool: {tool_id}"))?;
-    if tool.confirm.unwrap_or(false) && !confirmed {
-        return Err(anyhow!("confirmation required for tool: {tool_id}"));
-    }
-
-    let app = app.ok_or_else(|| anyhow!("no app handle"))?;
+    let tool = validate_run(&registry, &tool_id, confirmed)?;
     let defaults = registry.defaults();
-    let req = RunRequest { tool_id: tool_id.clone(), values };
-    spawn_and_stream(app, tool, defaults, req).await
+    spawn_and_stream(app, tool, defaults, tool_id, values).await
 }
 
 async fn spawn_and_stream(
     app: AppHandle,
     tool: Tool,
     defaults: Option<Defaults>,
-    req: RunRequest,
+    _tool_id: String,
+    values: HashMap<String, serde_json::Value>,
 ) -> Result<RunId> {
     let run_id = Uuid::new_v4().to_string();
     let bin = path_resolver::resolve(&tool.command)?;
-    let args = crate::application::arg_template::build_args(&tool, &req.values);
+    let args = crate::application::arg_template::build_args(&tool, &values);
     let cwd = tool.cwd.as_ref()
         .or_else(|| defaults.as_ref().and_then(|d| d.cwd.as_ref()))
         .map(PathBuf::from);
@@ -67,7 +64,7 @@ async fn spawn_and_stream(
     );
     let started = now();
 
-    let redacted = audit::redact_args(&args, &tool.parameters, &req.values);
+    let redacted = audit::redact_args(&args, &tool.parameters, &values);
     audit::append(&audit::Entry::start_with_env(
         &run_id, &tool.id, &bin, &redacted, &resolved_env.keys, started,
     ))?;
@@ -157,20 +154,37 @@ fn now() -> u64 {
 mod tests {
     use super::*;
     use crate::application::tool_registry::ToolRegistry;
-    use std::sync::Arc;
 
-    #[tokio::test]
-    async fn rejects_unknown_tool_id() {
-        let registry = Arc::new(ToolRegistry::new());
-        let res = run_tool_with_registry(
-            None,
-            registry,
-            "does-not-exist".to_string(),
-            std::collections::HashMap::new(),
-            false,
-        ).await;
-        assert!(res.is_err());
-        let msg = format!("{:#}", res.unwrap_err());
-        assert!(msg.contains("unknown tool"), "got: {msg}");
+    #[test]
+    fn validate_run_rejects_unknown_tool_id() {
+        let registry = ToolRegistry::new();
+        let err = validate_run(&registry, "does-not-exist", false).unwrap_err();
+        assert!(format!("{err:#}").contains("unknown tool"));
+    }
+
+    #[test]
+    fn validate_run_rejects_confirm_required_but_not_confirmed() {
+        let registry = ToolRegistry::new();
+        let cfg: ToolsConfig = serde_json::from_str(
+            r#"{"schemaVersion":"1.0","tools":[
+                {"id":"x","name":"X","command":"/bin/echo","confirm":true}
+            ]}"#,
+        ).unwrap();
+        registry.replace(cfg);
+        let err = validate_run(&registry, "x", false).unwrap_err();
+        assert!(format!("{err:#}").contains("confirmation required"));
+    }
+
+    #[test]
+    fn validate_run_passes_when_confirmed() {
+        let registry = ToolRegistry::new();
+        let cfg: ToolsConfig = serde_json::from_str(
+            r#"{"schemaVersion":"1.0","tools":[
+                {"id":"x","name":"X","command":"/bin/echo","confirm":true}
+            ]}"#,
+        ).unwrap();
+        registry.replace(cfg);
+        let tool = validate_run(&registry, "x", true).unwrap();
+        assert_eq!(tool.id, "x");
     }
 }
