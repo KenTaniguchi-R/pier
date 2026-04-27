@@ -29,6 +29,7 @@ impl Parameter {
     pub fn optional(&self) -> bool { self.base().optional.unwrap_or(false) }
     pub fn advanced(&self) -> bool { self.base().advanced.unwrap_or(false) }
     pub fn is_boolean(&self) -> bool { matches!(self, Parameter::Boolean(_)) }
+    pub fn is_secret(&self) -> bool { self.base().secret.unwrap_or(false) }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -41,6 +42,7 @@ pub struct ParameterBase {
     #[serde(default, skip_serializing_if = "Option::is_none")] pub advanced: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")] pub default: Option<serde_json::Value>,
     #[serde(default, skip_serializing_if = "Option::is_none")] pub flag: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")] pub secret: Option<bool>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

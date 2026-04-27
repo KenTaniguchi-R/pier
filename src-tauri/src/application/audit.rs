@@ -56,13 +56,31 @@ impl Entry {
     }
 }
 
-/// Temporary pass-through; replaced in Task 4 with real redaction.
+/// Replace argv entries that exactly match a `secret: true` parameter's value with `[REDACTED]`.
 pub fn redact_args(
     args: &[String],
-    _parameters: &[crate::domain::tool::Parameter],
-    _values: &std::collections::HashMap<String, serde_json::Value>,
+    parameters: &[crate::domain::tool::Parameter],
+    values: &std::collections::HashMap<String, serde_json::Value>,
 ) -> Vec<String> {
-    args.to_vec()
+    use serde_json::Value;
+    let mut secret_strings: Vec<String> = Vec::new();
+    for p in parameters {
+        if p.is_secret() {
+            if let Some(v) = values.get(p.id()) {
+                let s = match v {
+                    Value::String(s) => s.clone(),
+                    Value::Null => String::new(),
+                    other => other.to_string(),
+                };
+                if !s.is_empty() {
+                    secret_strings.push(s);
+                }
+            }
+        }
+    }
+    args.iter()
+        .map(|a| if secret_strings.iter().any(|s| s == a) { "[REDACTED]".to_string() } else { a.clone() })
+        .collect()
 }
 
 /// Append an entry to the default audit log at ~/.pier/audit.log
@@ -129,5 +147,36 @@ mod tests {
         assert!(json.contains("\"process\""));
         // Definitely no secret-looking content.
         assert!(!json.contains("sk-"));
+    }
+
+    #[test]
+    fn redact_args_replaces_secret_param_values() {
+        use crate::domain::tool::Parameter;
+        use serde_json::json;
+        let params: Vec<Parameter> = serde_json::from_str(r#"[
+            {"id":"token","label":"T","type":"text","secret":true},
+            {"id":"name","label":"N","type":"text"}
+        ]"#).unwrap();
+        let mut values = std::collections::HashMap::new();
+        values.insert("token".to_string(), json!("ghp_abc123"));
+        values.insert("name".to_string(), json!("hello"));
+
+        let args = vec!["--token".into(), "ghp_abc123".into(), "--name".into(), "hello".into()];
+        let out = super::redact_args(&args, &params, &values);
+        assert_eq!(out, vec!["--token", "[REDACTED]", "--name", "hello"]);
+    }
+
+    #[test]
+    fn redact_args_does_not_redact_non_secret_match() {
+        use crate::domain::tool::Parameter;
+        use serde_json::json;
+        let params: Vec<Parameter> = serde_json::from_str(r#"[
+            {"id":"name","label":"N","type":"text"}
+        ]"#).unwrap();
+        let mut values = std::collections::HashMap::new();
+        values.insert("name".to_string(), json!("hello"));
+        let args = vec!["hello".into()];
+        let out = super::redact_args(&args, &params, &values);
+        assert_eq!(out, vec!["hello"]);
     }
 }
