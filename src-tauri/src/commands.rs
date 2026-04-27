@@ -72,3 +72,11 @@ pub fn history_stats_cmd() -> Result<history_admin::HistoryStats, String> {
 pub fn clear_history_cmd() -> Result<(), String> {
     history_admin::clear().map_err(|e| e.to_string())
 }
+
+#[tauri::command]
+pub async fn patch_settings_cmd(
+    app: tauri::AppHandle,
+    patch: serde_json::Value,
+) -> Result<Settings, String> {
+    settings_app::patch(&app, patch).await.map_err(|e| e.to_string())
+}
