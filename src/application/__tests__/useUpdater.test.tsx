@@ -13,6 +13,10 @@ function makeChecker(overrides: Partial<UpdateChecker> = {}): UpdateChecker {
     check: vi.fn().mockResolvedValue(null),
     installAndRelaunch: vi.fn().mockResolvedValue(undefined),
     isTranslocated: vi.fn().mockResolvedValue(false),
+    setTrayBadge: vi.fn(),
+    notifyReady: vi.fn(),
+    isWindowVisible: vi.fn().mockResolvedValue(true),
+    onWindowVisibilityChange: vi.fn().mockReturnValue(() => {}),
     ...overrides,
   };
 }

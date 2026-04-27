@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useReducer, useRef } from "react";
-import { invoke } from "@tauri-apps/api/core";
 import type { UpdateInfo, UpdateProgress, UpdateState } from "../domain/update";
 import { AUTO_CHECK_INTERVAL_MS, dueForCheck, shouldSkip } from "../domain/update";
 import { DEFAULT_UPDATE_PREFS, type UpdatePrefs } from "../domain/settings";
@@ -7,18 +6,6 @@ import { useUpdateChecker } from "../state/UpdaterContext";
 import { useSettingsAdapter } from "../state/SettingsContext";
 
 const POLL_MS = 15 * 60 * 1000;
-
-function setTrayBadge(has: boolean) {
-  if (typeof window !== "undefined" && "__TAURI_INTERNALS__" in window) {
-    void invoke("set_tray_badge_cmd", { hasUpdate: has });
-  }
-}
-
-function notifyUpdateReady(version: string) {
-  if (typeof window !== "undefined" && "__TAURI_INTERNALS__" in window) {
-    void invoke("notify_update_ready_cmd", { version });
-  }
-}
 
 export interface UpdateController {
   state: UpdateState;
@@ -60,9 +47,9 @@ export function useUpdater(): UpdateController {
         const info = await checker.check();
         const merged = await settings.patch({ update: { lastCheckedAt: Date.now() } });
         prefsRef.current = merged.update;
-        if (!info) { dispatch({ type: "set", state: { kind: "idle" } }); setTrayBadge(false); return; }
+        if (!info) { dispatch({ type: "set", state: { kind: "idle" } }); checker.setTrayBadge(false); return; }
         if (!opts.manual && shouldSkip(info, merged.update, Date.now())) {
-          dispatch({ type: "set", state: { kind: "idle" } }); setTrayBadge(false); return;
+          dispatch({ type: "set", state: { kind: "idle" } }); checker.setTrayBadge(false); return;
         }
         if (!merged.update.autoCheck && !opts.manual) {
           dispatch({ type: "set", state: { kind: "available", info } }); return;
@@ -71,8 +58,8 @@ export function useUpdater(): UpdateController {
         try {
           await checker.installAndRelaunch((p) => dispatch({ type: "progress", progress: p }));
           dispatch({ type: "set", state: { kind: "ready", info } });
-          setTrayBadge(true);
-          notifyUpdateReady(info.version);
+          checker.setTrayBadge(true);
+          checker.notifyReady(info.version);
         } catch (err) {
           dispatch({ type: "set", state: { kind: "error", message: String(err), lastInfo: info } });
         }
@@ -132,8 +119,8 @@ export function useUpdater(): UpdateController {
     try {
       await checker.installAndRelaunch((p) => dispatch({ type: "progress", progress: p }));
       dispatch({ type: "set", state: { kind: "ready", info } });
-      setTrayBadge(true);
-      notifyUpdateReady(info.version);
+      checker.setTrayBadge(true);
+      checker.notifyReady(info.version);
     } catch (err) {
       dispatch({ type: "set", state: { kind: "error", message: String(err), lastInfo: info } });
     }
@@ -142,22 +129,22 @@ export function useUpdater(): UpdateController {
   const skip = useCallback(async () => {
     const cur = stateRef.current;
     const info = "info" in cur ? (cur as { info?: UpdateInfo }).info ?? null : null;
-    if (!info) { dispatch({ type: "set", state: { kind: "idle" } }); setTrayBadge(false); return; }
+    if (!info) { dispatch({ type: "set", state: { kind: "idle" } }); checker.setTrayBadge(false); return; }
     await settings.patch({ update: { skippedVersion: info.version } });
     dispatch({ type: "set", state: { kind: "idle" } });
-    setTrayBadge(false);
-  }, [settings]);
+    checker.setTrayBadge(false);
+  }, [settings, checker]);
 
   const remindLater = useCallback(async () => {
     await settings.patch({ update: { remindAfter: Date.now() + AUTO_CHECK_INTERVAL_MS } });
     dispatch({ type: "set", state: { kind: "idle" } });
-    setTrayBadge(false);
-  }, [settings]);
+    checker.setTrayBadge(false);
+  }, [settings, checker]);
 
   const dismissError = useCallback(() => {
     dispatch({ type: "set", state: { kind: "idle" } });
-    setTrayBadge(false);
-  }, []);
+    checker.setTrayBadge(false);
+  }, [checker]);
 
   return { state, manualCheck, install, remindLater, skip, dismissError };
 }
