@@ -53,6 +53,13 @@ export interface UrlOpener {
   open(url: string): Promise<void>;
 }
 
+export interface SettingsAdapter {
+  load(): Promise<import("../domain/settings").Settings>;
+  save(settings: import("../domain/settings").Settings): Promise<void>;
+  historyStats(): Promise<import("../domain/settings").HistoryStats>;
+  clearHistory(): Promise<void>;
+}
+
 export interface FilePicker {
   /** Subscribe to native drag-drop events from the host webview. */
   onDragDrop(cb: (e: DragDropEvent) => void): () => void;

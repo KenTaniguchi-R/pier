@@ -6,6 +6,7 @@ import { Sidebar, type Selection } from "../organisms/Sidebar";
 import { ToolBrowser } from "../organisms/ToolBrowser";
 import { ToolDetail } from "../organisms/ToolDetail";
 import { SkillGuide } from "../organisms/SkillGuide";
+import { SettingsPage } from "./SettingsPage";
 import { loadConfig } from "../../application/loadConfig";
 import { tauriConfigLoader } from "../../infrastructure/tauriConfigLoader";
 import { runningRuns, runningToolIds } from "../../state/reducer";
@@ -97,6 +98,8 @@ export function HomePage() {
     );
   } else if (selection.kind === "help") {
     main = <SkillGuide />;
+  } else if (selection.kind === "settings") {
+    main = <SettingsPage />;
   } else if (selectedTool) {
     main = (
       <ToolDetail
