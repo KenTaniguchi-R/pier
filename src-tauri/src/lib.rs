@@ -31,6 +31,10 @@ pub fn run() {
             #[cfg(target_os = "macos")]
             let _ = ActivationPolicy::Regular; // suppress unused-import warning
 
+            // Warm the login-shell PATH cache off the main thread so GUI launches
+            // (Finder/Dock) inherit Homebrew/nvm/pnpm paths without blocking startup.
+            std::thread::spawn(|| { let _ = crate::infrastructure::shell_env::login_path(); });
+
             // Start config file watcher
             if let Err(e) = crate::application::watch_config::start(app.handle().clone()) {
                 eprintln!("watch_config start: {e}");
