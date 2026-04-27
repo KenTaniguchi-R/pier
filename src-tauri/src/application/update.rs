@@ -50,3 +50,16 @@ pub fn is_translocated() -> Result<bool> {
     let exe = std::env::current_exe()?;
     Ok(exe.to_string_lossy().contains("AppTranslocation"))
 }
+
+pub fn set_tray_badge(app: &tauri::AppHandle, has_update: bool) -> Result<()> {
+    let bytes: &[u8] = if has_update {
+        include_bytes!("../../icons/tray-icon-update@2x.png")
+    } else {
+        include_bytes!("../../icons/tray-icon@2x.png")
+    };
+    if let Some(tray) = app.tray_by_id("main-tray") {
+        let img = tauri::image::Image::from_bytes(bytes)?;
+        tray.set_icon(Some(img))?;
+    }
+    Ok(())
+}
