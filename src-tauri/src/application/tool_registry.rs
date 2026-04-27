@@ -76,7 +76,12 @@ impl ToolRegistry {
     }
 
     pub fn defaults(&self) -> Option<crate::domain::Defaults> {
-        self.inner.read().unwrap().config.as_ref().and_then(|c| c.defaults.clone())
+        self.inner
+            .read()
+            .unwrap()
+            .config
+            .as_ref()
+            .and_then(|c| c.defaults.clone())
     }
 
     /// Returns the set of keychain keys the named tool is permitted to read.
@@ -99,7 +104,9 @@ fn parse_keychain_ref(raw: &str) -> Option<String> {
 }
 
 impl Default for ToolRegistry {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 #[cfg(test)]
@@ -129,8 +136,12 @@ mod tests {
     #[test]
     fn replace_swaps_cleanly() {
         let r = ToolRegistry::new();
-        r.replace(cfg(r#"{"schemaVersion":"1.0","tools":[{"id":"a","name":"A","command":"/x"}]}"#));
-        r.replace(cfg(r#"{"schemaVersion":"1.0","tools":[{"id":"b","name":"B","command":"/x"}]}"#));
+        r.replace(cfg(
+            r#"{"schemaVersion":"1.0","tools":[{"id":"a","name":"A","command":"/x"}]}"#,
+        ));
+        r.replace(cfg(
+            r#"{"schemaVersion":"1.0","tools":[{"id":"b","name":"B","command":"/x"}]}"#,
+        ));
         assert!(r.get("a").is_none());
         assert!(r.get("b").is_some());
     }

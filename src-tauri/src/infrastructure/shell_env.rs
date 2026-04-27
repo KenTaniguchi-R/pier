@@ -20,9 +20,7 @@ static LOGIN_PATH: OnceLock<Option<String>> = OnceLock::new();
 /// Returns the login-shell `PATH` if we could resolve one, else `None`.
 /// Cached after the first call.
 pub fn login_path() -> Option<&'static str> {
-    LOGIN_PATH
-        .get_or_init(resolve_login_path)
-        .as_deref()
+    LOGIN_PATH.get_or_init(resolve_login_path).as_deref()
 }
 
 fn resolve_login_path() -> Option<String> {

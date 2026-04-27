@@ -35,7 +35,9 @@ pub fn run() {
 
             // Warm the login-shell PATH cache off the main thread so GUI launches
             // (Finder/Dock) inherit Homebrew/nvm/pnpm paths without blocking startup.
-            std::thread::spawn(|| { let _ = crate::infrastructure::shell_env::login_path(); });
+            std::thread::spawn(|| {
+                let _ = crate::infrastructure::shell_env::login_path();
+            });
 
             // Start config file watcher
             if let Err(e) = crate::application::watch_config::start(app.handle().clone()) {
@@ -49,9 +51,8 @@ pub fn run() {
             // Build tray icon. The bundled app icon is full-color; for the menu
             // bar we use a separate monochrome template so it tints with the
             // system appearance.
-            let tray_icon = tauri::image::Image::from_bytes(include_bytes!(
-                "../icons/tray-icon@2x.png"
-            ))?;
+            let tray_icon =
+                tauri::image::Image::from_bytes(include_bytes!("../icons/tray-icon@2x.png"))?;
             let _tray = TrayIconBuilder::with_id("main-tray")
                 .icon(tray_icon)
                 .icon_as_template(true) // macOS: monochrome, adapts to dark/light menu bar

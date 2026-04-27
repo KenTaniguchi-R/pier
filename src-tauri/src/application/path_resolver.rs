@@ -1,12 +1,7 @@
 use anyhow::{anyhow, Result};
 use std::path::PathBuf;
 
-pub const SEARCH: &[&str] = &[
-    "/opt/homebrew/bin",
-    "/usr/local/bin",
-    "/usr/bin",
-    "/bin",
-];
+pub const SEARCH: &[&str] = &["/opt/homebrew/bin", "/usr/local/bin", "/usr/bin", "/bin"];
 
 pub fn resolve(command: &str) -> Result<PathBuf> {
     if command.contains('/') {
