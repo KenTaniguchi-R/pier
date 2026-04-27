@@ -12,6 +12,16 @@ describe("reducer", () => {
     expect(s.configErrors).toEqual([]);
   });
 
+  it("CONFIG_LOADED preserves defaults when present", () => {
+    const s = reducer(initialState, {
+      type: "CONFIG_LOADED",
+      tools: [],
+      defaults: { envFile: ".env", cwd: "/tmp" },
+    });
+    expect(s.defaults?.envFile).toBe(".env");
+    expect(s.defaults?.cwd).toBe("/tmp");
+  });
+
   it("CONFIG_ERROR stores errors", () => {
     const s = reducer(initialState, { type: "CONFIG_ERROR", errors: ["bad"] });
     expect(s.configErrors).toEqual(["bad"]);

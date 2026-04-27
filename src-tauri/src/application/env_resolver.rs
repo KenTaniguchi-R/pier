@@ -260,7 +260,8 @@ mod tests {
         let tool: Tool = serde_json::from_str(json).unwrap();
         let dir = tempfile::tempdir().unwrap();
         let r = resolve(&tool, None, Some(dir.path()), &HashMap::new(), &no_keychain);
-        // Process env still passes through; nothing else.
+        // No envFile loaded, no env block, empty process env → empty result. The point
+        // of this test is that the missing file is *silent*, not that it crashes.
         assert!(r.vars.is_empty());
     }
 }

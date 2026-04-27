@@ -112,6 +112,8 @@ Per-tool fields override these. Resolution order at spawn time:
 
 A `${keychain:X}` or `${env:X}` reference that can't be resolved drops the var entirely (the tool sees a missing var, not an empty string).
 
+**Scope of `${env:X}`:** resolves against Pier's *own* process env at spawn time. It does **not** see vars introduced by an `envFile` in the same tool. If you need a value from your `.env`, name the var directly in the env block — don't try to chain `${env:FROM_DOTENV}`.
+
 ## Audit log env recording
 
 Each `start` entry includes `env_keys`: a map of var name → source tag (`process | envfile | envblock | keychain | hostenv`). Values are never recorded.
