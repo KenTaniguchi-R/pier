@@ -10,7 +10,10 @@
     "core:window:allow-hide",
     "core:window:allow-set-focus",
     "core:event:default",
-    "opener:default",
+    {
+      "identifier": "opener:allow-open-url",
+      "allow": [{ "url": "https://*/**" }, { "url": "http://*/**" }]
+    },
     "dialog:default",
     "core:webview:default"
   ]
