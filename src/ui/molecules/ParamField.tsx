@@ -1,5 +1,6 @@
 import type { Parameter, ParamValue } from "../../domain/tool";
 import { TextField } from "../atoms/TextField";
+import { SecretField } from "../atoms/SecretField";
 import { Textarea } from "../atoms/Textarea";
 import { Select } from "../atoms/Select";
 import { Checkbox } from "../atoms/Checkbox";
@@ -64,6 +65,16 @@ function ParamWidget({ param: p, value, onChange, label }: WidgetProps) {
     case "folder":
       return <DropZone directory onDrop={onChange} value={str || undefined} />;
     case "text":
+      if (p.secret) {
+        return (
+          <SecretField
+            id={p.id}
+            label={label}
+            value={str}
+            onChange={v => onChange(v)}
+          />
+        );
+      }
       return p.multiline ? (
         <Textarea value={str} onChange={e => onChange(e.target.value)} placeholder="Paste text…" />
       ) : (
