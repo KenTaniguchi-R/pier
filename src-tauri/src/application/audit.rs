@@ -63,6 +63,7 @@ impl Entry {
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn end_full(
         run_id: &str,
         tool_id: &str,

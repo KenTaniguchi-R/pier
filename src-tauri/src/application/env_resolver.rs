@@ -342,9 +342,8 @@ mod tests {
     fn env_file_loads_and_envblock_overrides() {
         let dir = tempfile::tempdir().unwrap();
         std::fs::write(dir.path().join(".env"), "FROM_FILE=yes\nDEBUG=0\n").unwrap();
-        let json = format!(
-            r#"{{"id":"x","name":"X","command":"/x","envFile":".env","env":{{"DEBUG":"1"}}}}"#
-        );
+        let json = r#"{"id":"x","name":"X","command":"/x","envFile":".env","env":{"DEBUG":"1"}}"#
+            .to_string();
         let tool: Tool = serde_json::from_str(&json).unwrap();
         let r = resolve(&tool, None, Some(dir.path()), &HashMap::new(), &no_keychain);
         assert_eq!(r.vars.get("FROM_FILE").map(String::as_str), Some("yes"));

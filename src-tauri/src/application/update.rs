@@ -76,6 +76,8 @@ pub fn notify_update_ready(app: &tauri::AppHandle, version: &str) -> Result<()> 
 }
 
 pub fn set_tray_badge(app: &tauri::AppHandle, has_update: bool) -> Result<()> {
+    // include_bytes! resolves at macro time; clippy can't see the two PNGs differ.
+    #[allow(clippy::if_same_then_else)]
     let bytes: &[u8] = if has_update {
         include_bytes!("../../icons/tray-icon-update@2x.png")
     } else {

@@ -151,7 +151,7 @@ mod tests {
         let d = tempdir().unwrap();
         let mut log = RunLog::create(d.path(), "big").unwrap();
         let big = "x".repeat(1024); // 1 KiB payload
-        for _ in 0..(2200) {
+        for _ in 0..2200 {
             log.append(&line("stdout", &big));
         }
         assert!(log.truncated());
@@ -175,7 +175,7 @@ mod tests {
         });
         drop(log);
         let read = read_log(&d.path().join("t.log")).unwrap();
-        assert_eq!(read[0].r, true);
+        assert!(read[0].r);
     }
 
     #[test]
