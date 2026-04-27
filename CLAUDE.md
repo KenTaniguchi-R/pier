@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Commands
 
-- `npm run tauri dev` — run the desktop app (Vite on :1420 + Rust shell). Use this, not `npm run dev` alone, since the frontend assumes Tauri commands exist.
+- `npm run tauri:dev` — run the desktop app (Vite on :1420 + Rust shell). Use this, not `npm run dev` alone, since the frontend assumes Tauri commands exist.
 - `npm run dev` — frontend only (browser at :1420). Tauri `invoke` calls will fail; useful only for pure UI work.
 - `npm run build` — `tsc && vite build` (typechecks then builds the web bundle to `dist/`).
 - `npm run tauri build` — produce the unsigned DMG at `src-tauri/target/release/bundle/dmg/`.

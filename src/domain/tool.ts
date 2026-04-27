@@ -10,6 +10,7 @@ interface ParameterBase {
   advanced?: boolean;
   default?: ParamValue;
   flag?: string;
+  secret?: boolean;
 }
 
 export interface FileParam     extends ParameterBase { type: "file"; accepts?: string[] }

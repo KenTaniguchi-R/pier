@@ -71,11 +71,7 @@ describe("ToolRunner", () => {
     wrap(tool, runner);
     await userEvent.click(screen.getByRole("button", { name: /run/i }));
     await vi.waitFor(() => expect(runner.run).toHaveBeenCalled());
-    expect(runner.run).toHaveBeenCalledWith(
-      expect.objectContaining({ toolId: "t", values: { fmt: "mp4" } }),
-      tool,
-      undefined,
-    );
+    expect(runner.run).toHaveBeenCalledWith("t", { fmt: "mp4" }, false);
   });
 
   it("hides advanced parameters until the disclosure is opened", async () => {

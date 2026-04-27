@@ -1,5 +1,4 @@
-import type { Tool, Defaults } from "../domain/tool";
-import type { RunOutcome, RunRequest, Stream } from "../domain/runRequest";
+import type { RunOutcome, Stream } from "../domain/runRequest";
 
 export interface ConfigLoader {
   load(): Promise<{ raw: unknown; pathHint: string }>;
@@ -7,7 +6,7 @@ export interface ConfigLoader {
 }
 
 export interface CommandRunner {
-  run(req: RunRequest, tool: Tool, defaults?: Defaults): Promise<RunOutcome>;
+  run(toolId: string, values: Record<string, unknown>, confirmed: boolean): Promise<RunOutcome>;
   kill(runId: string): Promise<void>;
   onOutput(cb: (runId: string, line: string, stream: Stream, transient: boolean) => void): () => void;
   onExit(cb: (runId: string, outcome: RunOutcome) => void): () => void;
