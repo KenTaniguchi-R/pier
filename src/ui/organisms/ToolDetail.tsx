@@ -4,6 +4,7 @@ import { ConfirmDialog } from "../molecules/ConfirmDialog";
 import { RunActionBar } from "../molecules/RunActionBar";
 import { ToolRunner } from "./ToolRunner";
 import { LogPanel } from "./LogPanel";
+import { HistoryList } from "./HistoryList";
 import { useCollapseOnScroll } from "./useCollapseOnScroll";
 import { useToolRun } from "../../application/useToolRun";
 
@@ -36,6 +37,8 @@ export function ToolDetail({ tool, onBack }: Props) {
         <section className="flex-1 min-h-[260px] flex [&>*]:w-full">
           <LogPanel toolId={tool.id} />
         </section>
+
+        <HistoryList toolId={tool.id} />
       </div>
 
       <RunActionBar
