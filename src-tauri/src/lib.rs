@@ -40,9 +40,14 @@ pub fn run() {
             let quit_item = MenuItem::with_id(app, "quit", "Quit Pier", true, None::<&str>)?;
             let menu = Menu::with_items(app, &[&quit_item])?;
 
-            // Build tray icon
+            // Build tray icon. The bundled app icon is full-color; for the menu
+            // bar we use a separate monochrome template so it tints with the
+            // system appearance.
+            let tray_icon = tauri::image::Image::from_bytes(include_bytes!(
+                "../icons/tray-icon@2x.png"
+            ))?;
             let _tray = TrayIconBuilder::with_id("main-tray")
-                .icon(app.default_window_icon().unwrap().clone())
+                .icon(tray_icon)
                 .icon_as_template(true) // macOS: monochrome, adapts to dark/light menu bar
                 .menu(&menu)
                 .show_menu_on_left_click(false) // left-click toggles window; right-click shows menu
