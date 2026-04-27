@@ -29,9 +29,10 @@ jobs:
 
       # tauri-action runs the full pipeline:
       # - builds the universal binary
-      # - ad-hoc codesigns the .app via tauri.conf.json (signingIdentity: "-")
-      # - bundles into .app.tar.gz (for the updater) and .dmg (for first install)
-      # - signs the .app.tar.gz with TAURI_SIGNING_PRIVATE_KEY -> .sig
+      # - codesigns the .app with the Developer ID cert imported from APPLE_CERTIFICATE
+      # - bundles into .app.tar.gz (updater) and .dmg (first install)
+      # - notarizes + staples via notarytool using APPLE_ID / APPLE_PASSWORD / APPLE_TEAM_ID
+      # - signs the .app.tar.gz with TAURI_SIGNING_PRIVATE_KEY -> .sig (updater signature)
       # - creates the GitHub Release and uploads all three.
       - name: Build + release with tauri-action
         id: tauri
@@ -40,6 +41,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         with:
           tagName: ${{ github.ref_name }}
           releaseName: Pier ${{ github.ref_name }}
