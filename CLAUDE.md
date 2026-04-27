@@ -26,18 +26,18 @@ Tauri 2 + React 19 + TypeScript. Both sides follow the same clean-architecture l
 ### Frontend layers (`src/`)
 
 - `domain/` — pure types + validation (`tool.ts`, `runRequest.ts`, `validation.ts`). No React, no Tauri.
-- `application/ports.ts` — interfaces (`ConfigLoader`, `CommandRunner`, `AuditLogger`). The app depends on these, **not** on Tauri directly. Tests substitute fakes.
-- `infrastructure/` — concrete adapters: `tauriConfigLoader.ts`, `tauriCommandRunner.ts`. These are the only files that import from `@tauri-apps/api`.
-- `state/` — `AppContext` (config + tool list, Context+`useReducer`) and `RunnerContext` (injects the `CommandRunner` port). Components consume runners via `useRunner()` so tests can inject fakes.
+- `application/ports.ts` — interfaces (`ConfigLoader`, `CommandRunner`, `AuditLogger`, `HistoryReader`, `SettingsAdapter`, `UrlOpener`, `FilePicker`, `UpdateChecker`). The app depends on these, **not** on Tauri directly. Tests substitute fakes. `SettingsAdapter` exposes `load`/`save`/`patch` — partial mutators must use `patch` so concurrent writers (e.g. `useSettings` toggles + `useUpdater` persistence) don't last-write-wins.
+- `infrastructure/` — concrete adapters: `tauriConfigLoader.ts`, `tauriCommandRunner.ts`, `tauriSettings.ts`, `tauriUpdateChecker.ts`, etc. These are the only files that import from `@tauri-apps/api` or any `@tauri-apps/plugin-*`.
+- `state/` — `AppContext` (config + tool list, Context+`useReducer`), `RunnerContext` (injects `CommandRunner`), `SettingsContext`, `UpdaterContext`/`UpdaterStateContext`, etc. Components consume ports via the matching `useX()` hook so tests can inject fakes.
 - `ui/` — atomic design (`atoms/molecules/organisms/templates/pages`). Styling lives in `src/styles/` (`tokens.css` + `global.css`).
 
 ### Backend layers (`src-tauri/src/`)
 
 - `domain/` — `Tool`, `ToolsConfig`, `RunRequest`, `RunStatus`. Serde-derived; shapes mirror the frontend domain types.
-- `application/` — use cases: `load_config`, `watch_config`, `run_tool`, `audit`, `path_resolver`. Orchestrate domain + infrastructure.
+- `application/` — use cases: `load_config`, `watch_config`, `run_tool`, `audit`, `path_resolver`, `settings` (load/save/`patch` with atomic tmp+rename + serialized lock), `history`/`history_admin`, `update` (check / `download_and_install` / translocation guard / tray badge / system notification). Orchestrate domain + infrastructure.
 - `infrastructure/` — `subprocess.rs` (tokio process spawning + line streaming), `fs_watcher.rs` (notify wrapper).
 - `commands.rs` — thin `#[tauri::command]` shims; never put logic here.
-- `state.rs` — shared `AppState` (active runs map, etc.) registered via `.manage()`.
+- `state.rs` — shared `AppState` (active runs map, `settings_lock: tokio::sync::Mutex<()>`, etc.) registered via `.manage()`.
 
 ### Adding a tool runtime feature
 
@@ -46,14 +46,26 @@ The flow to extend (e.g. new field on `Tool`, new run option) typically touches:
 ### Config + data files
 
 - `~/.pier/tools.json` — user's tool definitions; seeded with defaults on first load. Hot-reloaded.
+- `~/.pier/settings.json` — user prefs (`launchAtLogin`, `update.{autoCheck, skippedVersion, remindAfter, lastCheckedAt}`). Loads via `#[serde(default)]` so older files without the `update` slice still parse. Writes go through `patch_settings_cmd` (atomic tmp+rename, serialized).
 - `~/.pier/audit.log` — append-only JSONL of every run.
+- `~/.pier/runs/` — per-run output blobs read by the history viewer.
 - `examples/tools.json` — reference schema.
+
+### Tauri plugins in use
+
+`tauri-plugin-opener`, `tauri-plugin-dialog`, `tauri-plugin-autostart`, `tauri-plugin-updater`, `tauri-plugin-notification`. Each plugin's permission lives in `src-tauri/capabilities/default.json` (`updater:default`, `notification:default`, etc.) — without the matching capability entry, the JS API silently fails.
+
+### Releases
+
+- `npm run tauri build` produces a local **unsigned** DMG (good for dev; triggers Gatekeeper warnings on other Macs).
+- Tagged releases (`git tag v* && git push origin v*`) trigger `.github/workflows/release.yml`: macOS arm64 runner, universal binary via `tauri-action`, ad-hoc codesign, signed `.app.tar.gz` + `.sig`, and `latest.json` uploaded to the GitHub Release. The Tauri updater pubkey lives in `tauri.conf.json` `plugins.updater.pubkey`; the matching private key + password are in GitHub Actions secrets `TAURI_SIGNING_PRIVATE_KEY` / `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`. Local copies live at `~/.tauri/pier.key` / `~/.tauri/pier.password` — back these up; losing them means existing installs can never receive a verifiable update.
 
 ## Conventions
 
 - Frontend tests live in `__tests__/` siblings (Vitest + jsdom; setup in `src/setupTests.ts`).
-- Don't import `@tauri-apps/api` outside `src/infrastructure/`. UI/state code goes through `application/ports.ts`.
-- The macOS tray uses `icon_as_template(true)`; tray icons must be monochrome PNGs.
+- Don't import `@tauri-apps/api` or any `@tauri-apps/plugin-*` outside `src/infrastructure/`. UI/state/application code goes through `application/ports.ts`.
+- Modal dialogs use `useDialogA11y` (focus trap + ESC + ARIA). Apply it to any new dialog.
+- The macOS tray uses `icon_as_template(true)`; tray icons must be monochrome PNGs. The "has-update" variant lives at `src-tauri/icons/tray-icon-update@2x.png` and is swapped via `set_tray_badge_cmd`.
 - `ActivationPolicy::Accessory` (true menu-bar mode) is currently disabled in `lib.rs` — the window shows like a regular app during early dev. Re-enable once tray UX is verified.
 
 ## Styling — Tailwind CSS v4 (CSS-first)
