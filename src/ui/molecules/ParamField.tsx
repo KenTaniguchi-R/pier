@@ -13,41 +13,31 @@ interface Props {
   onChange: (v: ParamValue) => void;
 }
 
-const paramLabel = (p: Parameter) => (p.label ?? p.id.replace(/[-_]+/g, " ")).toUpperCase();
-
 export function ParamField({ param, index, value, onChange }: Props) {
-  const counter = String(index + 1).padStart(2, "0");
-  const label = paramLabel(param);
-
   return (
     <div
-      className="flex gap-5 animate-tile-in"
+      className="flex flex-col gap-2 animate-tile-in"
       style={{ animationDelay: `${index * 30}ms` }}
     >
-      <span className="flex-none w-8 pt-[2px] font-mono text-[10.5px] uppercase tracking-[0.18em] text-ink-3">
-        {counter}
-      </span>
-      <div className="flex-1 min-w-0 flex flex-col gap-2">
-        <div className="flex items-center gap-3">
-          <span className="font-mono text-[11px] uppercase tracking-[0.16em] text-ink-2">
-            {label}
-          </span>
-          <span className="flex-1 h-px bg-line" />
-          {param.optional && (
-            <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-ink-4">
-              ◦ optional
-            </span>
-          )}
-        </div>
-
-        <ParamWidget param={param} value={value} onChange={onChange} label={label} />
-
-        {param.description && (
-          <span className="font-display italic text-[13px] leading-[1.45] text-ink-3">
-            {param.description}
+      <div className="flex items-center gap-3">
+        <span className="font-display text-[15px] font-medium leading-tight text-ink">
+          {param.label}
+        </span>
+        <span className="flex-1 h-px bg-line" />
+        {param.optional && !param.advanced && (
+          <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-ink-4">
+            ◦ optional
           </span>
         )}
       </div>
+
+      <ParamWidget param={param} value={value} onChange={onChange} label={param.label} />
+
+      {param.help && (
+        <span className="font-display text-[13px] leading-[1.45] text-ink-3">
+          {param.help}
+        </span>
+      )}
     </div>
   );
 }

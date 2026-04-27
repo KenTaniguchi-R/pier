@@ -13,7 +13,7 @@ describe("buildArgs", () => {
   it("substitutes {id} placeholders in positional args", () => {
     const t = tool({
       args: ["-i", "{input}"],
-      parameters: [{ id: "input", type: "file" }],
+      parameters: [{ id: "input", label: "Input file", type: "file" }],
     });
     expect(buildArgs(t, { input: "/tmp/a.mov" })).toEqual(["-i", "/tmp/a.mov"]);
   });
@@ -22,8 +22,8 @@ describe("buildArgs", () => {
     const t = tool({
       args: ["-i", "{input}", "{extra}"],
       parameters: [
-        { id: "input", type: "file" },
-        { id: "extra", type: "text", optional: true },
+        { id: "input", label: "Input file", type: "file" },
+        { id: "extra", label: "Extra", type: "text", optional: true },
       ],
     });
     expect(buildArgs(t, { input: "/a", extra: "" })).toEqual(["-i", "/a"]);
@@ -33,8 +33,8 @@ describe("buildArgs", () => {
     const t = tool({
       args: ["{input}"],
       parameters: [
-        { id: "input", type: "file" },
-        { id: "bitrate", type: "text", flag: "-b:v", optional: true },
+        { id: "input", label: "Input file", type: "file" },
+        { id: "bitrate", label: "Bitrate", type: "text", flag: "-b:v", optional: true },
       ],
     });
     expect(buildArgs(t, { input: "/a", bitrate: "5000k" })).toEqual([
@@ -46,8 +46,8 @@ describe("buildArgs", () => {
     const t = tool({
       args: ["{input}"],
       parameters: [
-        { id: "input", type: "file" },
-        { id: "bitrate", type: "text", flag: "-b:v", optional: true },
+        { id: "input", label: "Input file", type: "file" },
+        { id: "bitrate", label: "Bitrate", type: "text", flag: "-b:v", optional: true },
       ],
     });
     expect(buildArgs(t, { input: "/a", bitrate: "" })).toEqual(["/a"]);
@@ -55,14 +55,14 @@ describe("buildArgs", () => {
 
   it("emits a boolean true as flag-only", () => {
     const t = tool({
-      parameters: [{ id: "dry", type: "boolean", flag: "--dry-run" }],
+      parameters: [{ id: "dry", label: "Dry run", type: "boolean", flag: "--dry-run" }],
     });
     expect(buildArgs(t, { dry: true })).toEqual(["--dry-run"]);
   });
 
   it("omits a boolean false even with flag set", () => {
     const t = tool({
-      parameters: [{ id: "dry", type: "boolean", flag: "--dry-run" }],
+      parameters: [{ id: "dry", label: "Dry run", type: "boolean", flag: "--dry-run" }],
     });
     expect(buildArgs(t, { dry: false })).toEqual([]);
   });
@@ -71,9 +71,9 @@ describe("buildArgs", () => {
     const t = tool({
       args: ["{input}"],
       parameters: [
-        { id: "input", type: "file" },
-        { id: "a", type: "text", flag: "-a" },
-        { id: "b", type: "text", flag: "-b" },
+        { id: "input", label: "Input file", type: "file" },
+        { id: "a", label: "A", type: "text", flag: "-a" },
+        { id: "b", label: "B", type: "text", flag: "-b" },
       ],
     });
     expect(buildArgs(t, { input: "/x", a: "1", b: "2" })).toEqual([
@@ -84,7 +84,7 @@ describe("buildArgs", () => {
   it("coerces numbers to string", () => {
     const t = tool({
       args: ["-p", "{port}"],
-      parameters: [{ id: "port", type: "number" }],
+      parameters: [{ id: "port", label: "Port", type: "number" }],
     });
     expect(buildArgs(t, { port: 8080 })).toEqual(["-p", "8080"]);
   });

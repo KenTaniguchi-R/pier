@@ -30,7 +30,7 @@ describe("ToolRunner", () => {
   it("renders DropZone for a file parameter", () => {
     const tool: Tool = {
       id: "t", name: "T", command: "/x",
-      parameters: [{ id: "input", type: "file" }],
+      parameters: [{ id: "input", label: "Input file", type: "file" }],
     };
     wrap(tool, mockRunner());
     expect(screen.getByText(/drop a file/i)).toBeInTheDocument();
@@ -39,7 +39,7 @@ describe("ToolRunner", () => {
   it("disables Run when a required parameter has no value", () => {
     const tool: Tool = {
       id: "t", name: "T", command: "/x",
-      parameters: [{ id: "url", type: "url" }],
+      parameters: [{ id: "url", label: "URL", type: "url" }],
     };
     wrap(tool, mockRunner());
     expect(screen.getByRole("button", { name: /run/i })).toBeDisabled();
@@ -64,7 +64,7 @@ describe("ToolRunner", () => {
     const tool: Tool = {
       id: "t", name: "T", command: "/x", confirm: false,
       parameters: [
-        { id: "fmt", type: "select", options: ["mp4", "webm"], default: "mp4" },
+        { id: "fmt", label: "Format", type: "select", options: ["mp4", "webm"], default: "mp4" },
       ],
     };
     const runner = mockRunner();
