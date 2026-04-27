@@ -4,12 +4,11 @@
 
 **Please do not report security vulnerabilities through public GitHub issues.**
 
-Instead, report them privately by emailing **`taniguchi.ryusei@gmail.com`**
-with the subject `[pier] security`.
+Instead, report them privately via either:
 
-(Once this repository is public, GitHub Private Vulnerability Reporting will
-also be available via the Security tab — it is currently disabled because the
-repository is private.)
+- GitHub Private Vulnerability Reporting:
+  https://github.com/KenTaniguchi-R/pier/security/advisories/new
+- Email: **`taniguchi.ryusei@gmail.com`** with the subject `[pier] security`
 
 Please include:
 
