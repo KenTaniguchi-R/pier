@@ -52,7 +52,10 @@ pub fn spawn(
 /// The caller drives cancellation via a `tokio::select!` on an external cancel signal
 /// (see `run_tool.rs`). When the cancel arm fires, this future is dropped, which drops
 /// the `Child` — tokio sends SIGKILL on drop (macOS/Linux).
-pub async fn stream_lines<F>(mut p: SpawnedProcess, mut on_segment: F) -> Result<std::process::ExitStatus>
+pub async fn stream_lines<F>(
+    mut p: SpawnedProcess,
+    mut on_segment: F,
+) -> Result<std::process::ExitStatus>
 where
     F: FnMut(Segment),
 {
@@ -69,14 +72,20 @@ where
             r = so.next() => { let (more, b) = r?; stdout_open = more; b },
             r = se.next() => r?.1,
         };
-        for seg in batch { on_segment(seg); }
+        for seg in batch {
+            on_segment(seg);
+        }
     }
 
     // Phase 2: drain remaining stderr.
     loop {
         let (more, batch) = se.next().await?;
-        for seg in batch { on_segment(seg); }
-        if !more { break; }
+        for seg in batch {
+            on_segment(seg);
+        }
+        if !more {
+            break;
+        }
     }
 
     Ok(p.child.wait().await?)
@@ -109,14 +118,20 @@ impl<R: AsyncRead + Unpin> StreamSplitter<R> {
     /// Drain the current line buffer into a `Segment`.
     fn commit(&mut self, transient: bool) -> Segment {
         let raw = std::mem::take(&mut self.buf);
-        Segment { text: decode(&raw), stream: self.stream, transient }
+        Segment {
+            text: decode(&raw),
+            stream: self.stream,
+            transient,
+        }
     }
 
     /// Read one chunk and return the segments found in it, plus a "more data may
     /// follow" flag (`false` on EOF, after flushing the remainder).
     async fn next(&mut self) -> Result<(bool, Vec<Segment>)> {
         let mut out = Vec::new();
-        if self.eof { return Ok((false, out)); }
+        if self.eof {
+            return Ok((false, out));
+        }
 
         let n = self.reader.read(&mut self.chunk).await?;
         if n == 0 {
@@ -172,7 +187,8 @@ mod tests {
             &["-c".into(), script.into()],
             None,
             &std::collections::HashMap::new(),
-        ).unwrap()
+        )
+        .unwrap()
     }
 
     async fn collect(p: SpawnedProcess) -> Vec<Segment> {
@@ -182,7 +198,11 @@ mod tests {
     }
 
     fn seg(text: &str, stream: &'static str, transient: bool) -> Segment {
-        Segment { text: text.into(), stream, transient }
+        Segment {
+            text: text.into(),
+            stream,
+            transient,
+        }
     }
 
     #[tokio::test]
@@ -192,7 +212,8 @@ mod tests {
             &["hello".to_string()],
             None,
             &std::collections::HashMap::new(),
-        ).unwrap();
+        )
+        .unwrap();
         let pid = p.child.id().expect("child pid present right after spawn");
         assert!(pid > 0);
     }
@@ -208,12 +229,7 @@ mod tests {
         use std::collections::HashMap;
         let mut env = HashMap::new();
         env.insert("PIER_TEST_VAR".into(), "hello-pier".into());
-        let p = spawn(
-            std::path::Path::new("/usr/bin/env"),
-            &[],
-            None,
-            &env,
-        ).unwrap();
+        let p = spawn(std::path::Path::new("/usr/bin/env"), &[], None, &env).unwrap();
         let segs = collect(p).await;
         assert!(
             segs.iter().any(|s| s.text == "PIER_TEST_VAR=hello-pier"),
@@ -225,12 +241,15 @@ mod tests {
     async fn carriage_return_emits_transient_segments() {
         // Simulate a tqdm-style progress bar: \r-separated updates ending in \n.
         let segs = collect(sh("printf '10%%\\r50%%\\r100%%\\ndone\\n'")).await;
-        assert_eq!(segs, vec![
-            seg("10%", "stdout", true),
-            seg("50%", "stdout", true),
-            seg("100%", "stdout", false),
-            seg("done", "stdout", false),
-        ]);
+        assert_eq!(
+            segs,
+            vec![
+                seg("10%", "stdout", true),
+                seg("50%", "stdout", true),
+                seg("100%", "stdout", false),
+                seg("done", "stdout", false),
+            ]
+        );
     }
 
     #[tokio::test]
@@ -242,9 +261,9 @@ mod tests {
     #[tokio::test]
     async fn crlf_is_treated_as_single_newline() {
         let segs = collect(sh("printf 'a\\r\\nb\\r\\n'")).await;
-        assert_eq!(segs, vec![
-            seg("a", "stdout", false),
-            seg("b", "stdout", false),
-        ]);
+        assert_eq!(
+            segs,
+            vec![seg("a", "stdout", false), seg("b", "stdout", false),]
+        );
     }
 }

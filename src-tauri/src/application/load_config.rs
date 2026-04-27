@@ -1,6 +1,6 @@
 use crate::domain::ToolsConfig;
-use std::path::Path;
 use anyhow::{Context, Result};
+use std::path::Path;
 
 pub fn load_config_from_path(path: &Path) -> Result<ToolsConfig> {
     let bytes = std::fs::read_to_string(path).with_context(|| format!("read {:?}", path))?;
@@ -49,8 +49,8 @@ pub fn seed_default_if_missing(path: &Path) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tempfile::{NamedTempFile, tempdir};
     use std::io::Write;
+    use tempfile::{tempdir, NamedTempFile};
 
     #[test]
     fn loads_valid_config() {

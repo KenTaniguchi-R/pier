@@ -12,7 +12,8 @@ use std::path::Path;
 /// to get the full baseline; never iterate this constant directly outside that
 /// function.
 // LC_* keys are added dynamically below — don't bypass baseline_env()
-pub const BASELINE_STATIC_KEYS: &[&str] = &["PATH", "HOME", "USER", "LANG", "TERM", "TMPDIR", "SHELL"];
+pub const BASELINE_STATIC_KEYS: &[&str] =
+    &["PATH", "HOME", "USER", "LANG", "TERM", "TMPDIR", "SHELL"];
 
 /// Filter `full` down to BASELINE_STATIC_KEYS plus any `LC_*` locale keys. Used
 /// to build the seed env passed to spawned tools, while interpolation still
@@ -43,11 +44,15 @@ pub trait KeychainAllow {
 /// "anything goes" behavior of `resolve()`.
 pub(crate) struct AllowAll;
 impl KeychainAllow for AllowAll {
-    fn permits(&self, _: &str) -> bool { true }
+    fn permits(&self, _: &str) -> bool {
+        true
+    }
 }
 
 impl KeychainAllow for HashSet<String> {
-    fn permits(&self, key: &str) -> bool { self.contains(key) }
+    fn permits(&self, key: &str) -> bool {
+        self.contains(key)
+    }
 }
 
 /// Where a resolved env var came from. Used by the audit log to redact safely.
@@ -93,7 +98,15 @@ pub fn resolve(
 ) -> ResolvedEnv {
     // Default: allow all (used only by tests / older call sites; production
     // goes through `run_tool` which always passes a per-tool allowlist).
-    resolve_with_allowlist(tool, defaults, cwd, process_env, process_env, keychain_lookup, &AllowAll)
+    resolve_with_allowlist(
+        tool,
+        defaults,
+        cwd,
+        process_env,
+        process_env,
+        keychain_lookup,
+        &AllowAll,
+    )
 }
 
 /// Like `resolve`, but takes a separate `seed_env` (Layer 1, the starting map
@@ -133,11 +146,25 @@ pub fn resolve_with_allowlist(
 
     // Layer 4: defaults env block
     if let Some(d) = defaults {
-        apply_env_block(&d.env, interp_env, keychain_lookup, allow, &mut vars, &mut keys);
+        apply_env_block(
+            &d.env,
+            interp_env,
+            keychain_lookup,
+            allow,
+            &mut vars,
+            &mut keys,
+        );
     }
 
     // Layer 5: tool env block (overrides defaults)
-    apply_env_block(&tool.env, interp_env, keychain_lookup, allow, &mut vars, &mut keys);
+    apply_env_block(
+        &tool.env,
+        interp_env,
+        keychain_lookup,
+        allow,
+        &mut vars,
+        &mut keys,
+    );
 
     ResolvedEnv { vars, keys }
 }
@@ -204,7 +231,10 @@ fn interpolate(
     keychain_lookup: &dyn Fn(&str) -> Option<String>,
     allow: &dyn KeychainAllow,
 ) -> Option<(String, EnvSource)> {
-    if let Some(rest) = raw.strip_prefix("${keychain:").and_then(|s| s.strip_suffix('}')) {
+    if let Some(rest) = raw
+        .strip_prefix("${keychain:")
+        .and_then(|s| s.strip_suffix('}'))
+    {
         // Block before invoking the lookup so a malicious tool definition
         // can't probe the keychain for keys it doesn't already reference.
         if !allow.permits(rest) {
@@ -213,7 +243,10 @@ fn interpolate(
         return keychain_lookup(rest).map(|v| (v, EnvSource::Keychain));
     }
     if let Some(rest) = raw.strip_prefix("${env:").and_then(|s| s.strip_suffix('}')) {
-        return process_env.get(rest).cloned().map(|v| (v, EnvSource::HostEnv));
+        return process_env
+            .get(rest)
+            .cloned()
+            .map(|v| (v, EnvSource::HostEnv));
     }
     Some((raw.to_string(), EnvSource::EnvBlock))
 }
@@ -244,7 +277,9 @@ mod tests {
         serde_json::from_str(r#"{"id":"x","name":"X","command":"/x"}"#).unwrap()
     }
 
-    fn no_keychain(_: &str) -> Option<String> { None }
+    fn no_keychain(_: &str) -> Option<String> {
+        None
+    }
 
     #[test]
     fn process_env_passes_through() {
@@ -271,7 +306,13 @@ mod tests {
         let json = r#"{"id":"x","name":"X","command":"/x","env":{"API_KEY":"${keychain:openai}"}}"#;
         let tool: Tool = serde_json::from_str(json).unwrap();
         let proc_env = HashMap::new();
-        let kc = |k: &str| if k == "openai" { Some("sk-test".into()) } else { None };
+        let kc = |k: &str| {
+            if k == "openai" {
+                Some("sk-test".into())
+            } else {
+                None
+            }
+        };
         let r = resolve(&tool, None, None, &proc_env, &kc);
         assert_eq!(r.vars.get("API_KEY").map(String::as_str), Some("sk-test"));
         assert_eq!(r.keys.get("API_KEY"), Some(&EnvSource::Keychain));
@@ -318,10 +359,16 @@ mod tests {
         std::fs::write(dir.path().join("a.env"), "K=from_a\n").unwrap();
         std::fs::write(dir.path().join("b.env"), "K=from_b\n").unwrap();
         let defaults: Defaults = serde_json::from_str(r#"{"envFile":"a.env"}"#).unwrap();
-        let tool: Tool = serde_json::from_str(
-            r#"{"id":"x","name":"X","command":"/x","envFile":"b.env"}"#,
-        ).unwrap();
-        let r = resolve(&tool, Some(&defaults), Some(dir.path()), &HashMap::new(), &no_keychain);
+        let tool: Tool =
+            serde_json::from_str(r#"{"id":"x","name":"X","command":"/x","envFile":"b.env"}"#)
+                .unwrap();
+        let r = resolve(
+            &tool,
+            Some(&defaults),
+            Some(dir.path()),
+            &HashMap::new(),
+            &no_keychain,
+        );
         assert_eq!(r.vars.get("K").map(String::as_str), Some("from_b"));
     }
 
@@ -333,14 +380,23 @@ mod tests {
         let allow: HashSet<String> = HashSet::new();
         let env = HashMap::new();
         let r = resolve_with_allowlist(&tool, None, None, &env, &env, &kc, &allow);
-        assert!(!r.vars.contains_key("K"), "blocked key must not appear in env");
+        assert!(
+            !r.vars.contains_key("K"),
+            "blocked key must not appear in env"
+        );
     }
 
     #[test]
     fn keychain_lookup_allowed_when_key_in_allowlist() {
         let json = r#"{"id":"x","name":"X","command":"/x","env":{"K":"${keychain:secret}"}}"#;
         let tool: Tool = serde_json::from_str(json).unwrap();
-        let kc = |k: &str| if k == "secret" { Some("v".to_string()) } else { None };
+        let kc = |k: &str| {
+            if k == "secret" {
+                Some("v".to_string())
+            } else {
+                None
+            }
+        };
         let mut allow: HashSet<String> = HashSet::new();
         allow.insert("secret".to_string());
         let env = HashMap::new();
