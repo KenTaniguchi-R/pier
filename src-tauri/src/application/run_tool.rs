@@ -1,7 +1,9 @@
 use crate::application::{audit, path_resolver, tool_registry::ToolRegistry};
 use crate::domain::*;
 use crate::events::{ExitEvent, OutputEvent};
+use crate::infrastructure::run_store::{self, LogLine, RunLog};
 use crate::infrastructure::subprocess::{spawn, stream_lines};
+use std::sync::{Arc, Mutex};
 use crate::state::{AppState, RunHandle};
 use anyhow::{anyhow, Result};
 use std::collections::HashMap;
@@ -106,7 +108,20 @@ async fn spawn_and_stream(
 
         let id_for_lines = id_clone.clone();
         let app_for_lines = app_clone.clone();
+        let log = match RunLog::create(&run_store::default_dir(), &id_clone) {
+            Ok(l) => Some(Arc::new(Mutex::new(l))),
+            Err(e) => {
+                eprintln!("[pier] run_store create failed for {id_clone}: {e}");
+                None
+            }
+        };
+        let log_for_lines = log.clone();
         let stream_fut = stream_lines(proc, move |seg| {
+            if let Some(log) = &log_for_lines {
+                if let Ok(mut l) = log.lock() {
+                    l.append(&LogLine { s: seg.stream.into(), t: seg.text.clone(), r: seg.transient });
+                }
+            }
             let _ = app_for_lines.emit("pier://output",
                 OutputEvent { run_id: id_for_lines.clone(), line: seg.text, stream: seg.stream.to_string(), transient: seg.transient });
         });
@@ -127,9 +142,27 @@ async fn spawn_and_stream(
             None => (RunStatus::Killed, None),
         };
 
+        let status_str = match status {
+            RunStatus::Success => "success",
+            RunStatus::Failed => "failed",
+            RunStatus::Killed => "killed",
+            RunStatus::Pending => "pending",
+            RunStatus::Running => "running",
+        };
         let _ = app_clone.emit("pier://exit",
             ExitEvent { run_id: id_clone.clone(), status, exit_code: code, ended_at: ended });
-        let _ = audit::append(&audit::Entry::end(&id_clone, &tool_id, code, ended));
+
+        let (output_path, output_bytes, output_truncated) = match log.as_ref() {
+            Some(l) => {
+                let g = l.lock().unwrap();
+                (Some(g.path().to_string_lossy().to_string()), Some(g.bytes()), Some(g.truncated()))
+            }
+            None => (None, None, None),
+        };
+        let _ = audit::append(&audit::Entry::end_full(
+            &id_clone, &tool_id, code, ended, status_str,
+            output_path, output_bytes, output_truncated,
+        ));
 
         if let Some(state) = app_clone.try_state::<AppState>() {
             state.running.lock().unwrap().remove(&id_clone);

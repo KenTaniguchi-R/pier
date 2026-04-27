@@ -16,6 +16,31 @@ export interface AuditLogger {
   append(entry: object): Promise<void>;
 }
 
+export interface RunSummary {
+  runId: string;
+  toolId: string;
+  /** Epoch milliseconds. Infra adapters convert from backend seconds. */
+  startedAt: number;
+  /** Epoch milliseconds, or null while running. */
+  endedAt: number | null;
+  status: "success" | "failed" | "killed" | "running";
+  exitCode: number | null;
+  outputPath: string | null;
+  outputBytes: number | null;
+  outputTruncated: boolean | null;
+}
+
+export interface RunLogLine {
+  s: "stdout" | "stderr";
+  t: string;
+  r?: boolean;
+}
+
+export interface HistoryReader {
+  list(toolId: string, limit?: number): Promise<RunSummary[]>;
+  readOutput(outputPath: string): Promise<RunLogLine[]>;
+}
+
 export interface DragPosition { x: number; y: number }
 export type DragDropEvent =
   | { kind: "over"; position: DragPosition }

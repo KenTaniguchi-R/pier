@@ -20,6 +20,14 @@ pub enum Entry {
         tool_id: String,
         exit_code: Option<i32>,
         ts: u64,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        status: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        output_path: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        output_bytes: Option<u64>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        output_truncated: Option<bool>,
     },
 }
 
@@ -48,6 +56,32 @@ impl Entry {
             tool_id: tool_id.into(),
             exit_code,
             ts,
+            status: None,
+            output_path: None,
+            output_bytes: None,
+            output_truncated: None,
+        }
+    }
+
+    pub fn end_full(
+        run_id: &str,
+        tool_id: &str,
+        exit_code: Option<i32>,
+        ts: u64,
+        status: &str,
+        output_path: Option<String>,
+        output_bytes: Option<u64>,
+        output_truncated: Option<bool>,
+    ) -> Self {
+        Entry::End {
+            run_id: run_id.into(),
+            tool_id: tool_id.into(),
+            exit_code,
+            ts,
+            status: Some(status.into()),
+            output_path,
+            output_bytes,
+            output_truncated,
         }
     }
 }

@@ -35,3 +35,19 @@ pub async fn kill_run_cmd(app: tauri::AppHandle, run_id: String) -> Result<(), S
         .await
         .map_err(|e| e.to_string())
 }
+
+#[tauri::command]
+pub fn list_tool_history(
+    tool_id: String,
+    limit: Option<usize>,
+) -> Result<Vec<crate::application::history::RunSummary>, String> {
+    crate::application::history::list_for_tool(&tool_id, limit.unwrap_or(20))
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn read_run_output(
+    output_path: String,
+) -> Result<Vec<crate::infrastructure::run_store::LogLine>, String> {
+    crate::application::history::read_output(&output_path).map_err(|e| e.to_string())
+}

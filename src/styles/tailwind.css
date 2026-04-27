@@ -61,6 +61,7 @@
   --animate-run-ready: run-ready 420ms var(--ease-smooth-out);
   --animate-file-staged: file-staged 260ms var(--ease-smooth-out);
   --animate-end-rule: end-rule 280ms var(--ease-smooth-out) 60ms backwards;
+  --animate-ledger-row: ledger-row 220ms var(--ease-smooth-out) backwards;
 
   @keyframes tile-in {
     from { opacity: 0; transform: translateY(4px); }
@@ -95,6 +96,10 @@
   @keyframes end-rule {
     0%   { opacity: 0; letter-spacing: 0.06em; }
     100% { opacity: 1; letter-spacing: 0.18em; }
+  }
+  @keyframes ledger-row {
+    from { opacity: 0; transform: translateY(2px); }
+    to   { opacity: 1; transform: translateY(0); }
   }
 }
 
