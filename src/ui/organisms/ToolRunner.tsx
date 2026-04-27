@@ -1,52 +1,20 @@
-import { useState } from "react";
-import type { Tool, Parameter, ParamValue } from "../../domain/tool";
+import type { Parameter, ParamValue } from "../../domain/tool";
 import { ParamField } from "../molecules/ParamField";
 import { AdvancedDisclosure } from "../molecules/AdvancedDisclosure";
-import { ConfirmDialog } from "../molecules/ConfirmDialog";
-import { RunControl } from "../molecules/RunControl";
-import { useApp } from "../../state/AppContext";
-import { useRunner } from "../../state/RunnerContext";
-import { buildArgs } from "../../application/argTemplate";
-import { findBlocker, blockerLabel } from "../../application/runBlocker";
 
-interface Props { tool: Tool }
-
-function defaultValue(p: Parameter): ParamValue {
-  if (p.default !== undefined) return p.default;
-  if (p.type === "boolean") return false;
-  if (p.type === "select") return p.options[0] ?? "";
-  return "";
+interface Props {
+  params: Parameter[];
+  values: Record<string, ParamValue>;
+  onChange: (id: string, v: ParamValue) => void;
 }
 
-function initialValues(tool: Tool): Record<string, ParamValue> {
-  return Object.fromEntries((tool.parameters ?? []).map(p => [p.id, defaultValue(p)]));
-}
-
-export function ToolRunner({ tool }: Props) {
-  const { state, dispatch } = useApp();
-  const runner = useRunner();
-  const [values, setValues] = useState<Record<string, ParamValue>>(() => initialValues(tool));
-  const [confirmOpen, setConfirmOpen] = useState(false);
-
-  const runId = state.selectedRunIdByTool[tool.id];
-  const isRunning = runId ? state.runs[runId]?.status === "running" : false;
-  const params = tool.parameters ?? [];
+/**
+ * Presentational form for a tool's parameters. Pure: no app/runner hooks,
+ * no run orchestration. ToolDetail owns the state via useToolRun.
+ */
+export function ToolRunner({ params, values, onChange }: Props) {
   const required = params.filter(p => !p.advanced);
   const advanced = params.filter(p => p.advanced);
-
-  const blocker = findBlocker(params, values);
-  const canRun = !blocker;
-
-  const resolvedArgs = buildArgs(tool, values);
-
-  const startRun = async (confirmed: boolean) => {
-    const outcome = await runner.run(tool.id, values, confirmed);
-    dispatch({ type: "RUN_STARTED", runId: outcome.runId, toolId: tool.id, startedAt: outcome.startedAt });
-  };
-
-  const stopRun = () => { if (runId) runner.kill(runId); };
-  const onRunClick = () => (tool.confirm === false ? startRun(false) : setConfirmOpen(true));
-  const setValue = (id: string, v: ParamValue) => setValues(prev => ({ ...prev, [id]: v }));
 
   return (
     <div className="flex flex-col gap-7">
@@ -56,35 +24,13 @@ export function ToolRunner({ tool }: Props) {
           param={p}
           index={i}
           value={values[p.id]}
-          onChange={v => setValue(p.id, v)}
+          onChange={v => onChange(p.id, v)}
         />
       ))}
 
       {advanced.length > 0 && (
-        <AdvancedDisclosure params={advanced} values={values} onChange={setValue} />
+        <AdvancedDisclosure params={advanced} values={values} onChange={onChange} />
       )}
-
-      {params.length > 0 && <span className="block h-px bg-line mt-1" />}
-
-      <footer className="flex justify-end">
-        <RunControl
-          running={isRunning}
-          canRun={canRun}
-          onRun={onRunClick}
-          onStop={stopRun}
-          blockedReason={blocker ? blockerLabel(blocker) : undefined}
-        />
-      </footer>
-
-      <ConfirmDialog
-        open={confirmOpen}
-        toolName={tool.name}
-        command={tool.command}
-        args={resolvedArgs}
-        shell={tool.shell ?? false}
-        onCancel={() => setConfirmOpen(false)}
-        onConfirm={() => { setConfirmOpen(false); startRun(true); }}
-      />
     </div>
   );
 }
