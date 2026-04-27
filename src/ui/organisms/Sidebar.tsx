@@ -3,7 +3,8 @@ import type { Tool } from "../../domain/tool";
 export type Selection =
   | { kind: "all" }
   | { kind: "category"; name: string }
-  | { kind: "tool"; id: string };
+  | { kind: "tool"; id: string }
+  | { kind: "help" };
 
 interface Props {
   tools: Tool[];
@@ -31,6 +32,7 @@ export function Sidebar({ tools, query, onQueryChange, selection, onSelect }: Pr
   ).sort();
 
   const isAll = selection.kind === "all";
+  const isHelp = selection.kind === "help";
   const selectedCat = selection.kind === "category" ? selection.name : null;
 
   return (
@@ -92,6 +94,24 @@ export function Sidebar({ tools, query, onQueryChange, selection, onSelect }: Pr
           );
         })}
       </ul>
+
+      <div className="flex-none px-2 pt-2 pb-1 border-t border-line">
+        <button
+          type="button"
+          className={`${ITEM_BASE} text-ink-2 ${isHelp ? ITEM_ACTIVE : ""}`}
+          onClick={() => onSelect({ kind: "help" })}
+        >
+          <span
+            className={`flex-none w-[18px] text-center text-[14px] ${isHelp ? "text-accent" : "text-ink-3"}`}
+            aria-hidden
+          >
+            ?
+          </span>
+          <span className="flex-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
+            Setup with Claude
+          </span>
+        </button>
+      </div>
 
       <div className="flex-none px-4 py-2 border-t border-line">
         <span className="font-mono font-normal text-[11px] leading-[1.4] text-ink-4">

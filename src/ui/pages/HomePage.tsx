@@ -5,6 +5,7 @@ import { AppShell } from "../templates/AppShell";
 import { Sidebar, type Selection } from "../organisms/Sidebar";
 import { ToolBrowser } from "../organisms/ToolBrowser";
 import { ToolDetail } from "../organisms/ToolDetail";
+import { SkillGuide } from "../organisms/SkillGuide";
 import { loadConfig } from "../../application/loadConfig";
 import { tauriConfigLoader } from "../../infrastructure/tauriConfigLoader";
 import type { Tool } from "../../domain/tool";
@@ -91,6 +92,8 @@ export function HomePage() {
         </ul>
       </div>
     );
+  } else if (selection.kind === "help") {
+    main = <SkillGuide />;
   } else if (selectedTool) {
     main = (
       <ToolDetail
