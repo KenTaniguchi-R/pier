@@ -76,4 +76,9 @@ export interface UpdateChecker {
   check(): Promise<UpdateInfo | null>;
   installAndRelaunch(onProgress: (p: UpdateProgress) => void): Promise<void>;
   isTranslocated(): Promise<boolean>;
+  setTrayBadge(hasUpdate: boolean): void;
+  notifyReady(version: string): void;
+  /** Subscribe to changes in the main window's visibility (true = visible). */
+  onWindowVisibilityChange(cb: (visible: boolean) => void): () => void;
+  isWindowVisible(): Promise<boolean>;
 }
