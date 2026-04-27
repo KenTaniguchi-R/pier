@@ -1,6 +1,24 @@
 use crate::domain::{Defaults, Tool};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::Path;
+
+/// Gate over which `${keychain:X}` keys a tool may resolve. Computed at config
+/// load (`ToolRegistry::keychain_keys_for`) and consulted before every keychain
+/// lookup so a malicious tool definition can't enumerate other tools' secrets.
+pub trait KeychainAllow {
+    fn permits(&self, key: &str) -> bool;
+}
+
+/// Permissive allow used by tests / legacy callers that want the previous
+/// "anything goes" behavior of `resolve()`.
+pub(crate) struct AllowAll;
+impl KeychainAllow for AllowAll {
+    fn permits(&self, _: &str) -> bool { true }
+}
+
+impl KeychainAllow for HashSet<String> {
+    fn permits(&self, key: &str) -> bool { self.contains(key) }
+}
 
 /// Where a resolved env var came from. Used by the audit log to redact safely.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
@@ -43,6 +61,19 @@ pub fn resolve(
     process_env: &HashMap<String, String>,
     keychain_lookup: &dyn Fn(&str) -> Option<String>,
 ) -> ResolvedEnv {
+    // Default: allow all (used only by tests / older call sites; production
+    // goes through `run_tool` which always passes a per-tool allowlist).
+    resolve_with_allowlist(tool, defaults, cwd, process_env, keychain_lookup, &AllowAll)
+}
+
+pub fn resolve_with_allowlist(
+    tool: &Tool,
+    defaults: Option<&Defaults>,
+    cwd: Option<&Path>,
+    process_env: &HashMap<String, String>,
+    keychain_lookup: &dyn Fn(&str) -> Option<String>,
+    allow: &dyn KeychainAllow,
+) -> ResolvedEnv {
     let mut vars: HashMap<String, String> = HashMap::new();
     let mut keys: HashMap<String, EnvSource> = HashMap::new();
 
@@ -66,11 +97,11 @@ pub fn resolve(
 
     // Layer 4: defaults env block
     if let Some(d) = defaults {
-        apply_env_block(&d.env, process_env, keychain_lookup, &mut vars, &mut keys);
+        apply_env_block(&d.env, process_env, keychain_lookup, allow, &mut vars, &mut keys);
     }
 
     // Layer 5: tool env block (overrides defaults)
-    apply_env_block(&tool.env, process_env, keychain_lookup, &mut vars, &mut keys);
+    apply_env_block(&tool.env, process_env, keychain_lookup, allow, &mut vars, &mut keys);
 
     ResolvedEnv { vars, keys }
 }
@@ -108,11 +139,12 @@ fn apply_env_block(
     block: &HashMap<String, String>,
     process_env: &HashMap<String, String>,
     keychain_lookup: &dyn Fn(&str) -> Option<String>,
+    allow: &dyn KeychainAllow,
     vars: &mut HashMap<String, String>,
     keys: &mut HashMap<String, EnvSource>,
 ) {
     for (k, raw) in block {
-        match interpolate(raw, process_env, keychain_lookup) {
+        match interpolate(raw, process_env, keychain_lookup, allow) {
             Some((value, source)) => {
                 vars.insert(k.clone(), value);
                 keys.insert(k.clone(), source);
@@ -134,8 +166,14 @@ fn interpolate(
     raw: &str,
     process_env: &HashMap<String, String>,
     keychain_lookup: &dyn Fn(&str) -> Option<String>,
+    allow: &dyn KeychainAllow,
 ) -> Option<(String, EnvSource)> {
     if let Some(rest) = raw.strip_prefix("${keychain:").and_then(|s| s.strip_suffix('}')) {
+        // Block before invoking the lookup so a malicious tool definition
+        // can't probe the keychain for keys it doesn't already reference.
+        if !allow.permits(rest) {
+            return None;
+        }
         return keychain_lookup(rest).map(|v| (v, EnvSource::Keychain));
     }
     if let Some(rest) = raw.strip_prefix("${env:").and_then(|s| s.strip_suffix('}')) {
@@ -249,6 +287,27 @@ mod tests {
         ).unwrap();
         let r = resolve(&tool, Some(&defaults), Some(dir.path()), &HashMap::new(), &no_keychain);
         assert_eq!(r.vars.get("K").map(String::as_str), Some("from_b"));
+    }
+
+    #[test]
+    fn keychain_lookup_blocked_when_key_not_in_allowlist() {
+        let json = r#"{"id":"x","name":"X","command":"/x","env":{"K":"${keychain:secret}"}}"#;
+        let tool: Tool = serde_json::from_str(json).unwrap();
+        let kc = |_: &str| Some("would-be-leaked".to_string());
+        let allow: HashSet<String> = HashSet::new();
+        let r = resolve_with_allowlist(&tool, None, None, &HashMap::new(), &kc, &allow);
+        assert!(!r.vars.contains_key("K"), "blocked key must not appear in env");
+    }
+
+    #[test]
+    fn keychain_lookup_allowed_when_key_in_allowlist() {
+        let json = r#"{"id":"x","name":"X","command":"/x","env":{"K":"${keychain:secret}"}}"#;
+        let tool: Tool = serde_json::from_str(json).unwrap();
+        let kc = |k: &str| if k == "secret" { Some("v".to_string()) } else { None };
+        let mut allow: HashSet<String> = HashSet::new();
+        allow.insert("secret".to_string());
+        let r = resolve_with_allowlist(&tool, None, None, &HashMap::new(), &kc, &allow);
+        assert_eq!(r.vars.get("K").map(String::as_str), Some("v"));
     }
 
     #[test]
