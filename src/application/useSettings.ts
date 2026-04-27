@@ -5,21 +5,14 @@ import { useSettingsAdapter } from "../state/SettingsContext";
 export interface SettingsController {
   settings: Settings;
   stats: HistoryStats | null;
-
   setLaunchAtLogin: (next: boolean) => Promise<void>;
   savingLogin: boolean;
-
+  setAutoCheck: (next: boolean) => Promise<void>;
   clearHistory: () => Promise<void>;
   clearing: boolean;
   justCleared: boolean;
 }
 
-/**
- * Orchestrates the Settings page: loads persisted settings + history stats,
- * exposes idempotent mutators that refresh the relevant slice on success.
- *
- * UI-agnostic — returns plain values consumed by SettingsPage.
- */
 export function useSettings(): SettingsController {
   const adapter = useSettingsAdapter();
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
@@ -29,10 +22,7 @@ export function useSettings(): SettingsController {
   const [justCleared, setJustCleared] = useState(false);
 
   const refreshStats = useCallback(() => {
-    adapter
-      .historyStats()
-      .then(setStats)
-      .catch(() => setStats({ runCount: 0, bytes: 0 }));
+    adapter.historyStats().then(setStats).catch(() => setStats({ runCount: 0, bytes: 0 }));
   }, [adapter]);
 
   useEffect(() => {
@@ -45,12 +35,19 @@ export function useSettings(): SettingsController {
     setSettings({ ...prev, launchAtLogin: next });
     setSavingLogin(true);
     try {
-      await adapter.save({ ...prev, launchAtLogin: next });
-    } catch {
-      setSettings(prev);
-    } finally {
-      setSavingLogin(false);
-    }
+      const merged = await adapter.patch({ launchAtLogin: next });
+      setSettings(merged);
+    } catch { setSettings(prev); }
+    finally { setSavingLogin(false); }
+  };
+
+  const setAutoCheck = async (next: boolean) => {
+    const prev = settings;
+    setSettings({ ...prev, update: { ...prev.update, autoCheck: next } });
+    try {
+      const merged = await adapter.patch({ update: { autoCheck: next } });
+      setSettings(merged);
+    } catch { setSettings(prev); }
   };
 
   const clearHistory = async () => {
@@ -60,18 +57,8 @@ export function useSettings(): SettingsController {
       setJustCleared(true);
       setTimeout(() => setJustCleared(false), 1800);
       refreshStats();
-    } finally {
-      setClearing(false);
-    }
+    } finally { setClearing(false); }
   };
 
-  return {
-    settings,
-    stats,
-    setLaunchAtLogin,
-    savingLogin,
-    clearHistory,
-    clearing,
-    justCleared,
-  };
+  return { settings, stats, setLaunchAtLogin, savingLogin, setAutoCheck, clearHistory, clearing, justCleared };
 }
