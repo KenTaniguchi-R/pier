@@ -23,6 +23,12 @@ export type DragDropEvent =
   | { kind: "leave" }
   | { kind: "drop"; paths: string[]; position: DragPosition };
 
+export interface UrlOpener {
+  /** Open a URL in the user's default browser. Implementations MUST validate
+   *  the URL against a scheme allowlist and reject unsafe inputs. */
+  open(url: string): Promise<void>;
+}
+
 export interface FilePicker {
   /** Subscribe to native drag-drop events from the host webview. */
   onDragDrop(cb: (e: DragDropEvent) => void): () => void;

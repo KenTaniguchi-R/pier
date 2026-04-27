@@ -1,8 +1,11 @@
+import { useMemo } from "react";
 import { useApp } from "../../state/AppContext";
 import { runOutputText } from "../../state/reducer";
 import { LogLine } from "../molecules/LogLine";
+import { LogSearchBar } from "../molecules/LogSearchBar";
 import { RunHeader } from "../molecules/RunHeader";
 import { RUN_STATUS_STYLE } from "../molecules/runStatusStyle";
+import { useLogSearch } from "./useLogSearch";
 
 const SHELL =
   "flex flex-col h-full rounded-[14px] bg-surface border border-line overflow-hidden " +
@@ -23,6 +26,9 @@ export function LogPanel({ toolId }: Props) {
   const runId = state.selectedRunIdByTool[toolId];
   const run = runId ? state.runs[runId] : null;
 
+  const lineTexts = useMemo(() => run?.lines.map((l) => l.line) ?? [], [run]);
+  const search = useLogSearch({ lines: lineTexts, resetKey: runId, enabled: Boolean(run) });
+
   if (!run) {
     return (
       <EmptyShell>
@@ -39,9 +45,11 @@ export function LogPanel({ toolId }: Props) {
   const edge = RUN_STATUS_STYLE[run.status].edge;
   const isFinal = run.status === "success" || run.status === "failed" || run.status === "killed";
   const lineCount = run.lines.length;
+  const activeLineIdx = search.activeLocation?.lineIdx ?? -1;
+  const activeLocalIdx = search.activeLocation?.localIdx ?? 0;
 
   return (
-    <section className={`${SHELL} ${edge}`}>
+    <section className={`${SHELL} ${edge} ${isFinal ? "animate-run-ready" : ""}`}>
       <RunHeader
         status={run.status}
         startedAt={run.startedAt}
@@ -50,7 +58,19 @@ export function LogPanel({ toolId }: Props) {
         lineCount={lineCount}
         getOutputText={() => runOutputText(run)}
       />
-      <div className="flex-1 overflow-y-auto py-3 flex flex-col">
+      <div ref={search.scrollRef} className="flex-1 overflow-y-auto py-3 flex flex-col">
+        {search.open && (
+          <LogSearchBar
+            ref={search.inputRef}
+            query={search.query}
+            onQueryChange={search.setQuery}
+            total={search.total}
+            active={search.total === 0 ? 0 : search.active + 1}
+            onPrev={search.prev}
+            onNext={search.next}
+            onClose={search.closeSearch}
+          />
+        )}
         {lineCount === 0 && run.status === "running" && (
           <span className="block px-5 py-3 font-mono text-[12.5px] text-ink-3 italic">
             <span
@@ -66,12 +86,18 @@ export function LogPanel({ toolId }: Props) {
           </span>
         )}
         {run.lines.map((l, i) => (
-          <LogLine key={i} line={l.line} stream={l.stream} />
+          <LogLine
+            key={`${runId}:${i}`}
+            line={l.line}
+            stream={l.stream}
+            query={search.deferredQuery}
+            activeMatchInLine={i === activeLineIdx ? activeLocalIdx : undefined}
+          />
         ))}
         {isFinal && lineCount > 0 && (
           <div
             aria-hidden
-            className="flex items-center gap-3 px-5 pt-3 pb-1 font-mono text-[10.5px] uppercase tracking-[0.18em] text-ink-4"
+            className="flex items-center gap-3 px-5 pt-3 pb-1 font-mono text-[10.5px] uppercase tracking-[0.18em] text-ink-4 animate-end-rule"
           >
             <span className="flex-1 h-px bg-line" />
             end
