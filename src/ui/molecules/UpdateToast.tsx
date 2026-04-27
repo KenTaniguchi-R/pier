@@ -1,22 +1,25 @@
 import { useEffect, useState } from "react";
 import { Toast } from "./Toast";
 import { useUpdaterState } from "../../state/UpdaterStateContext";
+import { useUpdateChecker } from "../../state/UpdaterContext";
 import { UpdateDialog } from "./UpdateDialog";
 
-function useDocumentVisible(): boolean {
-  const [v, setV] = useState<boolean>(typeof document === "undefined" ? true : !document.hidden);
+function useWindowVisible(): boolean {
+  const checker = useUpdateChecker();
+  const [v, setV] = useState(true);
   useEffect(() => {
-    const onVis = () => setV(!document.hidden);
-    document.addEventListener("visibilitychange", onVis);
-    return () => document.removeEventListener("visibilitychange", onVis);
-  }, []);
+    let cancelled = false;
+    checker.isWindowVisible().then((initial) => { if (!cancelled) setV(initial); });
+    const unsub = checker.onWindowVisibilityChange(setV);
+    return () => { cancelled = true; unsub(); };
+  }, [checker]);
   return v;
 }
 
 export function UpdateToast() {
   const ctrl = useUpdaterState();
   const [open, setOpen] = useState(false);
-  const visible = useDocumentVisible();
+  const visible = useWindowVisible();
 
   if (ctrl.state.kind === "ready" && visible) {
     const info = ctrl.state.info;
