@@ -1,4 +1,5 @@
 import { InputHTMLAttributes } from "react";
+import { Check } from "lucide-react";
 
 interface Props extends Omit<InputHTMLAttributes<HTMLInputElement>, "type"> {
   label?: string;
@@ -21,11 +22,7 @@ export function Checkbox({ label, checked, className = "", ...rest }: Props) {
     <label className={`${WRAP} ${className}`}>
       <input type="checkbox" className="sr-only" checked={checked} {...rest} />
       <span className={`${BOX_BASE} ${checked ? BOX_ON : BOX_OFF}`}>
-        {checked && (
-          <svg className="w-2 h-2 text-white" viewBox="0 0 8 8" aria-hidden>
-            <path d="M1 4l2 2 4-5" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        )}
+        {checked && <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} aria-hidden />}
       </span>
       {label && <span className={LABEL}>{label}</span>}
     </label>

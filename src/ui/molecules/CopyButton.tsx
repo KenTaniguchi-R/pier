@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Copy, Check } from "lucide-react";
 
 interface Props {
   getText: () => string;
@@ -51,32 +52,21 @@ export function CopyButton({ getText, label = "copy", className = "" }: Props) {
         className
       }
     >
-      <span aria-hidden className="relative inline-block size-[11px]">
-        {/* copy glyph: two stacked rounded squares */}
-        <span
+      <span aria-hidden className="relative inline-block size-[12px]">
+        <Copy
           className={
-            "absolute inset-0 transition-[opacity,transform] duration-150 ease-(--ease-smooth) " +
+            "absolute inset-0 size-[12px] transition-[opacity,transform] duration-150 ease-(--ease-smooth) " +
             (isCopied ? "opacity-0 scale-75" : "opacity-100 scale-100")
           }
-        >
-          <span className="absolute left-0 top-0 size-[8px] rounded-[2px] border border-current" />
-          <span className="absolute right-0 bottom-0 size-[8px] rounded-[2px] border border-current bg-(--color-bg)" />
-        </span>
-        {/* check glyph */}
-        <svg
-          viewBox="0 0 11 11"
+          strokeWidth={2}
+        />
+        <Check
           className={
-            "absolute inset-0 transition-[opacity,transform] duration-150 ease-(--ease-smooth) " +
+            "absolute inset-0 size-[12px] transition-[opacity,transform] duration-150 ease-(--ease-smooth) " +
             (isCopied ? "opacity-100 scale-100" : "opacity-0 scale-75")
           }
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.6"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M2 6 L4.5 8.5 L9 3" />
-        </svg>
+          strokeWidth={2.5}
+        />
       </span>
       <span>{display}</span>
     </button>
