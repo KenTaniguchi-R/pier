@@ -27,6 +27,7 @@ impl Parameter {
     pub fn id(&self) -> &str { &self.base().id }
     pub fn flag(&self) -> Option<&str> { self.base().flag.as_deref() }
     pub fn optional(&self) -> bool { self.base().optional.unwrap_or(false) }
+    pub fn advanced(&self) -> bool { self.base().advanced.unwrap_or(false) }
     pub fn is_boolean(&self) -> bool { matches!(self, Parameter::Boolean(_)) }
 }
 
@@ -34,9 +35,10 @@ impl Parameter {
 #[serde(rename_all = "camelCase")]
 pub struct ParameterBase {
     pub id: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")] pub label: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")] pub description: Option<String>,
+    pub label: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")] pub help: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")] pub optional: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")] pub advanced: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")] pub default: Option<serde_json::Value>,
     #[serde(default, skip_serializing_if = "Option::is_none")] pub flag: Option<String>,
 }
@@ -136,7 +138,7 @@ mod tests {
     fn parses_select_parameter() {
         let json = r#"{"schemaVersion":"1.0","tools":[{
           "id":"x","name":"X","command":"/x",
-          "parameters":[{"id":"fmt","type":"select","options":["mp4","webm"]}]
+          "parameters":[{"id":"fmt","label":"Format","type":"select","options":["mp4","webm"]}]
         }]}"#;
         let cfg: ToolsConfig = serde_json::from_str(json).unwrap();
         match &cfg.tools[0].parameters[0] {
@@ -149,7 +151,7 @@ mod tests {
     fn parses_boolean_with_flag() {
         let json = r#"{"schemaVersion":"1.0","tools":[{
           "id":"x","name":"X","command":"/x",
-          "parameters":[{"id":"dry","type":"boolean","flag":"--dry-run"}]
+          "parameters":[{"id":"dry","label":"Dry run","type":"boolean","flag":"--dry-run"}]
         }]}"#;
         let cfg: ToolsConfig = serde_json::from_str(json).unwrap();
         let p = &cfg.tools[0].parameters[0];
@@ -162,7 +164,7 @@ mod tests {
     fn rejects_unknown_param_type() {
         let json = r#"{"schemaVersion":"1.0","tools":[{
           "id":"x","name":"X","command":"/x",
-          "parameters":[{"id":"q","type":"weird"}]
+          "parameters":[{"id":"q","label":"Q","type":"weird"}]
         }]}"#;
         assert!(serde_json::from_str::<ToolsConfig>(json).is_err());
     }

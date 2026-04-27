@@ -88,7 +88,7 @@ mod tests {
     fn substitutes_positional_placeholder() {
         let t = tool(r#"{"id":"t","name":"T","command":"/x",
           "args":["-i","{input}"],
-          "parameters":[{"id":"input","type":"file"}]}"#);
+          "parameters":[{"id":"input","label":"Input","type":"file"}]}"#);
         let r = build_args(&t, &vals(&[("input", json!("/tmp/a"))]));
         assert_eq!(r, vec!["-i", "/tmp/a"]);
     }
@@ -98,8 +98,8 @@ mod tests {
         let t = tool(r#"{"id":"t","name":"T","command":"/x",
           "args":["-i","{input}","{extra}"],
           "parameters":[
-            {"id":"input","type":"file"},
-            {"id":"extra","type":"text","optional":true}
+            {"id":"input","label":"Input","type":"file"},
+            {"id":"extra","label":"Extra","type":"text","optional":true}
           ]}"#);
         let r = build_args(&t, &vals(&[("input", json!("/a")), ("extra", json!(""))]));
         assert_eq!(r, vec!["-i", "/a"]);
@@ -110,8 +110,8 @@ mod tests {
         let t = tool(r#"{"id":"t","name":"T","command":"/x",
           "args":["{input}"],
           "parameters":[
-            {"id":"input","type":"file"},
-            {"id":"bitrate","type":"text","flag":"-b:v","optional":true}
+            {"id":"input","label":"Input","type":"file"},
+            {"id":"bitrate","label":"Bitrate","type":"text","flag":"-b:v","optional":true}
           ]}"#);
         let r = build_args(&t, &vals(&[
             ("input", json!("/a")), ("bitrate", json!("5000k")),
@@ -124,8 +124,8 @@ mod tests {
         let t = tool(r#"{"id":"t","name":"T","command":"/x",
           "args":["{input}"],
           "parameters":[
-            {"id":"input","type":"file"},
-            {"id":"bitrate","type":"text","flag":"-b:v","optional":true}
+            {"id":"input","label":"Input","type":"file"},
+            {"id":"bitrate","label":"Bitrate","type":"text","flag":"-b:v","optional":true}
           ]}"#);
         let r = build_args(&t, &vals(&[("input", json!("/a")), ("bitrate", json!(""))]));
         assert_eq!(r, vec!["/a"]);
@@ -134,7 +134,7 @@ mod tests {
     #[test]
     fn boolean_true_emits_flag_only() {
         let t = tool(r#"{"id":"t","name":"T","command":"/x",
-          "parameters":[{"id":"dry","type":"boolean","flag":"--dry-run"}]}"#);
+          "parameters":[{"id":"dry","label":"Dry run","type":"boolean","flag":"--dry-run"}]}"#);
         let r = build_args(&t, &vals(&[("dry", json!(true))]));
         assert_eq!(r, vec!["--dry-run"]);
     }
@@ -142,7 +142,7 @@ mod tests {
     #[test]
     fn boolean_false_emits_nothing() {
         let t = tool(r#"{"id":"t","name":"T","command":"/x",
-          "parameters":[{"id":"dry","type":"boolean","flag":"--dry-run"}]}"#);
+          "parameters":[{"id":"dry","label":"Dry run","type":"boolean","flag":"--dry-run"}]}"#);
         let r = build_args(&t, &vals(&[("dry", json!(false))]));
         assert!(r.is_empty());
     }
@@ -152,9 +152,9 @@ mod tests {
         let t = tool(r#"{"id":"t","name":"T","command":"/x",
           "args":["{input}"],
           "parameters":[
-            {"id":"input","type":"file"},
-            {"id":"a","type":"text","flag":"-a"},
-            {"id":"b","type":"text","flag":"-b"}
+            {"id":"input","label":"Input","type":"file"},
+            {"id":"a","label":"A","type":"text","flag":"-a"},
+            {"id":"b","label":"B","type":"text","flag":"-b"}
           ]}"#);
         let r = build_args(&t, &vals(&[
             ("input", json!("/x")), ("a", json!("1")), ("b", json!("2")),
@@ -166,7 +166,7 @@ mod tests {
     fn coerces_number_to_string() {
         let t = tool(r#"{"id":"t","name":"T","command":"/x",
           "args":["-p","{port}"],
-          "parameters":[{"id":"port","type":"number"}]}"#);
+          "parameters":[{"id":"port","label":"Port","type":"number"}]}"#);
         let r = build_args(&t, &vals(&[("port", json!(8080))]));
         assert_eq!(r, vec!["-p", "8080"]);
     }
