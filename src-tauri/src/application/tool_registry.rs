@@ -46,7 +46,15 @@ impl ToolRegistry {
         }
 
         for t in &config.tools {
-            tools.insert(t.id.clone(), t.clone());
+            let mut t = t.clone();
+            // Pre-resolve bare command names to absolute paths once at load
+            // time. Tools that fail to resolve are still loaded as-is — the
+            // same error will surface at run-time via path_resolver::resolve.
+            if !t.command.contains('/') {
+                if let Ok(abs) = crate::application::path_resolver::resolve(&t.command) {
+                    t.command = abs.to_string_lossy().into();
+                }
+            }
             let mut set = defaults_keys.clone();
             for raw in t.env.values() {
                 if let Some(k) = parse_keychain_ref(raw) {
@@ -54,6 +62,7 @@ impl ToolRegistry {
                 }
             }
             keychain_keys.insert(t.id.clone(), set);
+            tools.insert(t.id.clone(), t);
         }
 
         let mut g = self.inner.write().unwrap();

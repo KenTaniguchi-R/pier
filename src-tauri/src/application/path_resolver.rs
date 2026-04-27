@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Result};
 use std::path::PathBuf;
 
-const SEARCH: &[&str] = &[
+pub const SEARCH: &[&str] = &[
     "/opt/homebrew/bin",
     "/usr/local/bin",
     "/usr/bin",
@@ -16,13 +16,8 @@ pub fn resolve(command: &str) -> Result<PathBuf> {
         }
         return Err(anyhow!("not found: {}", command));
     }
-    let home = dirs::home_dir().ok_or_else(|| anyhow!("no home"))?;
-    let mut candidates: Vec<PathBuf> = SEARCH.iter().map(PathBuf::from).collect();
-    for sub in [".local/bin", ".cargo/bin", ".bun/bin"] {
-        candidates.push(home.join(sub));
-    }
-    for c in candidates {
-        let p = c.join(command);
+    for c in SEARCH {
+        let p = PathBuf::from(c).join(command);
         if p.exists() {
             return Ok(p);
         }
@@ -43,5 +38,15 @@ mod tests {
     #[test]
     fn errors_when_not_found() {
         assert!(resolve("definitely_not_a_real_binary_xyz").is_err());
+    }
+
+    #[test]
+    fn does_not_search_home_dirs() {
+        // We can't manipulate $HOME safely in tests, but we can assert the SEARCH
+        // constant is the system-only set.
+        assert_eq!(
+            super::SEARCH,
+            &["/opt/homebrew/bin", "/usr/local/bin", "/usr/bin", "/bin"]
+        );
     }
 }
