@@ -1,4 +1,5 @@
 import { Button } from "../atoms/Button";
+import { useDialogA11y } from "./useDialogA11y";
 
 interface Props {
   open: boolean;
@@ -11,19 +12,21 @@ interface Props {
 }
 
 export function ConfirmDialog({ open, toolName, command, args, shell, onConfirm, onCancel }: Props) {
+  const panelRef = useDialogA11y({ open, onEscape: onCancel });
   if (!open) return null;
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(31,26,22,0.32)] backdrop-blur-[4px] animate-overlay-in"
       role="dialog"
       aria-modal
+      aria-labelledby="cd-title"
     >
-      <div className="bg-surface border border-line rounded-[14px] w-[min(440px,calc(100%-32px))] shadow-pop overflow-hidden animate-panel-in">
+      <div ref={panelRef} className="bg-surface border border-line rounded-[14px] w-[min(440px,calc(100%-32px))] shadow-pop overflow-hidden animate-panel-in">
         <header className="px-6 pt-6 pb-3">
           <span className="block font-body font-medium text-[12px] leading-none text-ink-3 mb-1">
             Run this tool?
           </span>
-          <h2 className="font-display text-[22px] font-semibold text-ink tracking-[-0.005em]">
+          <h2 id="cd-title" className="font-display text-[22px] font-semibold text-ink tracking-[-0.005em]">
             {toolName}
           </h2>
         </header>
