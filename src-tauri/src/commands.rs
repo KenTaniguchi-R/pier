@@ -1,12 +1,16 @@
 use crate::application::load_config::{load_config_from_path, seed_default_if_missing};
-use crate::domain::{Defaults, RunRequest, Tool, ToolsConfig};
+use crate::domain::{RunRequestPayload, ToolsConfig};
+use crate::state::AppState;
 use std::path::PathBuf;
+use tauri::Manager;
 
 #[tauri::command]
-pub fn load_tools_config(path: String) -> Result<ToolsConfig, String> {
+pub fn load_tools_config(app: tauri::AppHandle, path: String) -> Result<ToolsConfig, String> {
     let p = PathBuf::from(path);
     seed_default_if_missing(&p).map_err(|e| e.to_string())?;
-    load_config_from_path(&p).map_err(|e| e.to_string())
+    let cfg = load_config_from_path(&p).map_err(|e| e.to_string())?;
+    app.state::<AppState>().registry.replace(cfg.clone());
+    Ok(cfg)
 }
 
 #[tauri::command]
@@ -18,11 +22,9 @@ pub fn config_path() -> String {
 #[tauri::command]
 pub async fn run_tool_cmd(
     app: tauri::AppHandle,
-    tool: Tool,
-    defaults: Option<Defaults>,
-    request: RunRequest,
+    payload: RunRequestPayload,
 ) -> Result<String, String> {
-    crate::application::run_tool::run_tool(app, tool, defaults, request)
+    crate::application::run_tool::run_tool(app, payload.tool_id, payload.values, payload.confirmed)
         .await
         .map_err(|e| e.to_string())
 }

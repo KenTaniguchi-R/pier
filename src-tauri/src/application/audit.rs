@@ -56,6 +56,15 @@ impl Entry {
     }
 }
 
+/// Temporary pass-through; replaced in Task 4 with real redaction.
+pub fn redact_args(
+    args: &[String],
+    _parameters: &[crate::domain::tool::Parameter],
+    _values: &std::collections::HashMap<String, serde_json::Value>,
+) -> Vec<String> {
+    args.to_vec()
+}
+
 /// Append an entry to the default audit log at ~/.pier/audit.log
 pub fn append(entry: &Entry) -> Result<()> {
     let path = audit_path();
