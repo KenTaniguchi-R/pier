@@ -77,4 +77,56 @@ describe("ToolRunner", () => {
       undefined,
     );
   });
+
+  it("hides advanced parameters until the disclosure is opened", async () => {
+    const tool: Tool = {
+      id: "t", name: "T", command: "/x",
+      parameters: [
+        { id: "input", label: "Video file", type: "file" },
+        { id: "voice", label: "Voice model", type: "select", options: ["a", "b"], advanced: true, default: "a" },
+      ],
+    };
+    wrap(tool, mockRunner());
+
+    expect(screen.getByText("Video file")).toBeInTheDocument();
+    expect(screen.queryByText("Voice model")).not.toBeInTheDocument();
+
+    const summary = screen.getByRole("button", { name: /advanced options/i });
+    await userEvent.click(summary);
+
+    expect(screen.getByText("Voice model")).toBeInTheDocument();
+  });
+
+  it("preserves advanced field values across collapse and re-expand", async () => {
+    const tool: Tool = {
+      id: "t", name: "T", command: "/x",
+      parameters: [
+        { id: "voice", label: "Voice model", type: "select", options: ["a", "b"], advanced: true, default: "a" },
+      ],
+    };
+    wrap(tool, mockRunner());
+
+    await userEvent.click(screen.getByRole("button", { name: /advanced options/i }));
+    const select = screen.getByLabelText("voice") as HTMLSelectElement;
+    await userEvent.selectOptions(select, "b");
+    expect(select.value).toBe("b");
+
+    // Collapse
+    await userEvent.click(screen.getByRole("button", { name: /advanced options/i }));
+    // Re-expand
+    await userEvent.click(screen.getByRole("button", { name: /advanced options/i }));
+    const select2 = screen.getByLabelText("voice") as HTMLSelectElement;
+    expect(select2.value).toBe("b");
+  });
+
+  it("Run stays enabled when only advanced+optional fields are unset", () => {
+    const tool: Tool = {
+      id: "t", name: "T", command: "/x",
+      parameters: [
+        { id: "title", label: "Title", type: "text", advanced: true, optional: true },
+      ],
+    };
+    wrap(tool, mockRunner());
+    expect(screen.getByRole("button", { name: /^run$/i })).not.toBeDisabled();
+  });
 });

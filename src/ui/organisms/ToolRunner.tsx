@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { Tool, Parameter, ParamValue } from "../../domain/tool";
 import { Button } from "../atoms/Button";
 import { ParamField } from "../molecules/ParamField";
+import { AdvancedDisclosure } from "../molecules/AdvancedDisclosure";
 import { ConfirmDialog } from "../molecules/ConfirmDialog";
 import { useApp } from "../../state/AppContext";
 import { useRunner } from "../../state/RunnerContext";
@@ -34,6 +35,8 @@ export function ToolRunner({ tool }: Props) {
   const runId = state.selectedRunIdByTool[tool.id];
   const status = runId ? state.runs[runId]?.status ?? null : null;
   const params = tool.parameters ?? [];
+  const required = params.filter(p => !p.advanced);
+  const advanced = params.filter(p => p.advanced);
   const canRun =
     status !== "running" &&
     params.every(p => p.optional === true || isFilled(values[p.id]));
@@ -50,7 +53,7 @@ export function ToolRunner({ tool }: Props) {
 
   return (
     <div className="flex flex-col gap-7">
-      {params.map((p, i) => (
+      {required.map((p, i) => (
         <ParamField
           key={p.id}
           param={p}
@@ -59,6 +62,10 @@ export function ToolRunner({ tool }: Props) {
           onChange={v => setValue(p.id, v)}
         />
       ))}
+
+      {advanced.length > 0 && (
+        <AdvancedDisclosure params={advanced} values={values} onChange={setValue} />
+      )}
 
       {params.length > 0 && <span className="block h-px bg-line mt-1" />}
 
