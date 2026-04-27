@@ -56,6 +56,9 @@ export interface UrlOpener {
 export interface SettingsAdapter {
   load(): Promise<import("../domain/settings").Settings>;
   save(settings: import("../domain/settings").Settings): Promise<void>;
+  patch(
+    partial: import("../domain/settings").DeepPartial<import("../domain/settings").Settings>,
+  ): Promise<import("../domain/settings").Settings>;
   historyStats(): Promise<import("../domain/settings").HistoryStats>;
   clearHistory(): Promise<void>;
 }
