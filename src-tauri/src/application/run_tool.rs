@@ -39,7 +39,7 @@ pub async fn run_tool(
     let tool = validate_run(&registry, &tool_id, confirmed)?;
     let defaults = registry.defaults();
     let allow = registry.keychain_keys_for(&tool.id);
-    spawn_and_stream(app, tool, defaults, allow, tool_id, values).await
+    spawn_and_stream(app, tool, defaults, allow, values).await
 }
 
 async fn spawn_and_stream(
@@ -47,7 +47,6 @@ async fn spawn_and_stream(
     tool: Tool,
     defaults: Option<Defaults>,
     allow: std::collections::HashSet<String>,
-    _tool_id: String,
     values: HashMap<String, serde_json::Value>,
 ) -> Result<RunId> {
     let run_id = Uuid::new_v4().to_string();
