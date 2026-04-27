@@ -1,8 +1,17 @@
 {
   "name": "pier",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.1",
+  "license": "MIT",
+  "description": "Tauri-based macOS menu-bar launcher for personal CLI tools",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/KenTaniguchi-R/pier.git"
+  },
   "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",

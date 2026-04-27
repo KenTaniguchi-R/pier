@@ -2,6 +2,12 @@
 
 All notable changes to Pier are documented here.
 
+## v0.1.1 — 2026-04-27
+
+First working release. v0.1.0 was tagged but its `latest.json` had a wrong asset URL — the on-disk tarball name didn't match the uploaded asset name after `tauri-action`'s rename, so the auto-updater would 404 on every check. Fixed by resolving the actual asset URL from the GitHub Release at workflow time.
+
+Everything else is identical to v0.1.0 below.
+
 ## v0.1.0 — 2026-04-27
 
 First public release. macOS menu-bar launcher for personal CLI tools, with everything wired in for self-updating from this version forward.
