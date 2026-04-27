@@ -25,7 +25,7 @@ On first launch, Pier creates `~/.pier/tools.json` with two starter tools. Click
 
 ## Adding a tool
 
-Edit `~/.pier/tools.json` (or ask Claude Code to). Pier hot-reloads within a second.
+Edit `~/.pier/tools.json` (or ask Claude Code to — see [`docs/skill.md`](docs/skill.md) for the bundled skill that adds, edits, and removes tools). Pier hot-reloads within a second.
 
 Schema (abbreviated):
 
