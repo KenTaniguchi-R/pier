@@ -28,12 +28,14 @@ pub async fn install_and_relaunch(app: &tauri::AppHandle) -> Result<()> {
         .ok_or_else(|| anyhow!("No update available at install time"))?;
 
     let app_for_progress = app.clone();
+    let mut downloaded: u64 = 0;
     let mut total: Option<u64> = None;
     update
         .download_and_install(
             move |chunk_len, content_len| {
                 if total.is_none() { total = content_len; }
-                let p = UpdateProgress { downloaded: chunk_len as u64, total };
+                downloaded += chunk_len as u64;
+                let p = UpdateProgress { downloaded, total };
                 let _ = app_for_progress.emit("pier://update-progress", p);
             },
             || {},
