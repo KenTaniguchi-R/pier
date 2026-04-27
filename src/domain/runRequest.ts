@@ -2,6 +2,8 @@ import type { ParamValue } from "./tool";
 
 export type RunStatus = "pending" | "running" | "success" | "failed" | "killed";
 
+export type Stream = "stdout" | "stderr";
+
 export interface RunRequest {
   toolId: string;
   values: Record<string, ParamValue>;

@@ -29,6 +29,7 @@ dotenvy = "0.15"
 tokio = { version = "1", features = ["full"] }
 uuid = { version = "1", features = ["v4"] }
 notify = "6"
+strip-ansi-escapes = "0.2.1"
 
 [dev-dependencies]
 tempfile = "3"

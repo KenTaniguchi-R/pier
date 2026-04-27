@@ -1,4 +1,5 @@
 import { useApp } from "../../state/AppContext";
+import { runOutputText } from "../../state/reducer";
 import { LogLine } from "../molecules/LogLine";
 import { RunHeader } from "../molecules/RunHeader";
 import { RUN_STATUS_STYLE } from "../molecules/runStatusStyle";
@@ -47,6 +48,7 @@ export function LogPanel({ toolId }: Props) {
         endedAt={run.endedAt}
         exitCode={run.exitCode}
         lineCount={lineCount}
+        getOutputText={() => runOutputText(run)}
       />
       <div className="flex-1 overflow-y-auto py-3 flex flex-col">
         {lineCount === 0 && run.status === "running" && (

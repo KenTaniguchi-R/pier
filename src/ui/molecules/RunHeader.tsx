@@ -1,4 +1,5 @@
 import type { RunStatus } from "../../domain/runRequest";
+import { CopyButton } from "./CopyButton";
 import { RUN_STATUS_STYLE } from "./runStatusStyle";
 
 interface Props {
@@ -7,6 +8,7 @@ interface Props {
   endedAt: number | null;
   exitCode: number | null;
   lineCount: number;
+  getOutputText?: () => string;
 }
 
 function formatDuration(ms: number): string {
@@ -18,7 +20,7 @@ function formatDuration(ms: number): string {
   return `${m}m ${rs}s`;
 }
 
-export function RunHeader({ status, startedAt, endedAt, exitCode, lineCount }: Props) {
+export function RunHeader({ status, startedAt, endedAt, exitCode, lineCount, getOutputText }: Props) {
   const style = RUN_STATUS_STYLE[status];
   const duration = endedAt ? endedAt - startedAt : null;
   const showLines = lineCount > 0;
@@ -40,6 +42,12 @@ export function RunHeader({ status, startedAt, endedAt, exitCode, lineCount }: P
           <>
             <span aria-hidden className="text-ink-4">·</span>
             <span className="text-danger">exit {exitCode}</span>
+          </>
+        )}
+        {getOutputText && showLines && (
+          <>
+            <span aria-hidden className="text-ink-4">·</span>
+            <CopyButton getText={getOutputText} />
           </>
         )}
       </span>

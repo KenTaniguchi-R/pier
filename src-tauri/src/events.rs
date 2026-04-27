@@ -9,6 +9,9 @@ pub struct OutputEvent {
     pub line: String,
     /// "stdout" or "stderr"
     pub stream: String,
+    /// True for in-progress segments (CR-terminated, e.g. tqdm bar refreshes).
+    /// The frontend replaces the prior transient row of the same stream instead of appending.
+    pub transient: bool,
 }
 
 /// Emitted on `pier://exit` when the process finishes, is killed, or times out.

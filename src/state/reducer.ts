@@ -1,6 +1,15 @@
 import type { Tool, Defaults } from "../domain/tool";
-import type { RunStatus } from "../domain/runRequest";
+import type { RunStatus, Stream } from "../domain/runRequest";
 import type { Action } from "./actions";
+
+export interface RunLine {
+  ts: number;
+  line: string;
+  stream: Stream;
+  /** True for `\r`-terminated progress segments. The next segment from the same
+   * stream replaces this one, so a tqdm bar collapses to a single mutating row. */
+  transient: boolean;
+}
 
 export interface RunState {
   toolId: string;
@@ -8,7 +17,7 @@ export interface RunState {
   exitCode: number | null;
   startedAt: number;
   endedAt: number | null;
-  lines: { ts: number; line: string; stream: "stdout" | "stderr" }[];
+  lines: RunLine[];
 }
 
 export interface AppState {
@@ -52,16 +61,19 @@ export function reducer(s: AppState, a: Action): AppState {
     case "RUN_OUTPUT": {
       const r = s.runs[a.runId];
       if (!r) return s;
-      return {
-        ...s,
-        runs: {
-          ...s.runs,
-          [a.runId]: {
-            ...r,
-            lines: [...r.lines, { ts: Date.now(), line: a.line, stream: a.stream }],
-          },
-        },
+      const next: RunLine = {
+        ts: Date.now(),
+        line: a.line,
+        stream: a.stream,
+        transient: a.transient,
       };
+      // Progress collapsing: when the previous trailing entry is a transient
+      // segment from the same stream, the incoming segment supersedes it.
+      const last = r.lines[r.lines.length - 1];
+      const lines = last && last.transient && last.stream === a.stream
+        ? [...r.lines.slice(0, -1), next]
+        : [...r.lines, next];
+      return { ...s, runs: { ...s.runs, [a.runId]: { ...r, lines } } };
     }
     case "RUN_EXIT": {
       const r = s.runs[a.runId];
@@ -75,4 +87,9 @@ export function reducer(s: AppState, a: Action): AppState {
       };
     }
   }
+}
+
+/** Plain-text concatenation of a run's output, suitable for clipboard. */
+export function runOutputText(r: RunState): string {
+  return r.lines.map((l) => l.line).join("\n");
 }
