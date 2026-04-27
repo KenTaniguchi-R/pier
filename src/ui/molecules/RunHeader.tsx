@@ -1,6 +1,7 @@
 import type { RunStatus } from "../../domain/runRequest";
 import { CopyButton } from "./CopyButton";
 import { RUN_STATUS_STYLE } from "./runStatusStyle";
+import { formatDuration } from "./elapsed";
 
 interface Props {
   status: RunStatus;
@@ -9,15 +10,6 @@ interface Props {
   exitCode: number | null;
   lineCount: number;
   getOutputText?: () => string;
-}
-
-function formatDuration(ms: number): string {
-  if (ms < 1000) return `${ms}ms`;
-  const s = ms / 1000;
-  if (s < 60) return `${s.toFixed(s < 10 ? 2 : 1)}s`;
-  const m = Math.floor(s / 60);
-  const rs = Math.round(s - m * 60);
-  return `${m}m ${rs}s`;
 }
 
 export function RunHeader({ status, startedAt, endedAt, exitCode, lineCount, getOutputText }: Props) {
