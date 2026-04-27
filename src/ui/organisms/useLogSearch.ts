@@ -12,6 +12,8 @@ interface Options {
   resetKey: string | undefined;
   /** Whether the host is mounted and should respond to global shortcuts. */
   enabled: boolean;
+  /** Scroll container that holds the rendered lines. */
+  scrollRef: React.RefObject<HTMLDivElement | null>;
 }
 
 interface Api {
@@ -26,7 +28,6 @@ interface Api {
   /** Where the active match lives, or null when there is none. */
   activeLocation: ActiveMatchLocation | null;
   inputRef: React.RefObject<HTMLInputElement | null>;
-  scrollRef: React.RefObject<HTMLDivElement | null>;
   setQuery: (q: string) => void;
   next: () => void;
   prev: () => void;
@@ -39,13 +40,12 @@ interface Api {
  * caller doesn't have to thread `total` back in to clamp `active`.
  * Active-match scrolling is delegated to a `data-pier-match="active"` attribute.
  */
-export function useLogSearch({ lines, resetKey, enabled }: Options): Api {
+export function useLogSearch({ lines, resetKey, enabled, scrollRef }: Options): Api {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
   const deferredQuery = useDeferredValue(query);
   const inputRef = useRef<HTMLInputElement>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
 
   const { perLine, total } = useMemo(
     () => tallyMatches(lines, deferredQuery),
@@ -136,7 +136,6 @@ export function useLogSearch({ lines, resetKey, enabled }: Options): Api {
     total,
     activeLocation,
     inputRef,
-    scrollRef,
     setQuery: setQueryAndReset,
     next,
     prev,

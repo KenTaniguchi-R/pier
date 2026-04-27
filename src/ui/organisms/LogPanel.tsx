@@ -1,11 +1,13 @@
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import { useApp } from "../../state/AppContext";
 import { runOutputText } from "../../state/reducer";
+import { JumpToBottomPill } from "../atoms/JumpToBottomPill";
 import { LogLine } from "../molecules/LogLine";
 import { LogSearchBar } from "../molecules/LogSearchBar";
 import { RunHeader } from "../molecules/RunHeader";
 import { RUN_STATUS_STYLE } from "../molecules/runStatusStyle";
 import { useLogSearch } from "./useLogSearch";
+import { useStickyScroll } from "./useStickyScroll";
 
 const SHELL =
   "flex flex-col h-full rounded-[14px] bg-surface border border-line overflow-hidden " +
@@ -27,7 +29,19 @@ export function LogPanel({ toolId }: Props) {
   const run = runId ? state.runs[runId] : null;
 
   const lineTexts = useMemo(() => run?.lines.map((l) => l.line) ?? [], [run]);
-  const search = useLogSearch({ lines: lineTexts, resetKey: runId, enabled: Boolean(run) });
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const search = useLogSearch({
+    lines: lineTexts,
+    resetKey: runId,
+    enabled: Boolean(run),
+    scrollRef,
+  });
+  const sticky = useStickyScroll({
+    scrollRef,
+    contentKey: lineTexts.length,
+    resetKey: runId,
+    enabled: Boolean(run),
+  });
 
   if (!run) {
     return (
@@ -58,7 +72,8 @@ export function LogPanel({ toolId }: Props) {
         lineCount={lineCount}
         getOutputText={() => runOutputText(run)}
       />
-      <div ref={search.scrollRef} className="flex-1 overflow-y-auto py-3 flex flex-col">
+      <div className="relative flex-1 min-h-0 flex flex-col">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto py-3 flex flex-col">
         {search.open && (
           <LogSearchBar
             ref={search.inputRef}
@@ -104,6 +119,11 @@ export function LogPanel({ toolId }: Props) {
             <span className="flex-1 h-px bg-line" />
           </div>
         )}
+      </div>
+        <JumpToBottomPill
+          visible={!sticky.isPinned && sticky.hasNewBelow}
+          onClick={sticky.jumpToBottom}
+        />
       </div>
     </section>
   );
