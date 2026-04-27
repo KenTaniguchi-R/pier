@@ -17,7 +17,10 @@ pub fn load_tools_config(app: tauri::AppHandle, path: String) -> Result<ToolsCon
 #[tauri::command]
 pub fn config_path() -> String {
     let home = dirs::home_dir().expect("home dir");
-    home.join(".pier").join("tools.json").to_string_lossy().into()
+    home.join(".pier")
+        .join("tools.json")
+        .to_string_lossy()
+        .into()
 }
 
 #[tauri::command]
@@ -78,7 +81,9 @@ pub async fn patch_settings_cmd(
     app: tauri::AppHandle,
     patch: serde_json::Value,
 ) -> Result<Settings, String> {
-    settings_app::patch(&app, patch).await.map_err(|e| e.to_string())
+    settings_app::patch(&app, patch)
+        .await
+        .map_err(|e| e.to_string())
 }
 
 use crate::application::update as update_app;
@@ -91,7 +96,9 @@ pub async fn check_update_cmd(app: tauri::AppHandle) -> Result<Option<UpdateInfo
 
 #[tauri::command]
 pub async fn install_update_cmd(app: tauri::AppHandle) -> Result<(), String> {
-    update_app::install_and_relaunch(&app).await.map_err(|e| e.to_string())
+    update_app::install_and_relaunch(&app)
+        .await
+        .map_err(|e| e.to_string())
 }
 
 #[tauri::command]

@@ -36,7 +36,9 @@ pub fn stats_in(audit: &Path, runs: &Path) -> Result<HistoryStats> {
         bytes = bytes.saturating_add(meta.len());
         let content = std::fs::read_to_string(audit)?;
         for line in content.lines() {
-            if line.is_empty() { continue; }
+            if line.is_empty() {
+                continue;
+            }
             if let Ok(v) = serde_json::from_str::<serde_json::Value>(line) {
                 if v.get("kind").and_then(|k| k.as_str()) == Some("start") {
                     run_count += 1;
@@ -88,7 +90,13 @@ mod tests {
     fn stats_zero_when_nothing_present() {
         let d = tempdir().unwrap();
         let s = stats_in(&d.path().join("a.log"), &d.path().join("runs")).unwrap();
-        assert_eq!(s, HistoryStats { run_count: 0, bytes: 0 });
+        assert_eq!(
+            s,
+            HistoryStats {
+                run_count: 0,
+                bytes: 0
+            }
+        );
     }
 
     #[test]

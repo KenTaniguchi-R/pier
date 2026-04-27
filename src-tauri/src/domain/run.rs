@@ -5,7 +5,13 @@ pub type RunId = String;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
-pub enum RunStatus { Pending, Running, Success, Failed, Killed }
+pub enum RunStatus {
+    Pending,
+    Running,
+    Success,
+    Failed,
+    Killed,
+}
 
 /// IPC payload for `run_tool_cmd`. The Tool itself is NEVER sent from the
 /// webview; the backend looks it up by id from the ToolRegistry.

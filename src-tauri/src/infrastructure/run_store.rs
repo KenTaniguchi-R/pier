@@ -21,7 +21,9 @@ pub struct LogLine {
     pub r: bool,
 }
 
-fn is_false(b: &bool) -> bool { !b }
+fn is_false(b: &bool) -> bool {
+    !b
+}
 
 /// Append-only writer for a single run's output. Drop closes the file.
 pub struct RunLog {
@@ -41,13 +43,22 @@ impl RunLog {
             .write(true)
             .truncate(true)
             .open(&path)?;
-        Ok(Self { path, file: Some(file), bytes_written: 0, truncated: false })
+        Ok(Self {
+            path,
+            file: Some(file),
+            bytes_written: 0,
+            truncated: false,
+        })
     }
 
     /// Append a line. Silently drops once truncated; emits a marker exactly once.
     pub fn append(&mut self, line: &LogLine) {
-        if self.file.is_none() { return; }
-        if self.truncated { return; }
+        if self.file.is_none() {
+            return;
+        }
+        if self.truncated {
+            return;
+        }
 
         let mut json = match serde_json::to_string(line) {
             Ok(s) => s,
@@ -72,9 +83,15 @@ impl RunLog {
         }
     }
 
-    pub fn path(&self) -> &Path { &self.path }
-    pub fn bytes(&self) -> u64 { self.bytes_written }
-    pub fn truncated(&self) -> bool { self.truncated }
+    pub fn path(&self) -> &Path {
+        &self.path
+    }
+    pub fn bytes(&self) -> u64 {
+        self.bytes_written
+    }
+    pub fn truncated(&self) -> bool {
+        self.truncated
+    }
 }
 
 /// Default storage dir: `~/.pier/runs/`.
@@ -87,12 +104,18 @@ pub fn read_log(path: &Path) -> Result<Vec<LogLine>> {
     let content = std::fs::read_to_string(path)?;
     let mut out = Vec::new();
     for line in content.lines() {
-        if line.is_empty() { continue; }
+        if line.is_empty() {
+            continue;
+        }
         match serde_json::from_str::<LogLine>(line) {
             Ok(l) => out.push(l),
             Err(_) => {
                 // Tolerate corrupt/legacy lines — surface as stderr text.
-                out.push(LogLine { s: "stderr".into(), t: line.into(), r: false });
+                out.push(LogLine {
+                    s: "stderr".into(),
+                    t: line.into(),
+                    r: false,
+                });
             }
         }
     }
@@ -105,7 +128,11 @@ mod tests {
     use tempfile::tempdir;
 
     fn line(s: &str, t: &str) -> LogLine {
-        LogLine { s: s.into(), t: t.into(), r: false }
+        LogLine {
+            s: s.into(),
+            t: t.into(),
+            r: false,
+        }
     }
 
     #[test]
@@ -124,11 +151,16 @@ mod tests {
         let d = tempdir().unwrap();
         let mut log = RunLog::create(d.path(), "big").unwrap();
         let big = "x".repeat(1024); // 1 KiB payload
-        for _ in 0..(2200) { log.append(&line("stdout", &big)); }
+        for _ in 0..2200 {
+            log.append(&line("stdout", &big));
+        }
         assert!(log.truncated());
         drop(log);
         let read = read_log(&d.path().join("big.log")).unwrap();
-        let markers: Vec<_> = read.iter().filter(|l| l.t == "[output truncated]").collect();
+        let markers: Vec<_> = read
+            .iter()
+            .filter(|l| l.t == "[output truncated]")
+            .collect();
         assert_eq!(markers.len(), 1);
     }
 
@@ -136,10 +168,14 @@ mod tests {
     fn transient_flag_round_trips() {
         let d = tempdir().unwrap();
         let mut log = RunLog::create(d.path(), "t").unwrap();
-        log.append(&LogLine { s: "stdout".into(), t: "50%".into(), r: true });
+        log.append(&LogLine {
+            s: "stdout".into(),
+            t: "50%".into(),
+            r: true,
+        });
         drop(log);
         let read = read_log(&d.path().join("t.log")).unwrap();
-        assert_eq!(read[0].r, true);
+        assert!(read[0].r);
     }
 
     #[test]

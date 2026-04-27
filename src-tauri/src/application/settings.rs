@@ -5,7 +5,10 @@ use tauri::Manager;
 use tauri_plugin_autostart::ManagerExt;
 
 pub fn settings_path() -> PathBuf {
-    dirs::home_dir().unwrap().join(".pier").join("settings.json")
+    dirs::home_dir()
+        .unwrap()
+        .join(".pier")
+        .join("settings.json")
 }
 
 pub fn load() -> Result<Settings> {
@@ -70,7 +73,9 @@ pub fn patch_with(path: &Path, patch: Value) -> Result<Settings> {
     };
     let merged = deep_merge(current, patch);
     let merged_settings: Settings = serde_json::from_value(merged)?;
-    if let Some(parent) = path.parent() { std::fs::create_dir_all(parent)?; }
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent)?;
+    }
     let tmp = path.with_extension("json.tmp");
     let json = serde_json::to_string_pretty(&merged_settings)?;
     std::fs::write(&tmp, json)?;
@@ -121,7 +126,10 @@ mod tests {
     fn round_trips_through_disk() {
         let d = tempdir().unwrap();
         let p = d.path().join("settings.json");
-        let s = Settings { launch_at_login: true, ..Default::default() };
+        let s = Settings {
+            launch_at_login: true,
+            ..Default::default()
+        };
         save_to(&p, &s).unwrap();
         let loaded = load_from(&p).unwrap();
         assert_eq!(loaded, s);
