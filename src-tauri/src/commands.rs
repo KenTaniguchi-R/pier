@@ -1,5 +1,6 @@
 use crate::application::load_config::{load_config_from_path, seed_default_if_missing};
-use crate::domain::{RunRequestPayload, ToolsConfig};
+use crate::application::{history_admin, settings as settings_app};
+use crate::domain::{RunRequestPayload, Settings, ToolsConfig};
 use crate::state::AppState;
 use std::path::PathBuf;
 use tauri::Manager;
@@ -50,4 +51,24 @@ pub fn read_run_output(
     output_path: String,
 ) -> Result<Vec<crate::infrastructure::run_store::LogLine>, String> {
     crate::application::history::read_output(&output_path).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn load_settings(app: tauri::AppHandle) -> Result<Settings, String> {
+    settings_app::current(&app).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn save_settings(app: tauri::AppHandle, settings: Settings) -> Result<(), String> {
+    settings_app::apply(&app, &settings).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn history_stats_cmd() -> Result<history_admin::HistoryStats, String> {
+    history_admin::stats().map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn clear_history_cmd() -> Result<(), String> {
+    history_admin::clear().map_err(|e| e.to_string())
 }

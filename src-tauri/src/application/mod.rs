@@ -5,5 +5,7 @@ pub mod history;
 pub mod load_config;
 pub mod path_resolver;
 pub mod run_tool;
+pub mod settings;
+pub mod history_admin;
 pub mod tool_registry;
 pub mod watch_config;
