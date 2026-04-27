@@ -69,3 +69,11 @@ export interface FilePicker {
   /** Open a native file picker. Returns absolute path or null if cancelled. */
   pick(opts: { directory?: boolean; accepts?: string[] }): Promise<string | null>;
 }
+
+import type { UpdateInfo, UpdateProgress } from "../domain/update";
+
+export interface UpdateChecker {
+  check(): Promise<UpdateInfo | null>;
+  installAndRelaunch(onProgress: (p: UpdateProgress) => void): Promise<void>;
+  isTranslocated(): Promise<boolean>;
+}
