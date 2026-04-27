@@ -2,22 +2,31 @@
 
 All notable changes to Pier are documented here.
 
-## v0.2.0 — 2026-04-27
+## v0.1.0 — 2026-04-27
 
-### Added
-- **In-app updater.** Pier checks for new releases on launch and every 24 hours, silently downloads them in the background, and surfaces a Sparkle-style modal with release notes plus three buttons: **Install and Restart**, **Remind Me Later** (24h), and **Skip This Version**. A manual "Check for updates…" button lives in Settings.
-- **Hidden-window UX for menu-bar mode.** When the main window is hidden (tray-only), Pier fires a system notification and swaps the tray icon to a dot-badge variant instead of showing the in-app toast.
-- **Updates section in Settings.** Toggle automatic updates, see the current version, see when the last check ran, and trigger a manual check. Errors render inline.
-- **Translocation guard.** If Pier is launched from a translocated bundle path (e.g., DMG), updates are refused with an actionable message.
-- **Atomic settings writes.** New `patch_settings_cmd` serializes concurrent partial writes through a lock with a tmp-file rename, eliminating last-write-wins races between auto-check persistence and user toggles.
-- **Dialog accessibility.** Focus trap, ESC-to-cancel, and ARIA labelling applied to all modal dialogs (`ConfirmDialog`, `DangerConfirmDialog`, `UpdateDialog`).
+First public release. macOS menu-bar launcher for personal CLI tools, with everything wired in for self-updating from this version forward.
 
-### Changed
-- Settings file (`~/.pier/settings.json`) now stores an `update` slice. Existing files load with safe defaults via `#[serde(default)]`.
+### Core
 
-### CI
-- Tagged-release pipeline (`.github/workflows/release.yml`): macOS arm64 runner, universal binary via `tauri-action`, ad-hoc codesign, signed `.app.tar.gz` + `.sig`, and `latest.json` assembly uploaded to the GitHub Release.
+- **Menu-bar app.** Tray icon left-click toggles a window of tool tiles. Right-click → Quit. Drag a file onto a tile, click Run. Stdout/stderr stream live.
+- **Tools defined in JSON.** `~/.pier/tools.json` is hot-reloaded; Claude Code can edit it directly. Schema supports parameters (`file`, `folder`, `text`, `url`, `select`, `boolean`, `number`), per-tool `cwd`, `envFile`, inline `env` with `${keychain:NAME}` and `${env:NAME}` interpolation, and confirmation gates.
+- **Run history.** Every run is appended to `~/.pier/audit.log` (JSONL). Per-tool history viewer with searchable output. Audit records *which* env vars came from where, never their values (except plain `envFile` entries).
+- **Settings.** Launch at login, clear history, automatic updates toggle, manual update check.
 
-## v0.1.0 — 2026-04-26
+### In-app updater
 
-Initial unsigned DMG release. Tray-icon menu-bar app, tool runner with confirmation dialogs, run history, settings (launch at login, clear history).
+- Checks for new releases on launch and every 24 hours; downloads in the background.
+- **Sparkle-style modal**: Install and Restart, Remind Me Later (24h), Skip This Version. Hand-rolled markdown renderer for release notes (no `dangerouslySetInnerHTML`, no deps).
+- **Hidden-window UX** for menu-bar mode: system notification + tray-icon dot badge replace the in-app toast when the window isn't visible.
+- **Translocation guard** refuses to self-update if launched from a quarantined path; prompts the user to move the app to /Applications.
+- **Atomic settings writes** via `patch_settings_cmd` (serialized lock + tmp+rename) eliminate last-write-wins races between auto-check persistence and user toggles.
+
+### Distribution
+
+- Universal arm64+x86_64 binary, ad-hoc codesigned via Tauri's bundler so in-place updates don't re-trigger Gatekeeper after the first launch.
+- Tagged-release pipeline (`.github/workflows/release.yml`) produces a `.dmg` for first install plus a signed `.app.tar.gz` + `.sig` + `latest.json` for the auto-updater.
+
+### Known limitations
+
+- Not Apple-notarized — first launch needs the one-time right-click → Open → Open Anyway dance. Subsequent in-app updates are seamless.
+- macOS only. Single update channel (no beta/pre-release).
