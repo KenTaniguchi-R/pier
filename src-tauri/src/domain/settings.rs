@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
+#[derive(Default)]
 pub struct Settings {
     #[serde(default)]
     pub launch_at_login: bool,
@@ -22,7 +23,9 @@ pub struct UpdatePrefs {
     pub last_checked_at: Option<i64>,
 }
 
-fn default_auto_check() -> bool { true }
+fn default_auto_check() -> bool {
+    true
+}
 
 impl Default for UpdatePrefs {
     fn default() -> Self {
@@ -32,12 +35,6 @@ impl Default for UpdatePrefs {
             remind_after: None,
             last_checked_at: None,
         }
-    }
-}
-
-impl Default for Settings {
-    fn default() -> Self {
-        Self { launch_at_login: false, update: UpdatePrefs::default() }
     }
 }
 

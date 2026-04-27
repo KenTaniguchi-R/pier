@@ -3,11 +3,11 @@ use crate::domain::*;
 use crate::events::{ExitEvent, OutputEvent};
 use crate::infrastructure::run_store::{self, LogLine, RunLog};
 use crate::infrastructure::subprocess::{spawn, stream_lines};
-use std::sync::{Arc, Mutex};
 use crate::state::{AppState, RunHandle};
 use anyhow::{anyhow, Result};
 use std::collections::HashMap;
 use std::path::PathBuf;
+use std::sync::{Arc, Mutex};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use tauri::{AppHandle, Emitter, Manager};
 use uuid::Uuid;
@@ -54,7 +54,9 @@ async fn spawn_and_stream(
     let run_id = Uuid::new_v4().to_string();
     let bin = path_resolver::resolve(&tool.command)?;
     let args = crate::application::arg_template::build_args(&tool, &values);
-    let cwd = tool.cwd.as_ref()
+    let cwd = tool
+        .cwd
+        .as_ref()
         .or_else(|| defaults.as_ref().and_then(|d| d.cwd.as_ref()))
         .map(PathBuf::from);
     let mut full_env: HashMap<String, String> = std::env::vars().collect();
@@ -78,7 +80,12 @@ async fn spawn_and_stream(
 
     let redacted = audit::redact_args(&args, &tool.parameters, &values);
     audit::append(&audit::Entry::start_with_env(
-        &run_id, &tool.id, &bin, &redacted, &resolved_env.keys, started,
+        &run_id,
+        &tool.id,
+        &bin,
+        &redacted,
+        &resolved_env.keys,
+        started,
     ))?;
 
     let timeout_secs = tool.timeout.unwrap_or(DEFAULT_TIMEOUT_SECS);
@@ -88,7 +95,9 @@ async fn spawn_and_stream(
         let state = app.state::<AppState>();
         state.running.lock().unwrap().insert(
             run_id.clone(),
-            RunHandle { cancel: Some(cancel_tx) },
+            RunHandle {
+                cancel: Some(cancel_tx),
+            },
         );
     }
 
@@ -103,7 +112,12 @@ async fn spawn_and_stream(
                 eprintln!("[pier] spawn error for run {id_clone}: {e}");
                 let _ = app_clone.emit(
                     "pier://exit",
-                    ExitEvent { run_id: id_clone.clone(), status: RunStatus::Failed, exit_code: None, ended_at: now() },
+                    ExitEvent {
+                        run_id: id_clone.clone(),
+                        status: RunStatus::Failed,
+                        exit_code: None,
+                        ended_at: now(),
+                    },
                 );
                 if let Some(state) = app_clone.try_state::<AppState>() {
                     state.running.lock().unwrap().remove(&id_clone);
@@ -125,11 +139,22 @@ async fn spawn_and_stream(
         let stream_fut = stream_lines(proc, move |seg| {
             if let Some(log) = &log_for_lines {
                 if let Ok(mut l) = log.lock() {
-                    l.append(&LogLine { s: seg.stream.into(), t: seg.text.clone(), r: seg.transient });
+                    l.append(&LogLine {
+                        s: seg.stream.into(),
+                        t: seg.text.clone(),
+                        r: seg.transient,
+                    });
                 }
             }
-            let _ = app_for_lines.emit("pier://output",
-                OutputEvent { run_id: id_for_lines.clone(), line: seg.text, stream: seg.stream.to_string(), transient: seg.transient });
+            let _ = app_for_lines.emit(
+                "pier://output",
+                OutputEvent {
+                    run_id: id_for_lines.clone(),
+                    line: seg.text,
+                    stream: seg.stream.to_string(),
+                    transient: seg.transient,
+                },
+            );
         });
 
         let result = tokio::select! {
@@ -155,19 +180,36 @@ async fn spawn_and_stream(
             RunStatus::Pending => "pending",
             RunStatus::Running => "running",
         };
-        let _ = app_clone.emit("pier://exit",
-            ExitEvent { run_id: id_clone.clone(), status, exit_code: code, ended_at: ended });
+        let _ = app_clone.emit(
+            "pier://exit",
+            ExitEvent {
+                run_id: id_clone.clone(),
+                status,
+                exit_code: code,
+                ended_at: ended,
+            },
+        );
 
         let (output_path, output_bytes, output_truncated) = match log.as_ref() {
             Some(l) => {
                 let g = l.lock().unwrap();
-                (Some(g.path().to_string_lossy().to_string()), Some(g.bytes()), Some(g.truncated()))
+                (
+                    Some(g.path().to_string_lossy().to_string()),
+                    Some(g.bytes()),
+                    Some(g.truncated()),
+                )
             }
             None => (None, None, None),
         };
         let _ = audit::append(&audit::Entry::end_full(
-            &id_clone, &tool_id, code, ended, status_str,
-            output_path, output_bytes, output_truncated,
+            &id_clone,
+            &tool_id,
+            code,
+            ended,
+            status_str,
+            output_path,
+            output_bytes,
+            output_truncated,
         ));
 
         if let Some(state) = app_clone.try_state::<AppState>() {
@@ -190,7 +232,10 @@ pub async fn kill_run(app: AppHandle, run_id: String) -> Result<()> {
 }
 
 fn now() -> u64 {
-    SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs()
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_secs()
 }
 
 #[cfg(test)]
@@ -212,7 +257,8 @@ mod tests {
             r#"{"schemaVersion":"1.0","tools":[
                 {"id":"x","name":"X","command":"/bin/echo","confirm":true}
             ]}"#,
-        ).unwrap();
+        )
+        .unwrap();
         registry.replace(cfg);
         let err = validate_run(&registry, "x", false).unwrap_err();
         assert!(format!("{err:#}").contains("confirmation required"));
@@ -225,7 +271,8 @@ mod tests {
             r#"{"schemaVersion":"1.0","tools":[
                 {"id":"x","name":"X","command":"/bin/echo","confirm":true}
             ]}"#,
-        ).unwrap();
+        )
+        .unwrap();
         registry.replace(cfg);
         let tool = validate_run(&registry, "x", true).unwrap();
         assert_eq!(tool.id, "x");

@@ -24,7 +24,9 @@ pub async fn install_and_relaunch(app: &tauri::AppHandle) -> Result<()> {
         ));
     }
     let updater = app.updater()?;
-    let update = updater.check().await?
+    let update = updater
+        .check()
+        .await?
         .ok_or_else(|| anyhow!("No update available at install time"))?;
 
     let app_for_progress = app.clone();
@@ -33,7 +35,9 @@ pub async fn install_and_relaunch(app: &tauri::AppHandle) -> Result<()> {
     update
         .download_and_install(
             move |chunk_len, content_len| {
-                if total.is_none() { total = content_len; }
+                if total.is_none() {
+                    total = content_len;
+                }
                 downloaded += chunk_len as u64;
                 let p = UpdateProgress { downloaded, total };
                 let _ = app_for_progress.emit("pier://update-progress", p);
@@ -60,7 +64,9 @@ pub fn notify_update_ready(app: &tauri::AppHandle, version: &str) -> Result<()> 
         .get_webview_window("main")
         .and_then(|w| w.is_visible().ok())
         .unwrap_or(false);
-    if visible { return Ok(()); }
+    if visible {
+        return Ok(());
+    }
     app.notification()
         .builder()
         .title("Pier update ready")
@@ -70,6 +76,8 @@ pub fn notify_update_ready(app: &tauri::AppHandle, version: &str) -> Result<()> 
 }
 
 pub fn set_tray_badge(app: &tauri::AppHandle, has_update: bool) -> Result<()> {
+    // include_bytes! resolves at macro time; clippy can't see the two PNGs differ.
+    #[allow(clippy::if_same_then_else)]
     let bytes: &[u8] = if has_update {
         include_bytes!("../../icons/tray-icon-update@2x.png")
     } else {

@@ -1,7 +1,27 @@
 node_modules
 dist
 src-tauri/target
+src-tauri/gen
 .DS_Store
 .serena/
 .claude/
 pier-updater/
+
+# Secrets — never commit
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+!src-tauri/icons/*.key
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor / OS
+.idea/
+*.swp
+.vitest-cache/
+coverage/
+
