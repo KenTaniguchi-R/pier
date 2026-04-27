@@ -57,7 +57,13 @@ async fn spawn_and_stream(
     let cwd = tool.cwd.as_ref()
         .or_else(|| defaults.as_ref().and_then(|d| d.cwd.as_ref()))
         .map(PathBuf::from);
-    let full_env: HashMap<String, String> = std::env::vars().collect();
+    let mut full_env: HashMap<String, String> = std::env::vars().collect();
+    // GUI launches (Finder/Dock) inherit a minimal PATH that lacks Homebrew,
+    // nvm, pnpm, etc. Replace it with the user's login-shell PATH so tools
+    // resolve their interpreters the same way they do in Terminal.
+    if let Some(p) = crate::infrastructure::shell_env::login_path() {
+        full_env.insert("PATH".to_string(), p.to_string());
+    }
     let process_env = crate::application::env_resolver::baseline_env(&full_env);
     let resolved_env = crate::application::env_resolver::resolve_with_allowlist(
         &tool,
