@@ -39,13 +39,13 @@ export function ToolRunner({ tool }: Props) {
 
   const resolvedArgs = buildArgs(tool, values);
 
-  const startRun = async () => {
-    const outcome = await runner.run({ toolId: tool.id, values }, tool, state.defaults);
+  const startRun = async (confirmed: boolean) => {
+    const outcome = await runner.run(tool.id, values, confirmed);
     dispatch({ type: "RUN_STARTED", runId: outcome.runId, toolId: tool.id, startedAt: outcome.startedAt });
   };
 
   const stopRun = () => { if (runId) runner.kill(runId); };
-  const onRunClick = () => (tool.confirm === false ? startRun() : setConfirmOpen(true));
+  const onRunClick = () => (tool.confirm === false ? startRun(false) : setConfirmOpen(true));
   const setValue = (id: string, v: ParamValue) => setValues(prev => ({ ...prev, [id]: v }));
 
   return (
@@ -83,7 +83,7 @@ export function ToolRunner({ tool }: Props) {
         args={resolvedArgs}
         shell={tool.shell ?? false}
         onCancel={() => setConfirmOpen(false)}
-        onConfirm={() => { setConfirmOpen(false); startRun(); }}
+        onConfirm={() => { setConfirmOpen(false); startRun(true); }}
       />
     </div>
   );

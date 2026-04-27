@@ -15,6 +15,18 @@ pub struct RunRequest {
     pub values: HashMap<String, serde_json::Value>,
 }
 
+/// IPC payload for `run_tool_cmd`. The Tool itself is NEVER sent from the
+/// webview; the backend looks it up by id from the ToolRegistry.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RunRequestPayload {
+    pub tool_id: String,
+    #[serde(default)]
+    pub values: HashMap<String, serde_json::Value>,
+    #[serde(default)]
+    pub confirmed: bool,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RunOutcome {
