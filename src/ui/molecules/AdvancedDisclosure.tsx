@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ChevronRight } from "lucide-react";
 import type { Parameter, ParamValue } from "../../domain/tool";
 import { ParamField } from "./ParamField";
 import { summarizeAdvanced } from "../../application/summarizeAdvanced";
@@ -24,9 +25,11 @@ export function AdvancedDisclosure({ params, values, onChange }: Props) {
       >
         <span
           aria-hidden
-          className={`inline-block w-3 transition-transform text-ink-3 ${open ? "rotate-90" : ""}`}
+          className={`flex-none w-[14px] flex items-center justify-center text-ink-3 transition-transform duration-150 ease-(--ease-smooth) origin-center ${
+            open ? "rotate-90" : ""
+          }`}
         >
-          ▸
+          <ChevronRight size={14} strokeWidth={2.25} />
         </span>
         <span className="font-display text-[14px] text-ink-2 group-hover:text-ink">
           {open ? "Advanced options" : summary}
@@ -34,19 +37,26 @@ export function AdvancedDisclosure({ params, values, onChange }: Props) {
         <span className="flex-1 h-px bg-line" />
       </button>
 
-      {open && (
-        <div className="flex flex-col gap-7 pl-6">
-          {params.map((p, i) => (
-            <ParamField
-              key={p.id}
-              param={p}
-              index={i}
-              value={values[p.id]}
-              onChange={v => onChange(p.id, v)}
-            />
-          ))}
+      <div
+        className={`grid transition-[grid-template-rows,opacity] duration-[220ms] ease-(--ease-smooth-out) ${
+          open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+        }`}
+        aria-hidden={!open}
+      >
+        <div className="min-h-0 overflow-hidden">
+          <div className="flex flex-col gap-7 pl-6 pt-1">
+            {params.map((p, i) => (
+              <ParamField
+                key={p.id}
+                param={p}
+                index={i}
+                value={values[p.id]}
+                onChange={v => onChange(p.id, v)}
+              />
+            ))}
+          </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }

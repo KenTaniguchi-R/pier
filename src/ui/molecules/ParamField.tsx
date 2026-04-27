@@ -58,11 +58,11 @@ function ParamWidget({ param: p, value, onChange, label }: WidgetProps) {
         <DropZone
           accepts={p.accepts}
           onDrop={onChange}
-          label={str ? str.split("/").pop() : undefined}
+          value={str ? str.split("/").pop() : undefined}
         />
       );
     case "folder":
-      return <DropZone directory onDrop={onChange} label={str || undefined} />;
+      return <DropZone directory onDrop={onChange} value={str || undefined} />;
     case "text":
       return p.multiline ? (
         <Textarea value={str} onChange={e => onChange(e.target.value)} placeholder="Paste text…" />

@@ -147,7 +147,7 @@ export function Sidebar({ tools, query, onQueryChange, selection, onSelect, runn
       <ul className="flex-1 list-none px-2 m-0 overflow-y-auto flex flex-col gap-[2px]">
         {running.length > 0 && (
           <>
-            <li className="px-3 pt-2 pb-1 text-[10px] uppercase tracking-[0.08em] font-semibold text-ink-4">
+            <li className="px-3 pt-2 pb-1 text-[10px] uppercase tracking-[0.08em] font-semibold text-ink-4 animate-tile-in">
               Running <span className="text-ink-3">({running.length})</span>
             </li>
             {running.map(entry => {

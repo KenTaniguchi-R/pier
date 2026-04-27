@@ -58,6 +58,9 @@
   --animate-overlay-in: overlay-in 140ms var(--ease-smooth);
   --animate-panel-in: panel-in 200ms var(--ease-smooth-out);
   --animate-run-pulse: run-pulse 1s ease-in-out infinite;
+  --animate-run-ready: run-ready 420ms var(--ease-smooth-out);
+  --animate-file-staged: file-staged 260ms var(--ease-smooth-out);
+  --animate-end-rule: end-rule 280ms var(--ease-smooth-out) 60ms backwards;
 
   @keyframes tile-in {
     from { opacity: 0; transform: translateY(4px); }
@@ -78,6 +81,20 @@
   @keyframes run-pulse {
     0%, 100% { opacity: 0.4; }
     50%      { opacity: 1; }
+  }
+  @keyframes run-ready {
+    0%   { transform: scale(1); }
+    45%  { transform: scale(1.035); }
+    100% { transform: scale(1); }
+  }
+  @keyframes file-staged {
+    0%   { transform: scale(0.985); opacity: 0; }
+    60%  { transform: scale(1.01); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  @keyframes end-rule {
+    0%   { opacity: 0; letter-spacing: 0.06em; }
+    100% { opacity: 1; letter-spacing: 0.18em; }
   }
 }
 

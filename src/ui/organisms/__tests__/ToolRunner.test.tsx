@@ -89,12 +89,14 @@ describe("ToolRunner", () => {
     wrap(tool, mockRunner());
 
     expect(screen.getByText("Video file")).toBeInTheDocument();
-    expect(screen.queryByText("Voice model")).not.toBeInTheDocument();
+    const voiceLabelClosed = screen.getByText("Voice model");
+    expect(voiceLabelClosed.closest("[aria-hidden='true']")).not.toBeNull();
 
     const summary = screen.getByRole("button", { name: /advanced options/i });
     await userEvent.click(summary);
 
-    expect(screen.getByText("Voice model")).toBeInTheDocument();
+    const voiceLabelOpen = screen.getByText("Voice model");
+    expect(voiceLabelOpen.closest("[aria-hidden='true']")).toBeNull();
   });
 
   it("preserves advanced field values across collapse and re-expand", async () => {
