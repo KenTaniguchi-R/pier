@@ -57,8 +57,10 @@ The flow to extend (e.g. new field on `Tool`, new run option) typically touches:
 
 ### Releases
 
-- `npm run tauri build` produces a local **unsigned** DMG (good for dev; triggers Gatekeeper warnings on other Macs).
-- Tagged releases (`git tag v* && git push origin v*`) trigger `.github/workflows/release.yml`: macOS arm64 runner, universal binary via `tauri-action`, ad-hoc codesign, signed `.app.tar.gz` + `.sig`, and `latest.json` uploaded to the GitHub Release. The Tauri updater pubkey lives in `tauri.conf.json` `plugins.updater.pubkey`; the matching private key + password are in GitHub Actions secrets `TAURI_SIGNING_PRIVATE_KEY` / `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`. Local copies live at `~/.tauri/pier.key` / `~/.tauri/pier.password` — back these up; losing them means existing installs can never receive a verifiable update.
+- `npm run tauri build` produces a local **unsigned** DMG (good for dev; triggers Gatekeeper warnings on other Macs because no Apple env vars are present locally).
+- Tagged releases (`git tag v* && git push origin v*`) trigger `.github/workflows/release.yml`: macOS runner, universal binary via `tauri-action`, **Developer ID codesign + Apple notarization**, signed `.app.tar.gz` + `.sig` (Tauri updater signature), and `latest.json` uploaded to the GitHub Release. Two signing systems are in play and must not be confused:
+  - **Apple Developer ID + notarization** (Gatekeeper trust). Cert: `Developer ID Application: Benri LLC (Q272ZH2Z42)`, Apple ID `ken.taniguchi@benree.tech`. GitHub secrets: `APPLE_CERTIFICATE` (base64 `.p12`), `APPLE_CERTIFICATE_PASSWORD`, `APPLE_SIGNING_IDENTITY`, `APPLE_ID`, `APPLE_PASSWORD` (app-specific password from appleid.apple.com), `APPLE_TEAM_ID`. `tauri-action` imports the cert into a temp keychain and runs `notarytool` automatically.
+  - **Tauri updater minisign signature** (so existing installs can verify the new bundle is yours, not Apple's). Pubkey lives in `tauri.conf.json` `plugins.updater.pubkey`; matching private key + password are GitHub secrets `TAURI_SIGNING_PRIVATE_KEY` / `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`. Local copies at `~/.tauri/pier.key` / `~/.tauri/pier.password` — back these up; losing them means existing installs can never receive a verifiable update.
 
 ## Conventions
 
