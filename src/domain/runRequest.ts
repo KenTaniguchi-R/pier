@@ -13,7 +13,9 @@ export interface RunOutcome {
   runId: string;
   status: RunStatus;
   exitCode: number | null;
+  /** Epoch milliseconds (matches Date.now()). */
   startedAt: number;
+  /** Epoch milliseconds, or null while running. */
   endedAt: number | null;
   outputFiles: string[];
 }
