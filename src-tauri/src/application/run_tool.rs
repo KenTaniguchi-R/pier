@@ -38,13 +38,15 @@ pub async fn run_tool(
     let registry = app.state::<AppState>().registry.clone();
     let tool = validate_run(&registry, &tool_id, confirmed)?;
     let defaults = registry.defaults();
-    spawn_and_stream(app, tool, defaults, tool_id, values).await
+    let allow = registry.keychain_keys_for(&tool.id);
+    spawn_and_stream(app, tool, defaults, allow, tool_id, values).await
 }
 
 async fn spawn_and_stream(
     app: AppHandle,
     tool: Tool,
     defaults: Option<Defaults>,
+    allow: std::collections::HashSet<String>,
     _tool_id: String,
     values: HashMap<String, serde_json::Value>,
 ) -> Result<RunId> {
@@ -55,12 +57,13 @@ async fn spawn_and_stream(
         .or_else(|| defaults.as_ref().and_then(|d| d.cwd.as_ref()))
         .map(PathBuf::from);
     let process_env: HashMap<String, String> = std::env::vars().collect();
-    let resolved_env = crate::application::env_resolver::resolve(
+    let resolved_env = crate::application::env_resolver::resolve_with_allowlist(
         &tool,
         defaults.as_ref(),
         cwd.as_deref(),
         &process_env,
         &crate::application::env_resolver::keychain_lookup,
+        &allow,
     );
     let started = now();
 
