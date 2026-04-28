@@ -3,7 +3,7 @@ import { useApp } from "../../state/AppContext";
 import { useRunner } from "../../state/RunnerContext";
 import { AppShell } from "../templates/AppShell";
 import { Sidebar, type Selection } from "../organisms/Sidebar";
-import { ToolBrowser } from "../organisms/ToolBrowser";
+import { HomeAllTools } from "../organisms/HomeAllTools";
 import { ToolDetail } from "../organisms/ToolDetail";
 import { SkillGuide } from "../organisms/SkillGuide";
 import { SettingsPage } from "./SettingsPage";
@@ -109,10 +109,13 @@ export function HomePage() {
     );
   } else {
     main = (
-      <ToolBrowser
-        title={browserTitle}
-        subtitle={browserSub}
-        tools={filteredTools}
+      <HomeAllTools
+        tools={tools}
+        filteredTools={filteredTools}
+        query={query}
+        isAllSelection={selection.kind === "all"}
+        browserTitle={browserTitle}
+        browserSub={browserSub}
         onPick={(id) => setSelection({ kind: "tool", id })}
         runningToolIds={runningIds}
         emptyHint={

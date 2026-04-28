@@ -36,9 +36,17 @@ export interface RunLogLine {
   r?: boolean;
 }
 
+export interface RecentToolRun {
+  toolId: string;
+  /** Epoch milliseconds. Adapters convert from backend seconds. */
+  lastRunAt: number;
+  lastStatus: "success" | "failed" | "killed" | "running";
+}
+
 export interface HistoryReader {
   list(toolId: string, limit?: number): Promise<RunSummary[]>;
   readOutput(outputPath: string): Promise<RunLogLine[]>;
+  listRecentTools(limit?: number): Promise<RecentToolRun[]>;
 }
 
 export interface DragPosition { x: number; y: number }

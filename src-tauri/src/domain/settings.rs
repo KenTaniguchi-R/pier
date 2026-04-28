@@ -8,6 +8,8 @@ pub struct Settings {
     pub launch_at_login: bool,
     #[serde(default)]
     pub update: UpdatePrefs,
+    #[serde(default)]
+    pub favorites: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -63,6 +65,7 @@ mod tests {
                 remind_after: Some(1_700_000_000_000),
                 last_checked_at: Some(1_700_000_000_000),
             },
+            favorites: vec!["a".into(), "b".into()],
         };
         let json = serde_json::to_string(&s).unwrap();
         let back: Settings = serde_json::from_str(&json).unwrap();
