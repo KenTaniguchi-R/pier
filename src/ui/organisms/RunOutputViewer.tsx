@@ -3,6 +3,7 @@ import { useHistory } from "../../state/HistoryContext";
 import type { RunLogLine, RunSummary } from "../../application/ports";
 
 const STATUS_TONE: Record<RunSummary["status"], string> = {
+  pending: "text-ink-3  border-line       bg-bg-2",
   success: "text-success border-success/40 bg-success-soft",
   failed:  "text-danger  border-danger/40  bg-danger-soft",
   killed:  "text-ink-3  border-line       bg-bg-2",

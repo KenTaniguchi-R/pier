@@ -1,4 +1,4 @@
-import type { RunOutcome, Stream } from "../domain/runRequest";
+import type { RunOutcome, RunStatus, Stream } from "../domain/runRequest";
 
 export interface ConfigLoader {
   load(): Promise<{ raw: unknown; pathHint: string }>;
@@ -23,7 +23,7 @@ export interface RunSummary {
   startedAt: number;
   /** Epoch milliseconds, or null while running. */
   endedAt: number | null;
-  status: "success" | "failed" | "killed" | "running";
+  status: RunStatus;
   exitCode: number | null;
   outputPath: string | null;
   outputBytes: number | null;
@@ -40,7 +40,7 @@ export interface RecentToolRun {
   toolId: string;
   /** Epoch milliseconds. Adapters convert from backend seconds. */
   lastRunAt: number;
-  lastStatus: "success" | "failed" | "killed" | "running";
+  lastStatus: RunStatus;
 }
 
 export interface HistoryReader {

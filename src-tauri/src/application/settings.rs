@@ -154,6 +154,7 @@ mod tests {
                 remind_after: None,
                 last_checked_at: Some(100),
             },
+            favorites: vec![],
         };
         save_to(&p, &s).unwrap();
         let patch = serde_json::json!({ "update": { "lastCheckedAt": 200 } });

@@ -24,12 +24,11 @@ describe("favorites", () => {
       expect(after).toEqual([]);
     });
 
-    it("respects the cap when adding new ids", () => {
+    it("returns the same reference when blocked at cap", () => {
       const full = ["a", "b", "c", "d", "e", "f", "g", "h"];
       expect(full.length).toBe(FAVORITES_CAP);
       const after = togglePin(full, "z");
-      expect(after).toEqual(full);
-      expect(after).not.toBe(full);
+      expect(after).toBe(full);
     });
 
     it("still removes when at cap", () => {

@@ -112,8 +112,7 @@ export function HomePage() {
       <HomeAllTools
         tools={tools}
         filteredTools={filteredTools}
-        query={query}
-        isAllSelection={selection.kind === "all"}
+        showStrips={selection.kind === "all" && query.trim() === ""}
         browserTitle={browserTitle}
         browserSub={browserSub}
         onPick={(id) => setSelection({ kind: "tool", id })}

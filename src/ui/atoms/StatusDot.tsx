@@ -1,17 +1,11 @@
-import type { RecentToolRun } from "../../application/ports";
+import type { RunStatus } from "../../domain/runRequest";
+import { RUN_STATUS_STYLE } from "../molecules/runStatusStyle";
 
-const TONE: Record<RecentToolRun["lastStatus"], string> = {
-  success: "bg-success",
-  failed: "bg-danger",
-  killed: "bg-ink-4",
-  running: "bg-accent animate-run-pulse",
-};
-
-export function StatusDot({ status }: { status: RecentToolRun["lastStatus"] }) {
+export function StatusDot({ status }: { status: RunStatus }) {
   return (
     <span
-      aria-label={`Last run: ${status}`}
-      className={`inline-block w-1.5 h-1.5 rounded-full ${TONE[status]}`}
+      aria-label={`Last run: ${RUN_STATUS_STYLE[status].label}`}
+      className={`inline-block w-1.5 h-1.5 rounded-full ${RUN_STATUS_STYLE[status].dot}`}
     />
   );
 }

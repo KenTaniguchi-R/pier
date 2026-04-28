@@ -5,16 +5,15 @@ export function isPinned(list: readonly string[], id: string): boolean {
 }
 
 /** Toggle pin for `id`. Removes if present; appends if absent and under cap.
- *  When already at cap, returns the list unchanged — UI is responsible for
- *  disabling the affordance, but this keeps the helper safe. */
+ *  Returns the same reference when the call is a no-op (already at cap and
+ *  trying to add) so callers can detect "nothing changed" via identity. */
 export function togglePin(
   list: readonly string[],
   id: string,
   cap: number = FAVORITES_CAP,
-): string[] {
-  const idx = list.indexOf(id);
-  if (idx !== -1) return list.filter((x) => x !== id);
-  if (list.length >= cap) return [...list];
+): readonly string[] {
+  if (list.indexOf(id) !== -1) return list.filter((x) => x !== id);
+  if (list.length >= cap) return list;
   return [...list, id];
 }
 

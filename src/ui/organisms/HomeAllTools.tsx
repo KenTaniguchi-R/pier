@@ -6,8 +6,9 @@ import { ToolBrowser } from "./ToolBrowser";
 interface Props {
   tools: Tool[];
   filteredTools: Tool[];
-  query: string;
-  isAllSelection: boolean;
+  /** Whether the Favorites + Recent strips should render. False on
+   *  search/category views so intent-focused screens stay clean. */
+  showStrips: boolean;
   browserTitle: string;
   browserSub?: string;
   onPick: (id: string) => void;
@@ -15,23 +16,21 @@ interface Props {
   emptyHint?: string;
 }
 
+/** Composes the strips + tool grid for the Home/All-tools view. */
 export function HomeAllTools({
   tools,
   filteredTools,
-  query,
-  isAllSelection,
+  showStrips,
   browserTitle,
   browserSub,
   onPick,
   runningToolIds,
   emptyHint,
 }: Props) {
-  const showStrips = isAllSelection && query.trim() === "";
-
   return (
     <div className="flex flex-col">
       {showStrips && (
-        <div className="px-8 pt-6 pb-0 flex flex-col gap-5">
+        <div className="px-8 pt-6 flex flex-col gap-5">
           <FavoritesBar tools={tools} onPick={onPick} runningToolIds={runningToolIds} />
           <RecentRunsStrip tools={tools} onPick={onPick} runningToolIds={runningToolIds} />
         </div>

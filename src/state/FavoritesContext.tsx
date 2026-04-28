@@ -34,15 +34,12 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
     async (id: string) => {
       const prev = favorites;
       const next = togglePin(prev, id);
-      // togglePin returns a fresh array even when blocked at cap; detect
-      // no-op by content so we don't round-trip a useless patch.
-      const unchanged =
-        next.length === prev.length && next.every((v, i) => v === prev[i]);
-      if (unchanged) return;
-      setFavorites(next);
+      if (next === prev) return; // blocked at cap — togglePin returns same ref
+      const nextArr = [...next];
+      setFavorites(nextArr);
       try {
-        const merged = await adapter.patch({ favorites: next });
-        setFavorites(merged.favorites ?? next);
+        const merged = await adapter.patch({ favorites: nextArr });
+        setFavorites(merged.favorites ?? nextArr);
       } catch {
         setFavorites(prev);
       }
