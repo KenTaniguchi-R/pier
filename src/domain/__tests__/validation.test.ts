@@ -204,3 +204,91 @@ describe("parseToolsConfig — label requirement", () => {
     expect(result.ok).toBe(true);
   });
 });
+
+describe("parseToolsConfig — multiselect", () => {
+  const wrap = (param: object) => ({
+    schemaVersion: "1.0",
+    tools: [{
+      id: "x", name: "X", command: "/x",
+      parameters: [{ id: "p", label: "P", ...param }],
+    }],
+  });
+
+  it("accepts a valid multiselect with default subset", () => {
+    ok(wrap({ type: "multiselect", options: ["a", "b"], default: ["a"] }));
+  });
+
+  it("rejects multiselect missing options", () => {
+    fail(wrap({ type: "multiselect" }));
+  });
+
+  it("rejects multiselect default not in options", () => {
+    fail(wrap({ type: "multiselect", options: ["a", "b"], default: ["c"] }));
+  });
+
+  it("rejects multiselect default that isn't an array", () => {
+    fail(wrap({ type: "multiselect", options: ["a"], default: "a" }));
+  });
+});
+
+describe("parseToolsConfig — slider", () => {
+  const wrap = (param: object) => ({
+    schemaVersion: "1.0",
+    tools: [{
+      id: "x", name: "X", command: "/x",
+      parameters: [{ id: "p", label: "P", ...param }],
+    }],
+  });
+
+  it("accepts a valid slider", () => {
+    ok(wrap({ type: "slider", min: 0, max: 100, step: 5, default: 50 }));
+  });
+
+  it("rejects slider missing min/max", () => {
+    fail(wrap({ type: "slider" }));
+  });
+
+  it("rejects slider with min >= max", () => {
+    fail(wrap({ type: "slider", min: 10, max: 5 }));
+  });
+});
+
+describe("parseToolsConfig — date", () => {
+  const wrap = (param: object) => ({
+    schemaVersion: "1.0",
+    tools: [{
+      id: "x", name: "X", command: "/x",
+      parameters: [{ id: "p", label: "P", ...param }],
+    }],
+  });
+
+  it("accepts a valid date param with bounds", () => {
+    ok(wrap({ type: "date", min: "2020-01-01", max: "2030-12-31" }));
+  });
+
+  it("rejects date min that isn't a string", () => {
+    fail(wrap({ type: "date", min: 12345 }));
+  });
+});
+
+describe("parseToolsConfig — pattern (regex)", () => {
+  it("accepts a valid regex pattern on text", () => {
+    ok({
+      schemaVersion: "1.0",
+      tools: [{
+        id: "x", name: "X", command: "/x",
+        parameters: [{ id: "p", label: "P", type: "text", pattern: "^[a-z]+$" }],
+      }],
+    });
+  });
+
+  it("rejects an invalid regex pattern", () => {
+    fail({
+      schemaVersion: "1.0",
+      tools: [{
+        id: "x", name: "X", command: "/x",
+        parameters: [{ id: "p", label: "P", type: "text", pattern: "[unclosed" }],
+      }],
+    });
+  });
+});

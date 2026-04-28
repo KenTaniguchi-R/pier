@@ -24,7 +24,7 @@ export function ToolDetail({ tool, onBack }: Props) {
 
       <div ref={scrollRef} className="flex-1 flex flex-col min-h-0 px-10 py-6 gap-6 overflow-y-auto">
         <section className="flex-none">
-          <ToolRunner params={params} values={run.values} onChange={run.setValue} />
+          <ToolRunner params={params} values={run.values} errors={run.errors} onChange={run.setValue} />
         </section>
 
         <div className="flex items-center gap-3 flex-none">

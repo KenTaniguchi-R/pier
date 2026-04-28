@@ -4,11 +4,14 @@ import { useApp } from "../state/AppContext";
 import { useRunner } from "../state/RunnerContext";
 import { buildArgs } from "./argTemplate";
 import { findBlocker, blockerLabel } from "./runBlocker";
+import { validateValues, type ValidationError } from "../domain/paramValidation";
 
 function defaultValue(p: Parameter): ParamValue {
   if (p.default !== undefined) return p.default;
   if (p.type === "boolean") return false;
   if (p.type === "select") return p.options[0] ?? "";
+  if (p.type === "multiselect") return [];
+  if (p.type === "slider") return p.min;
   return "";
 }
 
@@ -19,6 +22,7 @@ function initialValues(tool: Tool): Record<string, ParamValue> {
 export interface ToolRunController {
   values: Record<string, ParamValue>;
   setValue: (id: string, v: ParamValue) => void;
+  errors: Map<string, ValidationError>;
 
   isRunning: boolean;
   startedAt: number | null;
@@ -52,8 +56,9 @@ export function useToolRun(tool: Tool): ToolRunController {
   const startedAt = run?.startedAt ?? null;
   const params = tool.parameters ?? [];
 
+  const errors = useMemo(() => validateValues(params, values), [params, values]);
   const blocker = useMemo(() => findBlocker(params, values), [params, values]);
-  const canRun = !blocker;
+  const canRun = errors.size === 0;
   const resolvedArgs = useMemo(() => buildArgs(tool, values), [tool, values]);
 
   const setValue = (id: string, v: ParamValue) =>
@@ -79,6 +84,7 @@ export function useToolRun(tool: Tool): ToolRunController {
   return {
     values,
     setValue,
+    errors,
     isRunning: !!isRunning,
     startedAt,
     canRun,

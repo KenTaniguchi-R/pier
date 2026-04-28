@@ -36,11 +36,27 @@ pub fn build_args(tool: &Tool, values: &HashMap<String, Value>) -> Vec<String> {
         if is_empty(v) {
             continue;
         }
+        // Multiselect: repeat the flag once per array element.
+        if let Some(Value::Array(items)) = v {
+            for item in items {
+                out.push(flag.to_string());
+                out.push(item_string(item));
+            }
+            continue;
+        }
         out.push(flag.to_string());
         out.push(stringify(v));
     }
 
     out
+}
+
+fn item_string(v: &Value) -> String {
+    match v {
+        Value::String(s) => s.clone(),
+        Value::Null => String::new(),
+        other => other.to_string(),
+    }
 }
 
 fn match_placeholder(s: &str) -> Option<&str> {
@@ -66,6 +82,7 @@ fn is_empty(v: Option<&Value>) -> bool {
         None => true,
         Some(Value::Null) => true,
         Some(Value::String(s)) => s.is_empty(),
+        Some(Value::Array(a)) => a.is_empty(),
         _ => false,
     }
 }
@@ -76,6 +93,11 @@ fn stringify(v: Option<&Value>) -> String {
         Some(Value::String(s)) => s.clone(),
         Some(Value::Bool(b)) => b.to_string(),
         Some(Value::Number(n)) => n.to_string(),
+        Some(Value::Array(a)) => a
+            .iter()
+            .map(item_string)
+            .collect::<Vec<_>>()
+            .join(","),
         Some(other) => other.to_string(),
     }
 }
@@ -188,6 +210,39 @@ mod tests {
             &vals(&[("input", json!("/x")), ("a", json!("1")), ("b", json!("2"))]),
         );
         assert_eq!(r, vec!["/x", "-a", "1", "-b", "2"]);
+    }
+
+    #[test]
+    fn multiselect_with_flag_repeats_flag() {
+        let t = tool(
+            r#"{"id":"t","name":"T","command":"/x",
+          "parameters":[{"id":"tag","label":"Tag","type":"multiselect",
+            "options":["a","b","c"],"flag":"--tag"}]}"#,
+        );
+        let r = build_args(&t, &vals(&[("tag", json!(["a", "c"]))]));
+        assert_eq!(r, vec!["--tag", "a", "--tag", "c"]);
+    }
+
+    #[test]
+    fn multiselect_positional_joins_with_commas() {
+        let t = tool(
+            r#"{"id":"t","name":"T","command":"/x",
+          "args":["{tags}"],
+          "parameters":[{"id":"tags","label":"Tags","type":"multiselect","options":["a","b"]}]}"#,
+        );
+        let r = build_args(&t, &vals(&[("tags", json!(["a", "b"]))]));
+        assert_eq!(r, vec!["a,b"]);
+    }
+
+    #[test]
+    fn multiselect_empty_is_skipped() {
+        let t = tool(
+            r#"{"id":"t","name":"T","command":"/x",
+          "parameters":[{"id":"tag","label":"Tag","type":"multiselect",
+            "options":["a"],"flag":"--tag","optional":true}]}"#,
+        );
+        let r = build_args(&t, &vals(&[("tag", json!([]))]));
+        assert!(r.is_empty());
     }
 
     #[test]

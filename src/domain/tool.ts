@@ -1,6 +1,9 @@
-export type ParamType = "file" | "folder" | "text" | "url" | "select" | "boolean" | "number";
+export type ParamType =
+  | "file" | "folder" | "text" | "url"
+  | "select" | "boolean" | "number"
+  | "multiselect" | "slider" | "date";
 
-export type ParamValue = string | number | boolean;
+export type ParamValue = string | number | boolean | string[];
 
 interface ParameterBase {
   id: string;
@@ -13,17 +16,21 @@ interface ParameterBase {
   secret?: boolean;
 }
 
-export interface FileParam     extends ParameterBase { type: "file"; accepts?: string[] }
-export interface FolderParam   extends ParameterBase { type: "folder" }
-export interface TextParam     extends ParameterBase { type: "text"; multiline?: boolean }
-export interface UrlParam      extends ParameterBase { type: "url" }
-export interface SelectParam   extends ParameterBase { type: "select"; options: string[] }
-export interface BooleanParam  extends ParameterBase { type: "boolean" }
-export interface NumberParam   extends ParameterBase { type: "number"; min?: number; max?: number; step?: number }
+export interface FileParam        extends ParameterBase { type: "file"; accepts?: string[] }
+export interface FolderParam      extends ParameterBase { type: "folder" }
+export interface TextParam        extends ParameterBase { type: "text"; multiline?: boolean; pattern?: string }
+export interface UrlParam         extends ParameterBase { type: "url"; pattern?: string }
+export interface SelectParam      extends ParameterBase { type: "select"; options: string[] }
+export interface BooleanParam     extends ParameterBase { type: "boolean" }
+export interface NumberParam      extends ParameterBase { type: "number"; min?: number; max?: number; step?: number }
+export interface MultiSelectParam extends ParameterBase { type: "multiselect"; options: string[] }
+export interface SliderParam      extends ParameterBase { type: "slider"; min: number; max: number; step?: number }
+export interface DateParam        extends ParameterBase { type: "date"; min?: string; max?: string }
 
 export type Parameter =
   | FileParam | FolderParam | TextParam | UrlParam
-  | SelectParam | BooleanParam | NumberParam;
+  | SelectParam | BooleanParam | NumberParam
+  | MultiSelectParam | SliderParam | DateParam;
 
 export interface Tool {
   id: string;

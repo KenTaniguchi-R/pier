@@ -10,6 +10,10 @@ pub enum Parameter {
     Select(SelectParam),
     Boolean(BooleanParam),
     Number(NumberParam),
+    #[serde(rename = "multiselect")]
+    MultiSelect(MultiSelectParam),
+    Slider(SliderParam),
+    Date(DateParam),
 }
 
 impl Parameter {
@@ -22,6 +26,9 @@ impl Parameter {
             Parameter::Select(p) => &p.base,
             Parameter::Boolean(p) => &p.base,
             Parameter::Number(p) => &p.base,
+            Parameter::MultiSelect(p) => &p.base,
+            Parameter::Slider(p) => &p.base,
+            Parameter::Date(p) => &p.base,
         }
     }
     pub fn id(&self) -> &str {
@@ -86,6 +93,8 @@ pub struct TextParam {
     pub base: ParameterBase,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub multiline: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pattern: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -93,6 +102,8 @@ pub struct TextParam {
 pub struct UrlParam {
     #[serde(flatten)]
     pub base: ParameterBase,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pattern: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -121,6 +132,36 @@ pub struct NumberParam {
     pub max: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub step: Option<f64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MultiSelectParam {
+    #[serde(flatten)]
+    pub base: ParameterBase,
+    pub options: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SliderParam {
+    #[serde(flatten)]
+    pub base: ParameterBase,
+    pub min: f64,
+    pub max: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub step: Option<f64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DateParam {
+    #[serde(flatten)]
+    pub base: ParameterBase,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub min: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub max: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -235,6 +276,50 @@ mod tests {
         assert_eq!(t.env_file.as_deref(), Some(".env"));
         assert_eq!(t.env.get("DEBUG").map(String::as_str), Some("1"));
         assert_eq!(t.env.get("KEY").map(String::as_str), Some("${keychain:k}"));
+    }
+
+    #[test]
+    fn parses_multiselect_parameter() {
+        let json = r#"{"schemaVersion":"1.0","tools":[{
+          "id":"x","name":"X","command":"/x",
+          "parameters":[{"id":"tags","label":"Tags","type":"multiselect",
+            "options":["a","b","c"],"default":["a"]}]
+        }]}"#;
+        let cfg: ToolsConfig = serde_json::from_str(json).unwrap();
+        match &cfg.tools[0].parameters[0] {
+            Parameter::MultiSelect(p) => assert_eq!(p.options, vec!["a", "b", "c"]),
+            _ => panic!("expected MultiSelect"),
+        }
+    }
+
+    #[test]
+    fn parses_slider_parameter() {
+        let json = r#"{"schemaVersion":"1.0","tools":[{
+          "id":"x","name":"X","command":"/x",
+          "parameters":[{"id":"q","label":"Quality","type":"slider","min":0,"max":100,"step":5}]
+        }]}"#;
+        let cfg: ToolsConfig = serde_json::from_str(json).unwrap();
+        match &cfg.tools[0].parameters[0] {
+            Parameter::Slider(p) => {
+                assert_eq!(p.min, 0.0);
+                assert_eq!(p.max, 100.0);
+                assert_eq!(p.step, Some(5.0));
+            }
+            _ => panic!("expected Slider"),
+        }
+    }
+
+    #[test]
+    fn parses_date_parameter() {
+        let json = r#"{"schemaVersion":"1.0","tools":[{
+          "id":"x","name":"X","command":"/x",
+          "parameters":[{"id":"d","label":"Date","type":"date","min":"2020-01-01"}]
+        }]}"#;
+        let cfg: ToolsConfig = serde_json::from_str(json).unwrap();
+        match &cfg.tools[0].parameters[0] {
+            Parameter::Date(p) => assert_eq!(p.min.as_deref(), Some("2020-01-01")),
+            _ => panic!("expected Date"),
+        }
     }
 
     #[test]

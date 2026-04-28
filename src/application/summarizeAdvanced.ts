@@ -11,13 +11,20 @@ function basename(p: string): string {
 }
 
 function display(param: Parameter, value: ParamValue | undefined): string {
-  if (value === undefined || value === null || value === "") return "—";
+  if (value === undefined || value === null || value === ""
+      || (Array.isArray(value) && value.length === 0)) return "—";
   switch (param.type) {
     case "boolean": return value === true ? "on" : "off";
     case "file":
     case "folder":  return basename(String(value));
-    case "select":  return String(value);
-    case "number":  return String(value);
+    case "select":
+    case "date":
+    case "number":
+    case "slider":  return String(value);
+    case "multiselect": {
+      const arr = Array.isArray(value) ? value : [];
+      return arr.length <= 2 ? arr.join(", ") : `${arr.slice(0, 2).join(", ")} +${arr.length - 2}`;
+    }
     case "text":
     case "url": {
       const s = String(value);
