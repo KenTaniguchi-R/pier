@@ -206,7 +206,7 @@ pub fn list_recent_tools_in(audit: &Path, limit: usize) -> Result<Vec<RecentTool
             last_status: status,
         })
         .collect();
-    out.sort_by(|a, b| b.last_run_at.cmp(&a.last_run_at));
+    out.sort_by_key(|r| std::cmp::Reverse(r.last_run_at));
     out.truncate(limit);
     Ok(out)
 }
