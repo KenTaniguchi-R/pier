@@ -93,11 +93,7 @@ fn stringify(v: Option<&Value>) -> String {
         Some(Value::String(s)) => s.clone(),
         Some(Value::Bool(b)) => b.to_string(),
         Some(Value::Number(n)) => n.to_string(),
-        Some(Value::Array(a)) => a
-            .iter()
-            .map(item_string)
-            .collect::<Vec<_>>()
-            .join(","),
+        Some(Value::Array(a)) => a.iter().map(item_string).collect::<Vec<_>>().join(","),
         Some(other) => other.to_string(),
     }
 }
