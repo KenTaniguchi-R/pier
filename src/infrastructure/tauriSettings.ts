@@ -12,6 +12,7 @@ function withDefaults(s: Partial<Settings> | null | undefined): Settings {
   return {
     launchAtLogin: s?.launchAtLogin ?? DEFAULT_SETTINGS.launchAtLogin,
     update: { ...DEFAULT_UPDATE_PREFS, ...(s?.update ?? {}) },
+    favorites: Array.isArray(s?.favorites) ? [...s.favorites] : [],
   };
 }
 

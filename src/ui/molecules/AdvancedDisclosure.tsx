@@ -1,16 +1,18 @@
 import { useState } from "react";
 import { ChevronRight } from "lucide-react";
 import type { Parameter, ParamValue } from "../../domain/tool";
+import type { ValidationError } from "../../domain/paramValidation";
 import { ParamField } from "./ParamField";
 import { summarizeAdvanced } from "../../application/summarizeAdvanced";
 
 interface Props {
   params: Parameter[];
   values: Record<string, ParamValue>;
+  errors?: Map<string, ValidationError>;
   onChange: (id: string, value: ParamValue) => void;
 }
 
-export function AdvancedDisclosure({ params, values, onChange }: Props) {
+export function AdvancedDisclosure({ params, values, errors, onChange }: Props) {
   const [open, setOpen] = useState(false);
   if (params.length === 0) return null;
   const summary = summarizeAdvanced(params, values);
@@ -51,6 +53,7 @@ export function AdvancedDisclosure({ params, values, onChange }: Props) {
                 param={p}
                 index={i}
                 value={values[p.id]}
+                error={errors?.get(p.id)}
                 onChange={v => onChange(p.id, v)}
               />
             ))}

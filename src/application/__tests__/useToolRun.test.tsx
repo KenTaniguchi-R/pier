@@ -63,6 +63,18 @@ describe("useToolRun", () => {
     expect(result.current.canRun).toBe(true);
   });
 
+  it("blocks run while a regex is failing and unblocks once it passes", () => {
+    const tool: Tool = { id: "t", name: "T", command: "/x",
+      parameters: [{ id: "slug", label: "Slug", type: "text", pattern: "^[a-z0-9-]+$" }] };
+    const { result } = renderHook(() => useToolRun(tool), { wrapper: wrapper(mockRunner()) });
+    act(() => result.current.setValue("slug", "Has Spaces"));
+    expect(result.current.canRun).toBe(false);
+    expect(result.current.errors.get("slug")?.kind).toBe("regex");
+    act(() => result.current.setValue("slug", "ok-slug"));
+    expect(result.current.canRun).toBe(true);
+    expect(result.current.errors.size).toBe(0);
+  });
+
   it("Cmd+Enter triggers a run when ready", async () => {
     const tool: Tool = { id: "t", name: "T", command: "/x", confirm: false };
     const runner = mockRunner();

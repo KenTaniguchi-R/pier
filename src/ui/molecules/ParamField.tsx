@@ -1,20 +1,29 @@
 import type { Parameter, ParamValue } from "../../domain/tool";
+import { errorMessage, type ValidationError } from "../../domain/paramValidation";
 import { TextField } from "../atoms/TextField";
 import { SecretField } from "../atoms/SecretField";
 import { Textarea } from "../atoms/Textarea";
 import { Select } from "../atoms/Select";
 import { Checkbox } from "../atoms/Checkbox";
 import { NumberField } from "../atoms/NumberField";
+import { Slider } from "../atoms/Slider";
+import { DateField } from "../atoms/DateField";
+import { MultiSelect } from "../atoms/MultiSelect";
 import { DropZone } from "./DropZone";
 
 interface Props {
   param: Parameter;
   index: number;
   value: ParamValue | undefined;
+  error?: ValidationError;
   onChange: (v: ParamValue) => void;
 }
 
-export function ParamField({ param, index, value, onChange }: Props) {
+export function ParamField({ param, index, value, error, onChange }: Props) {
+  // Suppress the "required" pill until the user has interacted (i.e. the field
+  // is non-empty / has been touched). Other errors surface immediately.
+  const showError = error && error.kind !== "required";
+
   return (
     <div
       className="flex flex-col gap-2 animate-tile-in"
@@ -34,10 +43,19 @@ export function ParamField({ param, index, value, onChange }: Props) {
 
       <ParamWidget param={param} value={value} onChange={onChange} label={param.label} />
 
-      {param.help && (
-        <span className="font-display text-[13px] leading-[1.45] text-ink-3">
-          {param.help}
+      {showError ? (
+        <span
+          role="alert"
+          className="font-display text-[13px] leading-[1.45] text-danger"
+        >
+          {errorMessage(param, error!)}
         </span>
+      ) : (
+        param.help && (
+          <span className="font-display text-[13px] leading-[1.45] text-ink-3">
+            {param.help}
+          </span>
+        )
       )}
     </div>
   );
@@ -108,6 +126,33 @@ function ParamWidget({ param: p, value, onChange, label }: WidgetProps) {
           value={value === undefined || value === "" ? "" : (value as number)}
           min={p.min} max={p.max} step={p.step}
           onChange={e => onChange(e.target.value === "" ? "" : Number(e.target.value))}
+        />
+      );
+    case "slider":
+      return (
+        <Slider
+          aria-label={p.id}
+          min={p.min} max={p.max} step={p.step}
+          value={typeof value === "number" ? value : p.min}
+          onChange={e => onChange(Number(e.target.value))}
+        />
+      );
+    case "date":
+      return (
+        <DateField
+          aria-label={p.id}
+          value={str}
+          min={p.min} max={p.max}
+          onChange={e => onChange(e.target.value)}
+        />
+      );
+    case "multiselect":
+      return (
+        <MultiSelect
+          aria-label={p.id}
+          options={p.options}
+          value={Array.isArray(value) ? value : []}
+          onChange={onChange}
         />
       );
   }

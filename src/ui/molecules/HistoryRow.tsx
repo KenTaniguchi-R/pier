@@ -2,6 +2,7 @@ import type { RunSummary } from "../../application/ports";
 import { formatDuration, relativeTime } from "./elapsed";
 
 const GLYPH: Record<RunSummary["status"], string> = {
+  pending: "◦",
   success: "✓",
   failed:  "✗",
   killed:  "—",
@@ -9,6 +10,7 @@ const GLYPH: Record<RunSummary["status"], string> = {
 };
 
 const GLYPH_TONE: Record<RunSummary["status"], string> = {
+  pending: "text-ink-4",
   success: "text-success",
   failed:  "text-danger",
   killed:  "text-ink-4",

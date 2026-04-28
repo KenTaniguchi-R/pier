@@ -61,19 +61,7 @@ export function reducer(s: AppState, a: Action): AppState {
     case "RUN_OUTPUT": {
       const r = s.runs[a.runId];
       if (!r) return s;
-      const next: RunLine = {
-        ts: Date.now(),
-        line: a.line,
-        stream: a.stream,
-        transient: a.transient,
-      };
-      // Progress collapsing: when the previous trailing entry is a transient
-      // segment from the same stream, the incoming segment supersedes it.
-      const last = r.lines[r.lines.length - 1];
-      const lines = last && last.transient && last.stream === a.stream
-        ? [...r.lines.slice(0, -1), next]
-        : [...r.lines, next];
-      return { ...s, runs: { ...s.runs, [a.runId]: { ...r, lines } } };
+      return { ...s, runs: { ...s.runs, [a.runId]: { ...r, lines: appendLine(r.lines, a) } } };
     }
     case "RUN_EXIT": {
       const r = s.runs[a.runId];
@@ -87,6 +75,24 @@ export function reducer(s: AppState, a: Action): AppState {
       };
     }
   }
+}
+
+function appendLine(
+  lines: RunLine[],
+  a: { line: string; stream: Stream; transient: boolean },
+): RunLine[] {
+  const next: RunLine = {
+    ts: Date.now(),
+    line: a.line,
+    stream: a.stream,
+    transient: a.transient,
+  };
+  // Progress collapsing: when the previous trailing entry is a transient
+  // segment from the same stream, the incoming segment supersedes it.
+  const last = lines[lines.length - 1];
+  return last && last.transient && last.stream === a.stream
+    ? [...lines.slice(0, -1), next]
+    : [...lines, next];
 }
 
 /** Plain-text concatenation of a run's output, suitable for clipboard. */

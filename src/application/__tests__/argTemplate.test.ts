@@ -92,4 +92,50 @@ describe("buildArgs", () => {
   it("returns empty when tool has no args and no flagged params", () => {
     expect(buildArgs(tool({}), {})).toEqual([]);
   });
+
+  it("multiselect with flag repeats the flag once per value", () => {
+    const t = tool({
+      parameters: [{
+        id: "tag", label: "Tag", type: "multiselect",
+        options: ["a", "b", "c"], flag: "--tag",
+      }],
+    });
+    expect(buildArgs(t, { tag: ["a", "c"] })).toEqual(["--tag", "a", "--tag", "c"]);
+  });
+
+  it("multiselect positional joins with commas", () => {
+    const t = tool({
+      args: ["{tags}"],
+      parameters: [{
+        id: "tags", label: "Tags", type: "multiselect", options: ["a", "b", "c"],
+      }],
+    });
+    expect(buildArgs(t, { tags: ["a", "b"] })).toEqual(["a,b"]);
+  });
+
+  it("multiselect empty array is treated as empty", () => {
+    const t = tool({
+      parameters: [{
+        id: "tag", label: "Tag", type: "multiselect",
+        options: ["a"], flag: "--tag", optional: true,
+      }],
+    });
+    expect(buildArgs(t, { tag: [] })).toEqual([]);
+  });
+
+  it("slider value serializes like a number", () => {
+    const t = tool({
+      args: ["-q", "{q}"],
+      parameters: [{ id: "q", label: "Q", type: "slider", min: 0, max: 100 }],
+    });
+    expect(buildArgs(t, { q: 42 })).toEqual(["-q", "42"]);
+  });
+
+  it("date value serializes as ISO string", () => {
+    const t = tool({
+      args: ["{when}"],
+      parameters: [{ id: "when", label: "When", type: "date" }],
+    });
+    expect(buildArgs(t, { when: "2026-04-27" })).toEqual(["2026-04-27"]);
+  });
 });

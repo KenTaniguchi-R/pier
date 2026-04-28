@@ -1,5 +1,7 @@
 import { forwardRef } from "react";
 import type { Tool } from "../../domain/tool";
+import { useFavorites } from "../../state/FavoritesContext";
+import { StarButton } from "../atoms/StarButton";
 
 interface Props {
   tool: Tool;
@@ -20,6 +22,8 @@ export const ToolDetailHeader = forwardRef<HTMLElement, Props>(function ToolDeta
   ref,
 ) {
   const eyebrow = eyebrowFor(tool);
+  const { isPinned, toggle, atCap } = useFavorites();
+  const pinned = isPinned(tool.id);
 
   return (
     <header
@@ -68,9 +72,16 @@ export const ToolDetailHeader = forwardRef<HTMLElement, Props>(function ToolDeta
               {eyebrow}
             </span>
           </div>
-          <h1 className="font-display text-[34px] font-semibold tracking-[-0.02em] leading-[1.05] text-ink">
-            {tool.name}
-          </h1>
+          <div className="flex items-center gap-2">
+            <h1 className="font-display text-[34px] font-semibold tracking-[-0.02em] leading-[1.05] text-ink">
+              {tool.name}
+            </h1>
+            <StarButton
+              pinned={pinned}
+              onToggle={() => toggle(tool.id)}
+              disabled={!pinned && atCap}
+            />
+          </div>
           {tool.description && (
             <p className="mt-3 font-display italic text-[16px] leading-[1.45] text-ink-2 max-w-[58ch]">
               {tool.description}

@@ -130,6 +130,87 @@ pub fn list_for_tool_in(audit: &Path, tool_id: &str, limit: usize) -> Result<Vec
     Ok(out)
 }
 
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct RecentToolRun {
+    pub tool_id: String,
+    /// Epoch seconds (matches audit log; frontend converts to ms).
+    pub last_run_at: u64,
+    /// "success" | "failed" | "killed" | "running"
+    pub last_status: String,
+}
+
+/// Newest distinct tools to have appeared in the audit log, deduped by tool_id.
+pub fn list_recent_tools(limit: usize) -> Result<Vec<RecentToolRun>> {
+    let path = audit_path();
+    if !path.exists() {
+        return Ok(Vec::new());
+    }
+    list_recent_tools_in(&path, limit)
+}
+
+pub fn list_recent_tools_in(audit: &Path, limit: usize) -> Result<Vec<RecentToolRun>> {
+    let content = std::fs::read_to_string(audit)?;
+    // For each tool_id, keep the newest event seen (by ts), preferring "end"
+    // over "start" at the same ts so a finalised run reports its real status.
+    let mut latest: std::collections::HashMap<String, (u64, String, u8)> =
+        std::collections::HashMap::new();
+
+    for line in content.lines() {
+        if line.is_empty() {
+            continue;
+        }
+        let v: serde_json::Value = match serde_json::from_str(line) {
+            Ok(v) => v,
+            Err(_) => continue,
+        };
+        let kind = v.get("kind").and_then(|k| k.as_str()).unwrap_or("");
+        let tid = match v.get("tool_id").and_then(|t| t.as_str()) {
+            Some(s) if !s.is_empty() => s.to_string(),
+            _ => continue,
+        };
+        let ts = v.get("ts").and_then(|t| t.as_u64()).unwrap_or(0);
+        let (status, prio) = match kind {
+            "end" => {
+                let s = v
+                    .get("status")
+                    .and_then(|s| s.as_str())
+                    .map(|s| s.to_string())
+                    .unwrap_or_else(|| match v.get("exit_code").and_then(|c| c.as_i64()) {
+                        Some(0) => "success".into(),
+                        Some(_) => "failed".into(),
+                        None => "killed".into(),
+                    });
+                (s, 1u8)
+            }
+            "start" => ("running".to_string(), 0u8),
+            _ => continue,
+        };
+        match latest.get(&tid) {
+            Some((prev_ts, _, prev_prio))
+                if *prev_ts > ts || (*prev_ts == ts && *prev_prio >= prio) =>
+            {
+                // existing entry is newer (or same ts with stronger priority)
+            }
+            _ => {
+                latest.insert(tid, (ts, status, prio));
+            }
+        }
+    }
+
+    let mut out: Vec<RecentToolRun> = latest
+        .into_iter()
+        .map(|(tool_id, (ts, status, _))| RecentToolRun {
+            tool_id,
+            last_run_at: ts,
+            last_status: status,
+        })
+        .collect();
+    out.sort_by_key(|r| std::cmp::Reverse(r.last_run_at));
+    out.truncate(limit);
+    Ok(out)
+}
+
 /// Read a stored run log. Path is taken from the audit record; we restrict
 /// reads to the runs/ directory to prevent traversal via crafted audit lines.
 pub fn read_output(path: &str) -> Result<Vec<LogLine>> {
@@ -250,6 +331,101 @@ mod tests {
         assert_eq!(out.len(), 1);
         assert_eq!(out[0].status, "running");
         assert!(out[0].ended_at.is_none());
+    }
+
+    #[test]
+    fn recent_tools_dedup_by_tool_and_newest_first() {
+        let d = tempdir().unwrap();
+        let audit_log = d.path().join("audit.log");
+        // toolA at ts=10 (success), then toolB at ts=20 (failed),
+        // then toolA again at ts=30 (success). Expect order: A, B.
+        for (rid, tool, ts, exit) in [
+            ("r1", "toolA", 10u64, 0i32),
+            ("r2", "toolB", 20, 1),
+            ("r3", "toolA", 30, 0),
+        ] {
+            audit::append_to(
+                &audit_log,
+                &Entry::start_with_env(
+                    rid,
+                    tool,
+                    Path::new("/bin/echo"),
+                    &[],
+                    &std::collections::HashMap::new(),
+                    ts,
+                ),
+            )
+            .unwrap();
+            audit::append_to(&audit_log, &Entry::end(rid, tool, Some(exit), ts)).unwrap();
+        }
+        let out = list_recent_tools_in(&audit_log, 10).unwrap();
+        assert_eq!(out.len(), 2);
+        assert_eq!(out[0].tool_id, "toolA");
+        assert_eq!(out[0].last_run_at, 30);
+        assert_eq!(out[0].last_status, "success");
+        assert_eq!(out[1].tool_id, "toolB");
+        assert_eq!(out[1].last_status, "failed");
+    }
+
+    #[test]
+    fn recent_tools_respects_limit() {
+        let d = tempdir().unwrap();
+        let audit_log = d.path().join("audit.log");
+        for i in 0..5u64 {
+            let tool = format!("t{i}");
+            audit::append_to(
+                &audit_log,
+                &Entry::start_with_env(
+                    &format!("r{i}"),
+                    &tool,
+                    Path::new("/bin/echo"),
+                    &[],
+                    &std::collections::HashMap::new(),
+                    i * 10,
+                ),
+            )
+            .unwrap();
+            audit::append_to(
+                &audit_log,
+                &Entry::end(&format!("r{i}"), &tool, Some(0), i * 10 + 1),
+            )
+            .unwrap();
+        }
+        let out = list_recent_tools_in(&audit_log, 3).unwrap();
+        assert_eq!(out.len(), 3);
+        assert_eq!(out[0].tool_id, "t4");
+        assert_eq!(out[2].tool_id, "t2");
+    }
+
+    #[test]
+    fn recent_tools_includes_running_when_no_end() {
+        let d = tempdir().unwrap();
+        let audit_log = d.path().join("audit.log");
+        audit::append_to(
+            &audit_log,
+            &Entry::start_with_env(
+                "r1",
+                "live",
+                Path::new("/bin/echo"),
+                &[],
+                &std::collections::HashMap::new(),
+                100,
+            ),
+        )
+        .unwrap();
+        let out = list_recent_tools_in(&audit_log, 10).unwrap();
+        assert_eq!(out.len(), 1);
+        assert_eq!(out[0].tool_id, "live");
+        assert_eq!(out[0].last_status, "running");
+    }
+
+    #[test]
+    fn recent_tools_empty_when_no_audit_lines() {
+        let d = tempdir().unwrap();
+        let audit_log = d.path().join("audit.log");
+        std::fs::write(&audit_log, "").unwrap();
+        let out = list_recent_tools_in(&audit_log, 10).unwrap();
+        assert!(out.is_empty());
     }
 
     #[test]

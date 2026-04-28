@@ -62,6 +62,7 @@ describe("reducer", () => {
     expect(s.runs["r1"].lines.map(l => l.line)).toEqual(["out", "err"]);
   });
 
+
   it("RUN_EXIT updates status and exit code", () => {
     let s = reducer(initialState, { type: "RUN_STARTED", runId: "r1", toolId: "x", startedAt: 1 });
     s = reducer(s, { type: "RUN_EXIT", runId: "r1", status: "success", exitCode: 0, endedAt: 2 });

@@ -87,6 +87,7 @@ pub fn run() {
             commands::run_tool_cmd,
             commands::kill_run_cmd,
             commands::list_tool_history,
+            commands::list_recent_tools_cmd,
             commands::read_run_output,
             commands::load_settings,
             commands::save_settings,

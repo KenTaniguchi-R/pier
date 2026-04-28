@@ -8,6 +8,7 @@ export interface UpdatePrefs {
 export interface Settings {
   launchAtLogin: boolean;
   update: UpdatePrefs;
+  favorites: string[];
 }
 
 export const DEFAULT_UPDATE_PREFS: UpdatePrefs = {
@@ -20,6 +21,7 @@ export const DEFAULT_UPDATE_PREFS: UpdatePrefs = {
 export const DEFAULT_SETTINGS: Settings = {
   launchAtLogin: false,
   update: DEFAULT_UPDATE_PREFS,
+  favorites: [],
 };
 
 export interface HistoryStats {

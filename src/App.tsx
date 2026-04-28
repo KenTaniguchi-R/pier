@@ -4,6 +4,7 @@ import { FilePickerProvider } from "./state/FilePickerContext";
 import { OpenerProvider } from "./state/OpenerContext";
 import { HistoryProvider } from "./state/HistoryContext";
 import { SettingsProvider } from "./state/SettingsContext";
+import { FavoritesProvider } from "./state/FavoritesContext";
 import { UpdaterProvider } from "./state/UpdaterContext";
 import { UpdaterControllerHost } from "./state/UpdaterControllerHost";
 import { HomePage } from "./ui/pages/HomePage";
@@ -23,12 +24,14 @@ export default function App() {
           <FilePickerProvider picker={tauriFilePicker}>
             <OpenerProvider opener={defaultUrlOpener}>
               <SettingsProvider adapter={defaultSettingsAdapter}>
-                <UpdaterProvider checker={defaultUpdateChecker}>
-                  <UpdaterControllerHost>
-                    <HomePage />
-                    <UpdateToast />
-                  </UpdaterControllerHost>
-                </UpdaterProvider>
+                <FavoritesProvider>
+                  <UpdaterProvider checker={defaultUpdateChecker}>
+                    <UpdaterControllerHost>
+                      <HomePage />
+                      <UpdateToast />
+                    </UpdaterControllerHost>
+                  </UpdaterProvider>
+                </FavoritesProvider>
               </SettingsProvider>
             </OpenerProvider>
           </FilePickerProvider>

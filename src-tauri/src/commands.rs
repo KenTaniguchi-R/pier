@@ -50,6 +50,13 @@ pub fn list_tool_history(
 }
 
 #[tauri::command]
+pub fn list_recent_tools_cmd(
+    limit: Option<usize>,
+) -> Result<Vec<crate::application::history::RecentToolRun>, String> {
+    crate::application::history::list_recent_tools(limit.unwrap_or(6)).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 pub fn read_run_output(
     output_path: String,
 ) -> Result<Vec<crate::infrastructure::run_store::LogLine>, String> {

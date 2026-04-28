@@ -1,22 +1,29 @@
 import type { Parameter, ParamValue } from "../domain/tool";
+import {
+  errorMessage,
+  validateValues,
+  type ValidationError,
+} from "../domain/paramValidation";
 
-function isFilled(v: ParamValue | undefined): boolean {
-  if (typeof v === "string") return v !== "";
-  return v !== undefined && v !== null;
-}
+export type { ValidationError };
 
 /**
- * The first required parameter still missing a value, or null when ready.
+ * The first parameter still failing validation, or null when ready.
  * Drives the diagnostic Run-button label.
  */
 export function findBlocker(
   params: Parameter[],
   values: Record<string, ParamValue>,
-): Parameter | null {
-  return params.find(p => p.optional !== true && !isFilled(values[p.id])) ?? null;
+): { param: Parameter; error: ValidationError } | null {
+  const errs = validateValues(params, values);
+  for (const p of params) {
+    const e = errs.get(p.id);
+    if (e) return { param: p, error: e };
+  }
+  return null;
 }
 
-export function blockerLabel(p: Parameter): string {
-  const verb = p.type === "file" ? "Add" : p.type === "folder" ? "Choose" : "Enter";
-  return `${verb} ${p.label.toLowerCase()} to run`;
+export function blockerLabel(b: { param: Parameter; error: ValidationError }): string {
+  if (b.error.kind === "required") return `${errorMessage(b.param, b.error)} to run`;
+  return `Fix ${b.param.label.toLowerCase()} to run`;
 }

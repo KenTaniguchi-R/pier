@@ -4,6 +4,7 @@ import type {
 
 const PARAM_TYPES: ParamType[] = [
   "file", "folder", "text", "url", "select", "boolean", "number",
+  "multiselect", "slider", "date",
 ];
 
 export type ParseResult<T> =
@@ -165,6 +166,54 @@ function parseParam(p: unknown, ti: number, pi: number): ParseResult<Parameter> 
   if ((type === "text" || type === "url" || type === "file" || type === "folder")
       && isSet(p.default) && typeof p.default !== "string") {
     errors.push(`${where}.default must be a string`);
+  }
+
+  if ((type === "text" || type === "url") && isSet(p.pattern)) {
+    if (typeof p.pattern !== "string") {
+      errors.push(`${where}.pattern must be a string`);
+    } else {
+      try { new RegExp(p.pattern); }
+      catch { errors.push(`${where}.pattern is not a valid regex`); }
+    }
+  }
+
+  if (type === "multiselect") {
+    if (!Array.isArray(p.options) || (p.options as unknown[]).some(o => typeof o !== "string")) {
+      errors.push(`${where}.options must be a string[]`);
+    } else if (isSet(p.default)) {
+      if (!Array.isArray(p.default) || (p.default as unknown[]).some(v => typeof v !== "string")) {
+        errors.push(`${where}.default must be a string[]`);
+      } else {
+        const opts = new Set(p.options as string[]);
+        for (const v of p.default as string[]) {
+          if (!opts.has(v)) errors.push(`${where}.default value "${v}" not in options`);
+        }
+      }
+    }
+  }
+
+  if (type === "slider") {
+    for (const k of ["min", "max", "step"] as const) {
+      if (isSet(p[k]) && typeof p[k] !== "number") {
+        errors.push(`${where}.${k} must be a number`);
+      }
+    }
+    if (typeof p.min !== "number") errors.push(`${where}.min required for slider`);
+    if (typeof p.max !== "number") errors.push(`${where}.max required for slider`);
+    if (typeof p.min === "number" && typeof p.max === "number" && p.min >= p.max) {
+      errors.push(`${where}.min must be less than max`);
+    }
+    if (isSet(p.default) && typeof p.default !== "number") {
+      errors.push(`${where}.default must be a number`);
+    }
+  }
+
+  if (type === "date") {
+    for (const k of ["min", "max", "default"] as const) {
+      if (isSet(p[k]) && typeof p[k] !== "string") {
+        errors.push(`${where}.${k} must be an ISO date string (YYYY-MM-DD)`);
+      }
+    }
   }
 
   if (errors.length) return { ok: false, errors };
