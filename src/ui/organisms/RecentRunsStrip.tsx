@@ -28,7 +28,7 @@ export function RecentRunsStrip({ tools, onPick, runningToolIds, limit = 6 }: Pr
     <section aria-label="Recent runs" className="flex flex-col gap-2">
       <StripHeader label="Recent" />
 
-      <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+      <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {items.map(({ run, tool }) => (
           <QuickTile
             key={tool.id}
