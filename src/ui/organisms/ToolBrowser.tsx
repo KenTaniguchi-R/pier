@@ -1,7 +1,5 @@
 import type { Tool } from "../../domain/tool";
 import { ToolCard } from "./ToolCard";
-import { AddTile } from "./AddTile";
-
 interface Props {
   title: string;
   subtitle?: string;
@@ -39,7 +37,6 @@ export function ToolBrowser({ title, subtitle, tools, onPick, emptyHint, running
             running={runningToolIds?.has(t.id) ?? false}
           />
         ))}
-        <AddTile />
       </div>
     </div>
   );

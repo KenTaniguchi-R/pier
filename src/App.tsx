@@ -9,7 +9,6 @@ import { UpdaterProvider } from "./state/UpdaterContext";
 import { UpdaterControllerHost } from "./state/UpdaterControllerHost";
 import { HomePage } from "./ui/pages/HomePage";
 import { UpdateToast } from "./ui/molecules/UpdateToast";
-import { LibrarySheet } from "./ui/templates/LibrarySheet";
 import { tauriCommandRunner } from "./infrastructure/tauriCommandRunner";
 import { tauriFilePicker } from "./infrastructure/tauriFilePicker";
 import { defaultUrlOpener } from "./infrastructure/tauriUrlOpener";
@@ -32,7 +31,6 @@ export default function App() {
                     <UpdaterProvider checker={defaultUpdateChecker}>
                       <UpdaterControllerHost>
                         <HomePage />
-                        <LibrarySheet />
                         <UpdateToast />
                       </UpdaterControllerHost>
                     </UpdaterProvider>
