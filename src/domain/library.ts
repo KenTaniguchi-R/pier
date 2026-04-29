@@ -45,8 +45,9 @@ export interface CatalogTool {
   featured?: boolean;
   /** ISO date (YYYY-MM-DD). Drives "New this week" eligibility. */
   addedAt?: string;
-  /** "darwin-arm64" etc. Absent for shell tools. */
+  /** Map keyed by `<os>-<arch>`, e.g. "darwin-arm64". Absent for shell tools. */
   platforms?: Record<string, PlatformAsset>;
+  /** For pure-shell tools — inline script content. */
   script?: string;
   minPierVersion?: string;
   deprecated?: boolean;

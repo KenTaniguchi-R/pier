@@ -16,7 +16,7 @@ const baseClient: LibraryClient = {
         version: "1.0.0",
         description: "free a port",
         category: "dev",
-        permissions: { network: false, fsRead: [], fsWrite: [] },
+        permissions: { network: "none", files: "none", system: "none", sentences: [] },
         script: "echo",
       },
       {
@@ -25,7 +25,7 @@ const baseClient: LibraryClient = {
         version: "1.0.0",
         description: "download videos",
         category: "media",
-        permissions: { network: true, fsRead: [], fsWrite: [] },
+        permissions: { network: "internet", files: "none", system: "none", sentences: [] },
         script: "echo",
       },
     ],

@@ -10,7 +10,7 @@ const tool: CatalogTool = {
   version: "1.0.0",
   description: "Free a port held by a stuck process.",
   category: "dev",
-  permissions: { network: true, fsRead: ["~/Documents"], fsWrite: [] },
+  permissions: { network: "internet", files: "read-only", system: "none", sentences: [] },
   script: "echo",
 };
 
@@ -32,11 +32,11 @@ describe("AddToolDialog", () => {
       />
     );
     expect(screen.getByText(/internet/i)).toBeInTheDocument();
-    expect(screen.getByText("~/Documents")).toBeInTheDocument();
+    expect(screen.getByText(/reads/i)).toBeInTheDocument();
   });
 
   it("renders 'No special permissions' when all empty", () => {
-    const empty = { ...tool, permissions: { network: false, fsRead: [], fsWrite: [] } };
+    const empty = { ...tool, permissions: { network: "none" as const, files: "none" as const, system: "none" as const, sentences: [] } };
     render(
       <AddToolDialog
         tool={empty}

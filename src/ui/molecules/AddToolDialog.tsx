@@ -15,11 +15,11 @@ interface Props {
 
 type PermItem = { key: string; kind: "network" | "fsRead" | "fsWrite"; path?: string };
 
-function permItems({ network, fsRead, fsWrite }: CatalogTool["permissions"]): PermItem[] {
+function permItems({ network, files }: CatalogTool["permissions"]): PermItem[] {
   const out: PermItem[] = [];
-  if (network) out.push({ key: "network", kind: "network" });
-  for (const p of fsRead) out.push({ key: `r-${p}`, kind: "fsRead", path: p });
-  for (const p of fsWrite) out.push({ key: `w-${p}`, kind: "fsWrite", path: p });
+  if (network !== "none") out.push({ key: "network", kind: "network" });
+  if (files === "read-only") out.push({ key: "fsRead", kind: "fsRead" });
+  if (files === "writes") out.push({ key: "fsWrite", kind: "fsWrite" });
   return out;
 }
 
