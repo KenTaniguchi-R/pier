@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Home, HelpCircle, Settings as SettingsIcon } from "lucide-react";
+import { Home, HelpCircle, Library as LibraryIcon, Settings as SettingsIcon } from "lucide-react";
 import type { Tool } from "../../domain/tool";
 import type { RunningEntry } from "../../state/reducer";
 import { SidebarItem } from "../molecules/SidebarItem";
@@ -12,6 +12,7 @@ export type Selection =
   | { kind: "category"; name: string }
   | { kind: "tool"; id: string }
   | { kind: "help" }
+  | { kind: "library" }
   | { kind: "settings" };
 
 interface Props {
@@ -117,6 +118,7 @@ export function Sidebar({ tools, query, onQueryChange, selection, onSelect, runn
 
   const isAll = selection.kind === "all";
   const isHelp = selection.kind === "help";
+  const isLibrary = selection.kind === "library";
   const isSettings = selection.kind === "settings";
   const selectedCat = selection.kind === "category" ? selection.name : null;
   const activeToolId = selection.kind === "tool" ? selection.id : null;
@@ -201,6 +203,13 @@ export function Sidebar({ tools, query, onQueryChange, selection, onSelect, runn
       </ul>
 
       <div className="flex-none px-2 pt-2 pb-1 border-t border-line flex flex-col gap-[2px]">
+        <SidebarItem
+          icon={<LibraryIcon size={14} strokeWidth={2} />}
+          label="Library"
+          active={isLibrary}
+          onClick={() => onSelect({ kind: "library" })}
+        />
+        <div className="h-px bg-line mx-2 my-1" aria-hidden />
         <SidebarItem
           icon={<HelpCircle size={14} strokeWidth={2} />}
           label="Setup with Claude"

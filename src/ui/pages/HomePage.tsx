@@ -6,6 +6,7 @@ import { Sidebar, type Selection } from "../organisms/Sidebar";
 import { HomeAllTools } from "../organisms/HomeAllTools";
 import { ToolDetail } from "../organisms/ToolDetail";
 import { SkillGuide } from "../organisms/SkillGuide";
+import { LibraryBrowser } from "../organisms/LibraryBrowser";
 import { SettingsPage } from "./SettingsPage";
 import { loadConfig } from "../../application/loadConfig";
 import { tauriConfigLoader } from "../../infrastructure/tauriConfigLoader";
@@ -98,6 +99,8 @@ export function HomePage() {
     );
   } else if (selection.kind === "help") {
     main = <SkillGuide />;
+  } else if (selection.kind === "library") {
+    main = <LibraryBrowser />;
   } else if (selection.kind === "settings") {
     main = <SettingsPage />;
   } else if (selectedTool) {
