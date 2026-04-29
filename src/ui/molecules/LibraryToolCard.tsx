@@ -1,15 +1,18 @@
+import type { CSSProperties } from "react";
 import type { CatalogTool } from "../../domain/library";
 
 interface Props {
   tool: CatalogTool;
   onSelect: (t: CatalogTool) => void;
+  style?: CSSProperties;
 }
 
-export function LibraryToolCard({ tool, onSelect }: Props) {
+export function LibraryToolCard({ tool, onSelect, style }: Props) {
   return (
     <button
       type="button"
       onClick={() => onSelect(tool)}
+      style={style}
       className="
         group text-left
         bg-surface border border-line rounded-2 px-4 py-3.5
