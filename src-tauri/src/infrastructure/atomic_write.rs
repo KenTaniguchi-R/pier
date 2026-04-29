@@ -49,6 +49,9 @@ mod tests {
         let p = d.path().join("script.sh");
         atomic_write(&p, b"#!/bin/sh\n", Some(0o755)).unwrap();
         let mode = std::fs::metadata(&p).unwrap().permissions().mode();
-        assert!(mode & 0o111 != 0, "expected executable bits, got mode={mode:o}");
+        assert!(
+            mode & 0o111 != 0,
+            "expected executable bits, got mode={mode:o}"
+        );
     }
 }

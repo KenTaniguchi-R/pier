@@ -67,11 +67,27 @@ impl<'de> Deserialize<'de> for Permissions {
             },
         }
         Ok(match Raw::deserialize(d)? {
-            Raw::New { network, files, system, sentences } => {
-                Permissions { network, files, system, sentences }
-            }
-            Raw::Legacy { network, fs_read, fs_write } => Permissions {
-                network: if network { NetworkAccess::Internet } else { NetworkAccess::None },
+            Raw::New {
+                network,
+                files,
+                system,
+                sentences,
+            } => Permissions {
+                network,
+                files,
+                system,
+                sentences,
+            },
+            Raw::Legacy {
+                network,
+                fs_read,
+                fs_write,
+            } => Permissions {
+                network: if network {
+                    NetworkAccess::Internet
+                } else {
+                    NetworkAccess::None
+                },
                 files: if !fs_write.is_empty() {
                     FilesAccess::Writes
                 } else if !fs_read.is_empty() {

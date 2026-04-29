@@ -139,7 +139,10 @@ mod tests {
           {"id":"b","name":"B","command":"/bin/true"}
         ]}"#;
         let after = remove_tool_from_config_str(before, "a").unwrap();
-        assert!(!after.contains("\"id\": \"a\""), "still has a; got: {after}");
+        assert!(
+            !after.contains("\"id\": \"a\""),
+            "still has a; got: {after}"
+        );
         assert!(after.contains("\"id\": \"b\""), "missing b; got: {after}");
     }
 
@@ -147,10 +150,7 @@ mod tests {
     fn library_commit_remove_errors_when_id_missing() {
         let before = r#"{"schemaVersion":"1.0","tools":[]}"#;
         let err = remove_tool_from_config_str(before, "missing").unwrap_err();
-        assert!(
-            err.to_lowercase().contains("not found"),
-            "got: {err}"
-        );
+        assert!(err.to_lowercase().contains("not found"), "got: {err}");
     }
 
     #[test]

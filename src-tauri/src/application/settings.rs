@@ -66,9 +66,8 @@ use serde_json::Value;
 /// Caller holds the AppState settings_lock to serialize concurrent patches.
 pub fn patch_with(path: &Path, patch: Value) -> Result<Settings> {
     let current = match std::fs::read_to_string(path) {
-        Ok(raw) => {
-            serde_json::from_str::<Value>(&raw).unwrap_or_else(|_| Value::Object(Default::default()))
-        }
+        Ok(raw) => serde_json::from_str::<Value>(&raw)
+            .unwrap_or_else(|_| Value::Object(Default::default())),
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => Value::Object(Default::default()),
         Err(e) => return Err(e.into()),
     };
