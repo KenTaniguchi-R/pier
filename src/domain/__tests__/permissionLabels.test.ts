@@ -4,7 +4,7 @@ import {
 } from "../permissionLabels";
 import type {
   NetworkAccess, FilesAccess, SystemAccess, PermissionSentence,
-} from "../../../domain/library";
+} from "../library";
 
 const allNetwork: NetworkAccess[] = ["none", "localhost", "internet"];
 const allFiles: FilesAccess[] = ["none", "read-only", "writes"];

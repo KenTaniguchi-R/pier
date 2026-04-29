@@ -24,8 +24,8 @@ export function LibraryToolDetailPage({
 }: Props) {
   const outcome = outcomeOf(tool);
   const hasExtraDescription = !!tool.description && tool.description !== outcome;
-  const hasExamples = !!tool.examples && tool.examples.length > 0;
-  const showWhatItDoes = hasExtraDescription || hasExamples;
+  const examples = tool.examples ?? [];
+  const showWhatItDoes = hasExtraDescription || examples.length > 0;
   return (
     <div className="flex flex-col gap-6 px-8 py-6">
       <button
@@ -103,9 +103,9 @@ export function LibraryToolDetailPage({
           {hasExtraDescription && (
             <p className="text-[14px] text-ink-2 leading-relaxed">{tool.description}</p>
           )}
-          {hasExamples && (
+          {examples.length > 0 && (
             <div className="flex flex-col gap-1.5">
-              {tool.examples!.map((ex) => (
+              {examples.map((ex) => (
                 <pre
                   key={ex}
                   className="font-mono text-[12px] bg-bg-2 border border-line rounded-2 px-3 py-2 text-ink-2"

@@ -6,6 +6,10 @@ import type { LibrarySelection } from "./Sidebar";
 import { LibraryLandingPage } from "../pages/LibraryLandingPage";
 import { LibraryAllPage } from "../pages/LibraryAllPage";
 import { LibraryToolDetailPage } from "../pages/LibraryToolDetailPage";
+import { LibraryLandingSkeleton } from "./LibraryLandingSkeleton";
+import { LibraryAllSkeleton } from "./LibraryAllSkeleton";
+import { LibraryToolDetailSkeleton } from "./LibraryToolDetailSkeleton";
+import { LibraryErrorState } from "../molecules/LibraryErrorState";
 
 interface Props {
   selection: LibrarySelection;
@@ -18,7 +22,7 @@ interface Props {
  *  through the application ports. The page components stay pure presentation. */
 export function LibraryRoute({ selection, onNavigate, onConfigChanged }: Props) {
   const { state } = useApp();
-  const { catalog } = useCatalog();
+  const { status, catalog, error, retry } = useCatalog();
   const { previewAdd, commit: commitAdd, busy: addBusy } = useAddTool();
   const { remove: commitRemove, busy: removeBusy } = useRemoveTool();
   const [actionError, setActionError] = useState<string | null>(null);
@@ -33,6 +37,16 @@ export function LibraryRoute({ selection, onNavigate, onConfigChanged }: Props) 
     onNavigate({ kind: "library", view: "detail", toolId: t.id });
   const openLanding = () => onNavigate({ kind: "library", view: "landing" });
   const openAll = () => onNavigate({ kind: "library", view: "all" });
+
+  if (status === "idle" || status === "loading") {
+    if (selection.view === "all")    return <LibraryAllSkeleton onBack={openLanding} />;
+    if (selection.view === "detail") return <LibraryToolDetailSkeleton onBack={openLanding} />;
+    return <LibraryLandingSkeleton />;
+  }
+
+  if (status === "error") {
+    return <LibraryErrorState error={error ?? "Failed to load library."} onRetry={retry} />;
+  }
 
   if (selection.view === "landing") {
     return (

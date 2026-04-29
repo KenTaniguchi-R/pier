@@ -59,26 +59,23 @@ pub fn apply(_app: &tauri::AppHandle, settings: &Settings) -> Result<()> {
     Ok(())
 }
 
+use crate::infrastructure::atomic_write::atomic_write;
 use serde_json::Value;
 
 /// Merge a partial JSON patch into the on-disk Settings; atomic via tmp+rename.
 /// Caller holds the AppState settings_lock to serialize concurrent patches.
 pub fn patch_with(path: &Path, patch: Value) -> Result<Settings> {
-    let current = if path.exists() {
-        let raw = std::fs::read_to_string(path)?;
-        serde_json::from_str::<Value>(&raw).unwrap_or_else(|_| Value::Object(Default::default()))
-    } else {
-        Value::Object(Default::default())
+    let current = match std::fs::read_to_string(path) {
+        Ok(raw) => {
+            serde_json::from_str::<Value>(&raw).unwrap_or_else(|_| Value::Object(Default::default()))
+        }
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => Value::Object(Default::default()),
+        Err(e) => return Err(e.into()),
     };
     let merged = deep_merge(current, patch);
     let merged_settings: Settings = serde_json::from_value(merged)?;
-    if let Some(parent) = path.parent() {
-        std::fs::create_dir_all(parent)?;
-    }
-    let tmp = path.with_extension("json.tmp");
     let json = serde_json::to_string_pretty(&merged_settings)?;
-    std::fs::write(&tmp, json)?;
-    std::fs::rename(&tmp, path)?;
+    atomic_write(path, json.as_bytes(), None)?;
     Ok(merged_settings)
 }
 

@@ -1,3 +1,4 @@
+pub mod atomic_write;
 pub mod fs_watcher;
 pub mod library_http;
 pub mod run_store;

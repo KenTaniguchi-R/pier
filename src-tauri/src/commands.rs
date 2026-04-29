@@ -145,9 +145,9 @@ pub async fn library_fetch_catalog() -> Result<Catalog, String> {
 
 #[derive(serde::Serialize)]
 pub struct LibraryAddPreview {
-    pub before: String,
+    /// Full updated tools.json contents to write on commit. The UI ships this
+    /// back as-is to `library_commit_add` after the user confirms.
     pub after: String,
-    pub new_tool: crate::domain::Tool,
 }
 
 #[tauri::command]
@@ -159,11 +159,7 @@ pub async fn library_install_and_preview(tool: CatalogTool) -> Result<LibraryAdd
         add_to_config::build_tool_entry("pier-tools", &tool, installed.command, installed.sha256);
     let cfg_path = std::path::PathBuf::from(config_path());
     let p = add_to_config::preview(&cfg_path, entry).map_err(|e| e.to_string())?;
-    Ok(LibraryAddPreview {
-        before: p.before,
-        after: p.after,
-        new_tool: p.new_tool,
-    })
+    Ok(LibraryAddPreview { after: p.after })
 }
 
 #[tauri::command]

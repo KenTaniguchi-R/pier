@@ -94,9 +94,8 @@ export interface UpdateChecker {
 import type { Catalog, CatalogTool } from "../domain/library";
 
 export interface LibraryAddPreview {
-  before: string;
+  /** Full updated tools.json string. Pass back to commitAdd to write it. */
   after: string;
-  newTool: import("../domain/tool").Tool;
 }
 
 export interface LibraryClient {

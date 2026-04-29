@@ -63,6 +63,7 @@
   --animate-end-rule: end-rule 280ms var(--ease-smooth-out) 60ms backwards;
   --animate-ledger-row: ledger-row 220ms var(--ease-smooth-out) backwards;
   --animate-toast-in: toast-in 220ms var(--ease-smooth-out);
+  --animate-pulse-soft: pulse-soft 1.4s var(--ease-smooth) infinite;
 
   @keyframes tile-in {
     from { opacity: 0; transform: translateY(4px); }
@@ -105,6 +106,10 @@
   @keyframes toast-in {
     from { opacity: 0; transform: translateY(12px); }
     to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes pulse-soft {
+    0%, 100% { opacity: 0.55; }
+    50%      { opacity: 0.95; }
   }
 }
 

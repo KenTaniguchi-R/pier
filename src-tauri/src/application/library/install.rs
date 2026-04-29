@@ -1,7 +1,7 @@
 use crate::domain::CatalogTool;
+use crate::infrastructure::atomic_write::atomic_write;
 use anyhow::{anyhow, bail, Result};
 use sha2::{Digest, Sha256};
-use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 
 pub fn current_platform() -> &'static str {
@@ -37,30 +37,21 @@ fn validate_path_component(s: &str) -> Result<()> {
     Ok(())
 }
 
-fn atomic_install(dest: &Path, bytes: &[u8]) -> Result<()> {
-    let nanos = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .map(|d| d.as_nanos())
-        .unwrap_or(0);
-    let tmp = dest.with_extension(format!("tmp.{}.{}", std::process::id(), nanos));
-    std::fs::write(&tmp, bytes)?;
-    std::fs::set_permissions(&tmp, std::fs::Permissions::from_mode(0o755))?;
-    std::fs::rename(&tmp, dest)?;
-    Ok(())
+fn sha256_hex(bytes: &[u8]) -> String {
+    format!("{:x}", Sha256::digest(bytes))
 }
 
 pub async fn install(tool: &CatalogTool, root: &Path) -> Result<Installed> {
     validate_path_component(&tool.id)?;
     validate_path_component(&tool.version)?;
     let dest_dir = root.join(&tool.id).join(&tool.version);
-    std::fs::create_dir_all(&dest_dir)?;
 
     if let Some(script) = &tool.script {
         let path = dest_dir.join(format!("{}.sh", tool.id));
-        atomic_install(&path, script.as_bytes())?;
+        atomic_write(&path, script.as_bytes(), Some(0o755))?;
         return Ok(Installed {
             command: path.to_string_lossy().into_owned(),
-            sha256: format!("{:x}", Sha256::digest(script.as_bytes())),
+            sha256: sha256_hex(script.as_bytes()),
         });
     }
 
@@ -70,12 +61,12 @@ pub async fn install(tool: &CatalogTool, root: &Path) -> Result<Installed> {
         .get(plat)
         .ok_or_else(|| anyhow!("no asset for platform {plat}"))?;
     let bytes = crate::infrastructure::library_http::download_bytes(&asset.url).await?;
-    let actual = format!("{:x}", Sha256::digest(&bytes));
+    let actual = sha256_hex(&bytes);
     if actual != asset.sha256.to_lowercase() {
         bail!("sha256 mismatch: expected {}, got {}", asset.sha256, actual);
     }
     let path = dest_dir.join(&tool.id);
-    atomic_install(&path, &bytes)?;
+    atomic_write(&path, &bytes, Some(0o755))?;
     Ok(Installed {
         command: path.to_string_lossy().into_owned(),
         sha256: actual,
@@ -119,6 +110,7 @@ mod tests {
 
     #[tokio::test]
     async fn installs_shell_tool_executable() {
+        use std::os::unix::fs::PermissionsExt;
         let d = tempdir().unwrap();
         let i = install(&shell_tool(), d.path()).await.unwrap();
         let meta = std::fs::metadata(&i.command).unwrap();

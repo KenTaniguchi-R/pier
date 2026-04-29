@@ -1,6 +1,6 @@
 import type {
   NetworkAccess, FilesAccess, SystemAccess, PermissionSentence,
-} from "../../domain/library";
+} from "./library";
 
 export const NETWORK_LABELS: Record<NetworkAccess, string> = {
   "none": "No network",

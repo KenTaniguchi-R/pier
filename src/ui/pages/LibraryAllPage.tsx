@@ -10,11 +10,9 @@ interface Props {
   onBack: () => void;
 }
 
-const ALL = "__all__";
-
 export function LibraryAllPage({ tools, installedIds, onSelectTool, onBack }: Props) {
   const [query, setQuery] = useState("");
-  const [category, setCategory] = useState<string>(ALL);
+  const [category, setCategory] = useState<string | null>(null);
 
   const categories = useMemo(() => {
     const set = new Set<string>();
@@ -25,7 +23,7 @@ export function LibraryAllPage({ tools, installedIds, onSelectTool, onBack }: Pr
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
     return tools.filter((t) => {
-      if (category !== ALL && t.category !== category) return false;
+      if (category !== null && t.category !== category) return false;
       if (q === "") return true;
       const hay = [
         t.name.toLowerCase(),
@@ -60,8 +58,8 @@ export function LibraryAllPage({ tools, installedIds, onSelectTool, onBack }: Pr
       <div className="flex flex-wrap gap-2">
         <CategoryChip
           label="All"
-          active={category === ALL}
-          onClick={() => setCategory(ALL)}
+          active={category === null}
+          onClick={() => setCategory(null)}
         />
         {categories.map((c) => (
           <CategoryChip
