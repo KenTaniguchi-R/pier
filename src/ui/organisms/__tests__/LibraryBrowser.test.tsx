@@ -16,7 +16,6 @@ const baseClient: LibraryClient = {
         version: "1.0.0",
         description: "free a port",
         category: "dev",
-        tier: "beginner",
         permissions: { network: false, fsRead: [], fsWrite: [] },
         script: "echo",
       },
@@ -26,7 +25,6 @@ const baseClient: LibraryClient = {
         version: "1.0.0",
         description: "download videos",
         category: "media",
-        tier: "advanced",
         permissions: { network: true, fsRead: [], fsWrite: [] },
         script: "echo",
       },
@@ -47,23 +45,15 @@ function renderWith(client: LibraryClient = baseClient) {
 }
 
 describe("LibraryBrowser", () => {
-  it("hides advanced tools by default", async () => {
+  it("renders all catalog tools", async () => {
     renderWith();
     expect(await screen.findByText(/kill port/i)).toBeInTheDocument();
-    expect(screen.queryByText(/yt-dlp/i)).toBeNull();
-  });
-
-  it("shows advanced when toggle is on", async () => {
-    renderWith();
-    await screen.findByText(/kill port/i);
-    fireEvent.click(screen.getByLabelText(/show advanced/i));
     expect(screen.getByText(/yt-dlp/i)).toBeInTheDocument();
   });
 
   it("filters by search query", async () => {
     renderWith();
     await screen.findByText(/kill port/i);
-    fireEvent.click(screen.getByLabelText(/show advanced/i));
     const search = screen.getByPlaceholderText(/search/i);
     fireEvent.change(search, { target: { value: "video" } });
     expect(screen.queryByText(/kill port/i)).toBeNull();

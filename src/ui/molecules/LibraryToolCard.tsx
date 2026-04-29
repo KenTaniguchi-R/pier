@@ -23,16 +23,9 @@ export function LibraryToolCard({ tool, onSelect, style }: Props) {
         animate-tile-in
       "
     >
-      <div className="flex items-baseline justify-between gap-3">
-        <span className="font-display text-[17px] leading-tight text-ink">
-          {tool.name}
-        </span>
-        {tool.tier === "advanced" && (
-          <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-ink-3 border border-line rounded-1 px-1.5 py-px">
-            ADV
-          </span>
-        )}
-      </div>
+      <span className="font-display text-[17px] leading-tight text-ink">
+        {tool.name}
+      </span>
       <p className="text-[13px] leading-snug text-ink-3 line-clamp-2">
         {tool.description}
       </p>

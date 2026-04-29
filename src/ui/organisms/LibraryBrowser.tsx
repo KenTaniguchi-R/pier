@@ -10,20 +10,18 @@ export function LibraryBrowser() {
   const { status, catalog, error } = useCatalog();
   const { previewAdd, commit, busy } = useAddTool();
   const [query, setQuery] = useState("");
-  const [showAdvanced, setShowAdvanced] = useState(false);
   const [pending, setPending] = useState<{ tool: CatalogTool; preview: LibraryAddPreview } | null>(null);
 
   const visible = useMemo(() => {
     if (!catalog) return [];
     const q = query.trim().toLowerCase();
-    return catalog.tools
-      .filter((t) => showAdvanced || t.tier === "beginner")
-      .filter((t) =>
-        q === "" ||
+    if (q === "") return catalog.tools;
+    return catalog.tools.filter(
+      (t) =>
         t.name.toLowerCase().includes(q) ||
         t.description.toLowerCase().includes(q),
-      );
-  }, [catalog, query, showAdvanced]);
+    );
+  }, [catalog, query]);
 
   const onSelect = async (tool: CatalogTool) => {
     try {
@@ -46,25 +44,12 @@ export function LibraryBrowser() {
         </p>
       </header>
 
-      <div className="flex items-center gap-4">
-        <div className="flex-1">
-          <TextField
-            variant="compact"
-            placeholder="Search the library…"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
-        </div>
-        <label className="flex items-center gap-2 text-[12px] font-mono uppercase tracking-wider text-ink-3 select-none cursor-pointer">
-          <input
-            type="checkbox"
-            checked={showAdvanced}
-            onChange={(e) => setShowAdvanced(e.target.checked)}
-            className="accent-accent"
-          />
-          Show advanced tools
-        </label>
-      </div>
+      <TextField
+        variant="compact"
+        placeholder="Search the library…"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+      />
 
       {status === "loading" && (
         <p className="text-[13px] text-ink-3">Loading…</p>

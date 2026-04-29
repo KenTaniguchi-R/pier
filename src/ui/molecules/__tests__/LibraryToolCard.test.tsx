@@ -9,7 +9,6 @@ const tool: CatalogTool = {
   version: "1.0.0",
   description: "Free a port held by a stuck process.",
   category: "dev",
-  tier: "beginner",
   permissions: { network: false, fsRead: [], fsWrite: [] },
   script: "echo",
 };
@@ -26,15 +25,5 @@ describe("LibraryToolCard", () => {
     render(<LibraryToolCard tool={tool} onSelect={() => {}} />);
     expect(screen.getByText("v1.0.0")).toBeInTheDocument();
     expect(screen.getByText(/free a port/i)).toBeInTheDocument();
-  });
-
-  it("shows ADV chip for advanced tier", () => {
-    render(<LibraryToolCard tool={{ ...tool, tier: "advanced" }} onSelect={() => {}} />);
-    expect(screen.getByText("ADV")).toBeInTheDocument();
-  });
-
-  it("does NOT show ADV chip for beginner tier", () => {
-    render(<LibraryToolCard tool={tool} onSelect={() => {}} />);
-    expect(screen.queryByText("ADV")).toBeNull();
   });
 });

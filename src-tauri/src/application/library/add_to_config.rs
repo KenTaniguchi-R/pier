@@ -63,7 +63,7 @@ pub fn commit(config_path: &Path, after: &str) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::domain::{Permissions, Tier};
+    use crate::domain::Permissions;
     use std::io::Write;
     use tempfile::NamedTempFile;
 
@@ -74,7 +74,6 @@ mod tests {
             version: "1.0.0".into(),
             description: "d".into(),
             category: "dev".into(),
-            tier: Tier::Beginner,
             params: vec![],
             permissions: Permissions {
                 network: false,

@@ -12,7 +12,6 @@ describe("Catalog type", () => {
         version: "1.0.0",
         description: "Free a port.",
         category: "dev",
-        tier: "beginner",
         permissions: { network: false, fsRead: [], fsWrite: [] },
         script: "#!/bin/sh\nlsof -ti:$1 | xargs kill -9\n",
       }],

@@ -11,7 +11,7 @@ const fake: LibraryClient = {
     publishedAt: "2026-05-15T00:00:00Z",
     tools: [{
       id: "k", name: "K", version: "1.0.0", description: "d",
-      category: "dev", tier: "beginner",
+      category: "dev",
       permissions: { network: false, fsRead: [], fsWrite: [] },
       script: "echo",
     }],

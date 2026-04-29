@@ -1,5 +1,3 @@
-export type Tier = "beginner" | "advanced";
-
 export interface PlatformAsset {
   url: string;
   sha256: string;
@@ -11,7 +9,6 @@ export interface CatalogTool {
   version: string;
   description: string;
   category: string;
-  tier: Tier;
   /** Same shape as Tool["parameters"] */
   params?: import("./tool").Parameter[];
   permissions: {

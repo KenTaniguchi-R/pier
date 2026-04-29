@@ -2,13 +2,6 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-#[serde(rename_all = "lowercase")]
-pub enum Tier {
-    Beginner,
-    Advanced,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct PlatformAsset {
     pub url: String,
@@ -31,7 +24,6 @@ pub struct CatalogTool {
     pub version: String,
     pub description: String,
     pub category: String,
-    pub tier: Tier,
     #[serde(default)]
     pub params: Vec<crate::domain::tool::Parameter>,
     pub permissions: Permissions,
@@ -90,7 +82,6 @@ mod tests {
             "tools": [{
                 "id": "kill-port", "name": "Kill port", "version": "1.0.0",
                 "description": "Free a port.", "category": "dev",
-                "tier": "beginner",
                 "permissions": { "network": false, "fsRead": [], "fsWrite": [] },
                 "script": "#!/bin/sh\nlsof -ti:$1 | xargs kill -9\n"
             }]

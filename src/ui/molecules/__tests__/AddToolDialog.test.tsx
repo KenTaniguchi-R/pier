@@ -10,7 +10,6 @@ const tool: CatalogTool = {
   version: "1.0.0",
   description: "Free a port held by a stuck process.",
   category: "dev",
-  tier: "beginner",
   permissions: { network: true, fsRead: ["~/Documents"], fsWrite: [] },
   script: "echo",
 };
