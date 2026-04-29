@@ -26,6 +26,7 @@ export interface AppState {
   configErrors: string[];
   runs: Record<string, RunState>;
   selectedRunIdByTool: Record<string, string>;
+  librarySheetOpen: boolean;
 }
 
 export const initialState: AppState = {
@@ -34,6 +35,7 @@ export const initialState: AppState = {
   configErrors: [],
   runs: {},
   selectedRunIdByTool: {},
+  librarySheetOpen: false,
 };
 
 export function reducer(s: AppState, a: Action): AppState {
@@ -74,6 +76,10 @@ export function reducer(s: AppState, a: Action): AppState {
         },
       };
     }
+    case "LIBRARY_SHEET_OPEN":
+      return { ...s, librarySheetOpen: true };
+    case "LIBRARY_SHEET_CLOSE":
+      return { ...s, librarySheetOpen: false };
   }
 }
 

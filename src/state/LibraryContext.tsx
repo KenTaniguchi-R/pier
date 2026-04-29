@@ -8,7 +8,7 @@ export function LibraryProvider({ client, children }: { client: LibraryClient; c
   return <Ctx.Provider value={client}>{children}</Ctx.Provider>;
 }
 
-export function useLibrary() {
+export function useLibraryClient() {
   const c = useContext(Ctx);
   if (!c) throw new Error("LibraryProvider missing");
   return c;
