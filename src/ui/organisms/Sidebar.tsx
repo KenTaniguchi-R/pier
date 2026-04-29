@@ -7,12 +7,17 @@ import { SidebarCategoryGroup } from "../molecules/SidebarCategoryGroup";
 import { SidebarRunningRow } from "../molecules/SidebarRunningRow";
 import { useNow } from "../molecules/elapsed";
 
+export type LibrarySelection =
+  | { kind: "library"; view: "landing" }
+  | { kind: "library"; view: "all" }
+  | { kind: "library"; view: "detail"; toolId: string };
+
 export type Selection =
   | { kind: "all" }
   | { kind: "category"; name: string }
   | { kind: "tool"; id: string }
   | { kind: "help" }
-  | { kind: "library" }
+  | LibrarySelection
   | { kind: "settings" };
 
 interface Props {
@@ -207,7 +212,7 @@ export function Sidebar({ tools, query, onQueryChange, selection, onSelect, runn
           icon={<LibraryIcon size={14} strokeWidth={2} />}
           label="Library"
           active={isLibrary}
-          onClick={() => onSelect({ kind: "library" })}
+          onClick={() => onSelect({ kind: "library", view: "landing" })}
         />
         <div className="h-px bg-line mx-2 my-1" aria-hidden />
         <SidebarItem
