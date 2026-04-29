@@ -38,7 +38,10 @@ pub async fn fetch(opts: FetchOpts<'_>) -> Result<Catalog> {
             &CachedCatalog {
                 etag: res.etag,
                 body,
-                fetched_at: chrono::Utc::now().timestamp(),
+                fetched_at: std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .map(|d| d.as_secs() as i64)
+                    .unwrap_or(0),
             },
         )?;
     }
@@ -86,5 +89,30 @@ mod tests {
         .await
         .unwrap();
         assert_eq!(cat.catalog_schema_version, 1);
+    }
+
+    #[tokio::test]
+    async fn rejects_tampered_body() {
+        let server = MockServer::start();
+        let _m1 = server.mock(|when, then| {
+            when.method(GET).path("/catalog.json");
+            then.status(200).body(r#"{"catalogSchemaVersion":1,"publishedAt":"x","tools":[]}"#);
+        });
+        let _m2 = server.mock(|when, then| {
+            when.method(GET).path("/catalog.json.minisig");
+            then.status(200).body(TEST_SIG);
+        });
+        let d = tempdir().unwrap();
+        let err = fetch(FetchOpts {
+            url: &server.url("/catalog.json"),
+            minisign_pubkey: TEST_PUBKEY.trim(),
+            signature_url: &server.url("/catalog.json.minisig"),
+            cache_path: &d.path().join("c.json"),
+        }).await.unwrap_err();
+        assert!(
+            err.to_string().to_lowercase().contains("signature")
+                || err.chain().any(|c| c.to_string().to_lowercase().contains("verify")),
+            "expected signature/verify error, got: {err:?}"
+        );
     }
 }

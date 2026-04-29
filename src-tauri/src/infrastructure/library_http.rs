@@ -23,13 +23,13 @@ pub async fn get_with_etag(url: &str, prev_etag: Option<&str>) -> Result<FetchRe
         .get("etag")
         .and_then(|v| v.to_str().ok())
         .map(str::to_owned);
+    if status >= 400 {
+        return Err(anyhow!("HTTP {status} for {url}"));
+    }
     let body = if status == 304 {
         String::new()
     } else {
         resp.text().await?
     };
-    if status >= 400 {
-        return Err(anyhow!("HTTP {status} for {url}"));
-    }
     Ok(FetchResult { status, etag, body })
 }

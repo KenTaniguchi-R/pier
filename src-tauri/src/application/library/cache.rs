@@ -22,10 +22,13 @@ pub fn load(path: &std::path::Path) -> Result<Option<CachedCatalog>> {
 }
 
 pub fn save(path: &std::path::Path, c: &CachedCatalog) -> Result<()> {
-    if let Some(parent) = path.parent() {
-        std::fs::create_dir_all(parent)?;
-    }
-    let tmp = path.with_extension("tmp");
+    if let Some(parent) = path.parent() { std::fs::create_dir_all(parent)?; }
+    // Unique tmp suffix per call to avoid collisions if two writers race.
+    let nanos = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_nanos())
+        .unwrap_or(0);
+    let tmp = path.with_extension(format!("tmp.{}.{}", std::process::id(), nanos));
     std::fs::write(&tmp, serde_json::to_string(c)?)?;
     std::fs::rename(&tmp, path)?;
     Ok(())
