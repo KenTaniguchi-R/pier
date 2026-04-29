@@ -10,7 +10,9 @@ pub struct CachedCatalog {
 }
 
 pub fn cache_path() -> PathBuf {
-    dirs::home_dir().expect("home").join(".pier/cache/catalog.json")
+    dirs::home_dir()
+        .expect("home")
+        .join(".pier/cache/catalog.json")
 }
 
 pub fn load(path: &std::path::Path) -> Result<Option<CachedCatalog>> {
@@ -22,7 +24,9 @@ pub fn load(path: &std::path::Path) -> Result<Option<CachedCatalog>> {
 }
 
 pub fn save(path: &std::path::Path, c: &CachedCatalog) -> Result<()> {
-    if let Some(parent) = path.parent() { std::fs::create_dir_all(parent)?; }
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent)?;
+    }
     // Unique tmp suffix per call to avoid collisions if two writers race.
     let nanos = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)

@@ -147,6 +147,9 @@ mod tests {
         t.id = "../evil".into();
         let d = tempdir().unwrap();
         let err = install(&t, d.path()).await.unwrap_err();
-        assert!(err.to_string().contains("unsafe path component"), "got: {err}");
+        assert!(
+            err.to_string().contains("unsafe path component"),
+            "got: {err}"
+        );
     }
 }

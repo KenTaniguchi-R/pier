@@ -41,7 +41,11 @@ pub fn preview(config_path: &Path, new_tool: Tool) -> Result<AddPreview> {
     }
     cfg.tools.push(new_tool.clone());
     let after = serde_json::to_string_pretty(&cfg)? + "\n";
-    Ok(AddPreview { before, after, new_tool })
+    Ok(AddPreview {
+        before,
+        after,
+        new_tool,
+    })
 }
 
 pub fn commit(config_path: &Path, after: &str) -> Result<()> {
@@ -72,7 +76,11 @@ mod tests {
             category: "dev".into(),
             tier: Tier::Beginner,
             params: vec![],
-            permissions: Permissions { network: false, fs_read: vec![], fs_write: vec![] },
+            permissions: Permissions {
+                network: false,
+                fs_read: vec![],
+                fs_write: vec![],
+            },
             platforms: Default::default(),
             script: None,
             min_pier_version: None,
@@ -88,14 +96,24 @@ mod tests {
         let p = preview(f.path(), t).unwrap();
         commit(f.path(), &p.after).unwrap();
         let after = std::fs::read_to_string(f.path()).unwrap();
-        assert!(after.contains("\"id\": \"x\""), "missing tool id; got: {after}");
-        assert!(after.contains("\"sha256\": \"abc\""), "missing sha256 in source; got: {after}");
+        assert!(
+            after.contains("\"id\": \"x\""),
+            "missing tool id; got: {after}"
+        );
+        assert!(
+            after.contains("\"sha256\": \"abc\""),
+            "missing sha256 in source; got: {after}"
+        );
     }
 
     #[test]
     fn rejects_duplicate_id() {
         let mut f = NamedTempFile::new().unwrap();
-        write!(f, r#"{{"schemaVersion":"1.0","tools":[{{"id":"x","name":"X","command":"/bin/x"}}]}}"#).unwrap();
+        write!(
+            f,
+            r#"{{"schemaVersion":"1.0","tools":[{{"id":"x","name":"X","command":"/bin/x"}}]}}"#
+        )
+        .unwrap();
         let t = build_tool_entry("pier-tools", &cat_tool(), "/bin/x".into(), "abc".into());
         let err = preview(f.path(), t).unwrap_err();
         assert!(err.to_string().contains("already exists"), "got: {err}");

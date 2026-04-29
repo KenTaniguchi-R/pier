@@ -49,8 +49,8 @@ pub async fn fetch(opts: FetchOpts<'_>) -> Result<Catalog> {
 }
 
 fn verify_minisign(body: &str, sig: &str, pubkey: &str) -> Result<()> {
-    let pk = minisign_verify::PublicKey::from_base64(pubkey)
-        .map_err(|e| anyhow!("bad pubkey: {e}"))?;
+    let pk =
+        minisign_verify::PublicKey::from_base64(pubkey).map_err(|e| anyhow!("bad pubkey: {e}"))?;
     let signature =
         minisign_verify::Signature::decode(sig).map_err(|e| anyhow!("bad signature: {e}"))?;
     pk.verify(body.as_bytes(), &signature, false)
@@ -96,7 +96,8 @@ mod tests {
         let server = MockServer::start();
         let _m1 = server.mock(|when, then| {
             when.method(GET).path("/catalog.json");
-            then.status(200).body(r#"{"catalogSchemaVersion":1,"publishedAt":"x","tools":[]}"#);
+            then.status(200)
+                .body(r#"{"catalogSchemaVersion":1,"publishedAt":"x","tools":[]}"#);
         });
         let _m2 = server.mock(|when, then| {
             when.method(GET).path("/catalog.json.minisig");
@@ -108,10 +109,14 @@ mod tests {
             minisign_pubkey: TEST_PUBKEY.trim(),
             signature_url: &server.url("/catalog.json.minisig"),
             cache_path: &d.path().join("c.json"),
-        }).await.unwrap_err();
+        })
+        .await
+        .unwrap_err();
         assert!(
             err.to_string().to_lowercase().contains("signature")
-                || err.chain().any(|c| c.to_string().to_lowercase().contains("verify")),
+                || err
+                    .chain()
+                    .any(|c| c.to_string().to_lowercase().contains("verify")),
             "expected signature/verify error, got: {err:?}"
         );
     }

@@ -151,21 +151,19 @@ pub struct LibraryAddPreview {
 }
 
 #[tauri::command]
-pub async fn library_install_and_preview(
-    tool: CatalogTool,
-) -> Result<LibraryAddPreview, String> {
+pub async fn library_install_and_preview(tool: CatalogTool) -> Result<LibraryAddPreview, String> {
     let installed = lib_install::install(&tool, &lib_install::install_root())
         .await
         .map_err(|e| e.to_string())?;
-    let entry = add_to_config::build_tool_entry(
-        "pier-tools",
-        &tool,
-        installed.command,
-        installed.sha256,
-    );
+    let entry =
+        add_to_config::build_tool_entry("pier-tools", &tool, installed.command, installed.sha256);
     let cfg_path = std::path::PathBuf::from(config_path());
     let p = add_to_config::preview(&cfg_path, entry).map_err(|e| e.to_string())?;
-    Ok(LibraryAddPreview { before: p.before, after: p.after, new_tool: p.new_tool })
+    Ok(LibraryAddPreview {
+        before: p.before,
+        after: p.after,
+        new_tool: p.new_tool,
+    })
 }
 
 #[tauri::command]
