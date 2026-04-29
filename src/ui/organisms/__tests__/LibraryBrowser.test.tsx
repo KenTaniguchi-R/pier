@@ -32,6 +32,7 @@ const baseClient: LibraryClient = {
   }),
   installAndPreview: vi.fn(),
   commitAdd: vi.fn(),
+  commitRemove: vi.fn(),
 };
 
 function renderWith(client: LibraryClient = baseClient) {

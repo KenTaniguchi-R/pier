@@ -16,4 +16,5 @@ export const tauriLibraryClient: LibraryClient = {
     return { before: r.before, after: r.after, newTool: r.new_tool };
   },
   commitAdd: (after: string) => invoke<void>("library_commit_add", { after }),
+  commitRemove: (toolId: string) => invoke<void>("library_commit_remove", { toolId }),
 };

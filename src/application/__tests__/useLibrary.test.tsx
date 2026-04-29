@@ -18,6 +18,7 @@ const fake: LibraryClient = {
   }),
   installAndPreview: async () => ({ before: "", after: "", newTool: {} as any }),
   commitAdd: async () => {},
+  commitRemove: async () => {},
 };
 
 describe("useCatalog", () => {
