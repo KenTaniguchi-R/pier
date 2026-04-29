@@ -22,6 +22,9 @@ export function LibraryToolDetailPage({
   onBack,
 }: Props) {
   const outcome = tool.outcome ?? tool.description;
+  const showWhatItDoes =
+    (tool.description && tool.description !== outcome) ||
+    (tool.examples && tool.examples.length > 0);
   return (
     <div className="flex flex-col gap-6 px-8 py-6">
       <button
@@ -66,10 +69,10 @@ export function LibraryToolDetailPage({
 
       <PermissionPanel permissions={tool.permissions} />
 
-      {(tool.description || (tool.examples && tool.examples.length > 0)) && (
+      {showWhatItDoes && (
         <section className="flex flex-col gap-3">
           <h2 className="font-display text-xl text-ink">What it does</h2>
-          {tool.description && (
+          {tool.description && tool.description !== outcome && (
             <p className="text-[14px] text-ink-2 leading-relaxed">{tool.description}</p>
           )}
           {tool.examples && tool.examples.length > 0 && (
