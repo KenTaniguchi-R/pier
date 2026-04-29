@@ -1,11 +1,12 @@
 import type { Tool } from "../../domain/tool";
 import { ToolCard } from "./ToolCard";
+
 interface Props {
   title: string;
   subtitle?: string;
   tools: Tool[];
   onPick: (id: string) => void;
-  emptyHint?: string;
+  emptyHint: string;
   runningToolIds?: ReadonlySet<string>;
 }
 
@@ -25,7 +26,7 @@ export function ToolBrowser({ title, subtitle, tools, onPick, emptyHint, running
 
       {tools.length === 0 && (
         <div className="p-4 text-center text-ink-3 text-[14px]">
-          {emptyHint ?? "No tools yet — open the Library to add one."}
+          {emptyHint}
         </div>
       )}
       <div className="grid gap-3 grid-cols-[repeat(auto-fill,minmax(280px,1fr))]">
