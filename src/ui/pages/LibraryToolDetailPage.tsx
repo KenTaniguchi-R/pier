@@ -7,6 +7,7 @@ interface Props {
   tool: CatalogTool;
   installed: boolean;
   busy: boolean;
+  error: string | null;
   onAdd: () => void;
   onRemove: () => void;
   onBack: () => void;
@@ -16,6 +17,7 @@ export function LibraryToolDetailPage({
   tool,
   installed,
   busy,
+  error,
   onAdd,
   onRemove,
   onBack,
@@ -65,6 +67,33 @@ export function LibraryToolDetailPage({
           )}
         </div>
       </header>
+
+      {error && (
+        <aside
+          role="alert"
+          className="relative flex flex-col gap-2 border-l-2 border-danger bg-danger-soft/60 pl-4 pr-3 py-3 rounded-r-2"
+        >
+          <div className="flex items-baseline justify-between gap-3">
+            <div className="font-mono text-[10.5px] uppercase tracking-[0.18em] text-danger">
+              Install · Failed
+            </div>
+            <button
+              type="button"
+              onClick={onAdd}
+              disabled={busy}
+              className="font-mono text-[10.5px] uppercase tracking-[0.18em] text-ink-3 hover:text-ink underline-offset-2 hover:underline disabled:opacity-40"
+            >
+              {busy ? "Retrying…" : "Try again ↻"}
+            </button>
+          </div>
+          <p className="font-display text-[15px] leading-snug text-ink">
+            That didn't land.
+          </p>
+          <pre className="font-mono text-[12px] leading-relaxed text-ink-2 whitespace-pre-wrap break-words">
+            {error}
+          </pre>
+        </aside>
+      )}
 
       <PermissionPanel permissions={tool.permissions} />
 

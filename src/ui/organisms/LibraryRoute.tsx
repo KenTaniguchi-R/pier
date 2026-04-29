@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useApp } from "../../state/AppContext";
 import { useAddTool, useCatalog, useRemoveTool } from "../../application/useLibrary";
 import type { CatalogTool } from "../../domain/library";
@@ -21,6 +21,7 @@ export function LibraryRoute({ selection, onNavigate, onConfigChanged }: Props) 
   const { catalog } = useCatalog();
   const { previewAdd, commit: commitAdd, busy: addBusy } = useAddTool();
   const { remove: commitRemove, busy: removeBusy } = useRemoveTool();
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const tools = catalog?.tools ?? [];
   const installedIds = useMemo(
@@ -63,14 +64,25 @@ export function LibraryRoute({ selection, onNavigate, onConfigChanged }: Props) 
       tool={tool}
       installed={installedIds.has(tool.id)}
       busy={addBusy || removeBusy}
+      error={actionError}
       onAdd={async () => {
-        const preview = await previewAdd(tool);
-        await commitAdd(preview.after);
-        await onConfigChanged();
+        setActionError(null);
+        try {
+          const preview = await previewAdd(tool);
+          await commitAdd(preview.after);
+          await onConfigChanged();
+        } catch (e) {
+          setActionError(e instanceof Error ? e.message : String(e));
+        }
       }}
       onRemove={async () => {
-        await commitRemove(tool.id);
-        await onConfigChanged();
+        setActionError(null);
+        try {
+          await commitRemove(tool.id);
+          await onConfigChanged();
+        } catch (e) {
+          setActionError(e instanceof Error ? e.message : String(e));
+        }
       }}
       onBack={openLanding}
     />

@@ -30,6 +30,7 @@ describe("LibraryToolDetailPage", () => {
         busy={false}
         onAdd={() => {}}
         onRemove={() => {}}
+        error={null}
         onBack={() => {}}
       />
     );
@@ -48,6 +49,7 @@ describe("LibraryToolDetailPage", () => {
         busy={false}
         onAdd={onAdd}
         onRemove={() => {}}
+        error={null}
         onBack={() => {}}
       />
     );
@@ -64,6 +66,7 @@ describe("LibraryToolDetailPage", () => {
         busy={false}
         onAdd={() => {}}
         onRemove={onRemove}
+        error={null}
         onBack={() => {}}
       />
     );
@@ -80,10 +83,31 @@ describe("LibraryToolDetailPage", () => {
         busy={false}
         onAdd={() => {}}
         onRemove={() => {}}
+        error={null}
         onBack={() => {}}
       />
     );
     expect(screen.queryByText(/advanced/i)).not.toBeInTheDocument();
+  });
+
+  it("surfaces an install error with retry that calls onAdd", async () => {
+    const onAdd = vi.fn();
+    render(
+      <LibraryToolDetailPage
+        tool={tool}
+        installed={false}
+        busy={false}
+        error="sha256 mismatch: expected abc, got def"
+        onAdd={onAdd}
+        onRemove={() => {}}
+        onBack={() => {}}
+      />
+    );
+    expect(screen.getByRole("alert")).toBeInTheDocument();
+    expect(screen.getByText(/that didn't land/i)).toBeInTheDocument();
+    expect(screen.getByText(/sha256 mismatch/i)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: /try again/i }));
+    expect(onAdd).toHaveBeenCalled();
   });
 
   it("calls onBack when Back is clicked", async () => {
@@ -95,6 +119,7 @@ describe("LibraryToolDetailPage", () => {
         busy={false}
         onAdd={() => {}}
         onRemove={() => {}}
+        error={null}
         onBack={onBack}
       />
     );
