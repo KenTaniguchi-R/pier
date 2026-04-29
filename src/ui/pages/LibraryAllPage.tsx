@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import type { CatalogTool } from "../../domain/library";
-import { CatalogCard } from "../organisms/CatalogCard";
+import { CatalogCard } from "../molecules/CatalogCard";
 import { TextField } from "../atoms/TextField";
 
 interface Props {

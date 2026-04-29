@@ -1,4 +1,5 @@
 import type { CatalogTool } from "../../domain/library";
+import { outcomeOf } from "../../domain/library";
 import { Button } from "../atoms/Button";
 import { PermissionPanel } from "../organisms/PermissionPanel";
 
@@ -19,10 +20,10 @@ export function LibraryToolDetailPage({
   onRemove,
   onBack,
 }: Props) {
-  const outcome = tool.outcome ?? tool.description;
-  const showWhatItDoes =
-    (tool.description && tool.description !== outcome) ||
-    (tool.examples && tool.examples.length > 0);
+  const outcome = outcomeOf(tool);
+  const hasExtraDescription = !!tool.description && tool.description !== outcome;
+  const hasExamples = !!tool.examples && tool.examples.length > 0;
+  const showWhatItDoes = hasExtraDescription || hasExamples;
   return (
     <div className="flex flex-col gap-6 px-8 py-6">
       <button
@@ -70,12 +71,12 @@ export function LibraryToolDetailPage({
       {showWhatItDoes && (
         <section className="flex flex-col gap-3">
           <h2 className="font-display text-xl text-ink">What it does</h2>
-          {tool.description && tool.description !== outcome && (
+          {hasExtraDescription && (
             <p className="text-[14px] text-ink-2 leading-relaxed">{tool.description}</p>
           )}
-          {tool.examples && tool.examples.length > 0 && (
+          {hasExamples && (
             <div className="flex flex-col gap-1.5">
-              {tool.examples.map((ex) => (
+              {tool.examples!.map((ex) => (
                 <pre
                   key={ex}
                   className="font-mono text-[12px] bg-bg-2 border border-line rounded-2 px-3 py-2 text-ink-2"

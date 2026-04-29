@@ -1,5 +1,5 @@
 import type { CatalogTool } from "../../domain/library";
-import { CatalogCard } from "./CatalogCard";
+import { CatalogCard } from "../molecules/CatalogCard";
 
 interface Props {
   title: string;

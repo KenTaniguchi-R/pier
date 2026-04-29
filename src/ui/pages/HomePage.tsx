@@ -6,11 +6,7 @@ import { Sidebar, type Selection } from "../organisms/Sidebar";
 import { HomeAllTools } from "../organisms/HomeAllTools";
 import { ToolDetail } from "../organisms/ToolDetail";
 import { SkillGuide } from "../organisms/SkillGuide";
-import { LibraryLandingPage } from "./LibraryLandingPage";
-import { LibraryAllPage } from "./LibraryAllPage";
-import { LibraryToolDetailPage } from "./LibraryToolDetailPage";
-import { useCatalog, useAddTool, useRemoveTool } from "../../application/useLibrary";
-import type { CatalogTool } from "../../domain/library";
+import { LibraryRoute } from "../organisms/LibraryRoute";
 import { SettingsPage } from "./SettingsPage";
 import { loadConfig } from "../../application/loadConfig";
 import { tauriConfigLoader } from "../../infrastructure/tauriConfigLoader";
@@ -87,11 +83,6 @@ export function HomePage() {
       ? `${filteredTools.length} match${filteredTools.length === 1 ? "" : "es"}`
       : `${filteredTools.length} tool${filteredTools.length === 1 ? "" : "s"}`;
 
-  const { catalog } = useCatalog();
-  const { previewAdd, commit: commitAdd, busy: addBusy } = useAddTool();
-  const { remove: commitRemove, busy: removeBusy } = useRemoveTool();
-  const installedIds = useMemo(() => new Set(state.tools.map(t => t.id)), [state.tools]);
-
   let main;
   if (state.configErrors.length) {
     main = (
@@ -109,64 +100,13 @@ export function HomePage() {
   } else if (selection.kind === "help") {
     main = <SkillGuide />;
   } else if (selection.kind === "library") {
-    const libTools = catalog?.tools ?? [];
-    if (selection.view === "landing") {
-      main = (
-        <LibraryLandingPage
-          tools={libTools}
-          installedIds={installedIds}
-          onSelectTool={(t: CatalogTool) =>
-            setSelection({ kind: "library", view: "detail", toolId: t.id })
-          }
-          onSeeAll={() => setSelection({ kind: "library", view: "all" })}
-        />
-      );
-    } else if (selection.view === "all") {
-      main = (
-        <LibraryAllPage
-          tools={libTools}
-          installedIds={installedIds}
-          onSelectTool={(t: CatalogTool) =>
-            setSelection({ kind: "library", view: "detail", toolId: t.id })
-          }
-          onBack={() => setSelection({ kind: "library", view: "landing" })}
-        />
-      );
-    } else {
-      const tool = libTools.find(t => t.id === selection.toolId);
-      if (!tool) {
-        main = (
-          <div className="px-8 py-6 text-ink-3">
-            That tool isn't in the catalog anymore.
-            <button
-              type="button"
-              className="ml-2 underline"
-              onClick={() => setSelection({ kind: "library", view: "landing" })}
-            >
-              Back to Library
-            </button>
-          </div>
-        );
-      } else {
-        main = (
-          <LibraryToolDetailPage
-            tool={tool}
-            installed={installedIds.has(tool.id)}
-            busy={addBusy || removeBusy}
-            onAdd={async () => {
-              const preview = await previewAdd(tool);
-              await commitAdd(preview.after);
-              await reload();
-            }}
-            onRemove={async () => {
-              await commitRemove(tool.id);
-              await reload();
-            }}
-            onBack={() => setSelection({ kind: "library", view: "landing" })}
-          />
-        );
-      }
-    }
+    main = (
+      <LibraryRoute
+        selection={selection}
+        onNavigate={setSelection}
+        onConfigChanged={reload}
+      />
+    );
   } else if (selection.kind === "settings") {
     main = <SettingsPage />;
   } else if (selectedTool) {

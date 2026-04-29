@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import { Check } from "lucide-react";
 import type { CatalogTool } from "../../domain/library";
+import { outcomeOf } from "../../domain/library";
 
 interface Props {
   tool: CatalogTool;
@@ -10,9 +11,7 @@ interface Props {
 }
 
 export function CatalogCard({ tool, installed, onSelect, style }: Props) {
-  const outcome = tool.outcome ?? tool.description;
-  const audienceTag =
-    tool.audience && tool.audience.length > 0 ? tool.audience[0] : null;
+  const audienceTag = tool.audience?.[0] ?? null;
 
   return (
     <button
@@ -42,7 +41,7 @@ export function CatalogCard({ tool, installed, onSelect, style }: Props) {
         {tool.name}
       </span>
       <p className="text-[13px] leading-snug text-ink-3 line-clamp-2">
-        {outcome}
+        {outcomeOf(tool)}
       </p>
       {audienceTag && (
         <div className="mt-1 flex items-center gap-2 text-[11px] text-ink-4">

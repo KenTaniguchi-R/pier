@@ -58,3 +58,9 @@ export interface Catalog {
   publishedAt: string;
   tools: CatalogTool[];
 }
+
+/** One-line outcome shown in cards and detail headers. Falls back to `description`
+ *  while the catalog still ships entries without `outcome`. */
+export function outcomeOf(tool: CatalogTool): string {
+  return tool.outcome ?? tool.description;
+}
