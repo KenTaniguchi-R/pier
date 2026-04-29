@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useLibraryClient } from "../state/LibraryContext";
-import type { Catalog, CatalogTool } from "../domain/library";
-import type { LibraryAddPreview } from "./ports";
+import type { Catalog } from "../domain/library";
 
 type Status = "idle" | "loading" | "ready" | "error";
 
@@ -11,34 +10,28 @@ export function useCatalog() {
   const [catalog, setCatalog] = useState<Catalog | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const refresh = useCallback(async () => {
+  useEffect(() => {
     setStatus("loading");
     setError(null);
-    try {
-      const c = await client.fetchCatalog();
-      setCatalog(c);
-      setStatus("ready");
-    } catch (e) {
-      setError(String(e));
-      setStatus("error");
-    }
+    client
+      .fetchCatalog()
+      .then((c) => {
+        setCatalog(c);
+        setStatus("ready");
+      })
+      .catch((e) => {
+        setError(String(e));
+        setStatus("error");
+      });
   }, [client]);
 
-  useEffect(() => {
-    void refresh();
-  }, [refresh]);
-
-  return { status, catalog, error, refresh };
+  return { status, catalog, error };
 }
 
 export function useAddTool() {
   const client = useLibraryClient();
   const [busy, setBusy] = useState(false);
 
-  const previewAdd = useCallback(
-    (tool: CatalogTool): Promise<LibraryAddPreview> => client.installAndPreview(tool),
-    [client],
-  );
   const commit = useCallback(
     async (after: string) => {
       setBusy(true);
@@ -51,5 +44,5 @@ export function useAddTool() {
     [client],
   );
 
-  return { busy, previewAdd, commit };
+  return { busy, previewAdd: client.installAndPreview, commit };
 }

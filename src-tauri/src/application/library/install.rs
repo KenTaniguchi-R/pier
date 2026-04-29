@@ -27,7 +27,6 @@ pub fn install_root() -> PathBuf {
 pub struct Installed {
     pub command: String,
     pub sha256: String,
-    pub version: String,
 }
 
 fn validate_path_component(s: &str) -> Result<()> {
@@ -62,7 +61,6 @@ pub async fn install(tool: &CatalogTool, root: &Path) -> Result<Installed> {
         return Ok(Installed {
             command: path.to_string_lossy().into_owned(),
             sha256: format!("{:x}", Sha256::digest(script.as_bytes())),
-            version: tool.version.clone(),
         });
     }
 
@@ -81,7 +79,6 @@ pub async fn install(tool: &CatalogTool, root: &Path) -> Result<Installed> {
     Ok(Installed {
         command: path.to_string_lossy().into_owned(),
         sha256: actual,
-        version: tool.version.clone(),
     })
 }
 

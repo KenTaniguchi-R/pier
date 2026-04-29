@@ -1,3 +1,5 @@
+import type { Parameter } from "./tool";
+
 export interface PlatformAsset {
   url: string;
   sha256: string;
@@ -10,7 +12,7 @@ export interface CatalogTool {
   description: string;
   category: string;
   /** Same shape as Tool["parameters"] */
-  params?: import("./tool").Parameter[];
+  params?: Parameter[];
   permissions: {
     network: boolean;
     fsRead: string[];

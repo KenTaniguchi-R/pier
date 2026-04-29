@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import { useDialogA11y } from "./useDialogA11y";
 import { PermissionPill } from "../atoms/PermissionPill";
 import { Button } from "../atoms/Button";
@@ -12,11 +13,19 @@ interface Props {
   onConfirm: (after: string) => void;
 }
 
+type PermItem = { key: string; kind: "network" | "fsRead" | "fsWrite"; path?: string };
+
+function permItems({ network, fsRead, fsWrite }: CatalogTool["permissions"]): PermItem[] {
+  const out: PermItem[] = [];
+  if (network) out.push({ key: "network", kind: "network" });
+  for (const p of fsRead) out.push({ key: `r-${p}`, kind: "fsRead", path: p });
+  for (const p of fsWrite) out.push({ key: `w-${p}`, kind: "fsWrite", path: p });
+  return out;
+}
+
 export function AddToolDialog({ tool, preview, busy, onClose, onConfirm }: Props) {
   const panelRef = useDialogA11y({ open: true, onEscape: onClose });
-
-  const { network, fsRead, fsWrite } = tool.permissions;
-  const noPerms = !network && fsRead.length === 0 && fsWrite.length === 0;
+  const perms = permItems(tool.permissions);
 
   return (
     <div
@@ -44,24 +53,15 @@ export function AddToolDialog({ tool, preview, busy, onClose, onConfirm }: Props
         </header>
 
         <section className="px-6 py-4 border-b border-line">
-          {noPerms ? (
+          {perms.length === 0 ? (
             <p className="font-display italic text-[14px] text-ink-3">No special permissions.</p>
           ) : (
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
-              {network && <PermissionPill kind="network" />}
-              {fsRead.map((p, i) => (
-                <span key={`r-${p}`} className="contents">
-                  {(network || i > 0) && <span aria-hidden className="text-ink-4">·</span>}
-                  <PermissionPill kind="fsRead" path={p} />
-                </span>
-              ))}
-              {fsWrite.map((p, i) => (
-                <span key={`w-${p}`} className="contents">
-                  {(network || fsRead.length > 0 || i > 0) && (
-                    <span aria-hidden className="text-ink-4">·</span>
-                  )}
-                  <PermissionPill kind="fsWrite" path={p} />
-                </span>
+              {perms.map((p, i) => (
+                <Fragment key={p.key}>
+                  {i > 0 && <span aria-hidden className="text-ink-4">·</span>}
+                  <PermissionPill kind={p.kind} path={p.path} />
+                </Fragment>
               ))}
             </div>
           )}
