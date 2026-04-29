@@ -4,7 +4,9 @@ pub mod settings;
 pub mod tool;
 pub mod update;
 
-pub use library::{Catalog, CatalogTool, Permissions, PlatformAsset};
+pub use library::{
+    Catalog, CatalogTool, FilesAccess, NetworkAccess, Permissions, PlatformAsset, SystemAccess,
+};
 pub use run::*;
 pub use settings::*;
 pub use tool::*;

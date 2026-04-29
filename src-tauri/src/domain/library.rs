@@ -1,4 +1,4 @@
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -8,12 +8,82 @@ pub struct PlatformAsset {
     pub sha256: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "kebab-case")]
+pub enum NetworkAccess {
+    None,
+    Localhost,
+    Internet,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "kebab-case")]
+pub enum FilesAccess {
+    None,
+    ReadOnly,
+    Writes,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "kebab-case")]
+pub enum SystemAccess {
+    None,
+    RunsCommands,
+    KillsProcesses,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct Permissions {
-    pub network: bool,
-    pub fs_read: Vec<String>,
-    pub fs_write: Vec<String>,
+    pub network: NetworkAccess,
+    pub files: FilesAccess,
+    pub system: SystemAccess,
+    #[serde(default)]
+    pub sentences: Vec<String>,
+}
+
+/// Custom deserialize that accepts both the new three-axis shape and the
+/// legacy `{ network: bool, fsRead: [], fsWrite: [] }` shape so older
+/// catalogs (and our existing signed test fixture) keep loading.
+impl<'de> Deserialize<'de> for Permissions {
+    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
+        #[derive(Deserialize)]
+        #[serde(untagged)]
+        enum Raw {
+            New {
+                network: NetworkAccess,
+                files: FilesAccess,
+                system: SystemAccess,
+                #[serde(default)]
+                sentences: Vec<String>,
+            },
+            Legacy {
+                #[serde(default)]
+                network: bool,
+                #[serde(default, rename = "fsRead")]
+                fs_read: Vec<String>,
+                #[serde(default, rename = "fsWrite")]
+                fs_write: Vec<String>,
+            },
+        }
+        Ok(match Raw::deserialize(d)? {
+            Raw::New { network, files, system, sentences } => {
+                Permissions { network, files, system, sentences }
+            }
+            Raw::Legacy { network, fs_read, fs_write } => Permissions {
+                network: if network { NetworkAccess::Internet } else { NetworkAccess::None },
+                files: if !fs_write.is_empty() {
+                    FilesAccess::Writes
+                } else if !fs_read.is_empty() {
+                    FilesAccess::ReadOnly
+                } else {
+                    FilesAccess::None
+                },
+                system: SystemAccess::None,
+                sentences: Vec::new(),
+            },
+        })
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -27,6 +97,16 @@ pub struct CatalogTool {
     #[serde(default)]
     pub params: Vec<crate::domain::tool::Parameter>,
     pub permissions: Permissions,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub outcome: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub audience: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub examples: Vec<String>,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub featured: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub added_at: Option<String>,
     #[serde(default)]
     pub platforms: HashMap<String, PlatformAsset>,
     #[serde(default)]
@@ -74,8 +154,9 @@ impl<'de> Deserialize<'de> for Catalog {
 #[cfg(test)]
 mod tests {
     use super::*;
+
     #[test]
-    fn parses_minimal_catalog() {
+    fn parses_legacy_permissions_shape() {
         let json = r##"{
             "catalogSchemaVersion": 1,
             "publishedAt": "2026-05-15T00:00:00Z",
@@ -88,8 +169,38 @@ mod tests {
         }"##;
         let cat: Catalog = serde_json::from_str(json).unwrap();
         assert_eq!(cat.tools.len(), 1);
-        assert_eq!(cat.tools[0].id, "kill-port");
-        assert!(cat.tools[0].script.is_some());
+        assert_eq!(cat.tools[0].permissions.network, NetworkAccess::None);
+        assert_eq!(cat.tools[0].permissions.files, FilesAccess::None);
+    }
+
+    #[test]
+    fn parses_new_permissions_shape() {
+        let json = r##"{
+            "catalogSchemaVersion": 1,
+            "publishedAt": "2026-05-15T00:00:00Z",
+            "tools": [{
+                "id": "kill-port", "name": "Kill port", "version": "1.0.0",
+                "description": "Free a port.", "category": "dev",
+                "outcome": "Free up a stuck port",
+                "audience": ["developer"],
+                "featured": true,
+                "addedAt": "2026-04-25",
+                "permissions": {
+                    "network": "none",
+                    "files": "none",
+                    "system": "kills-processes",
+                    "sentences": ["runs-locally", "may-terminate-processes"]
+                },
+                "script": "x"
+            }]
+        }"##;
+        let cat: Catalog = serde_json::from_str(json).unwrap();
+        let t = &cat.tools[0];
+        assert_eq!(t.permissions.network, NetworkAccess::None);
+        assert_eq!(t.permissions.system, SystemAccess::KillsProcesses);
+        assert_eq!(t.permissions.sentences.len(), 2);
+        assert_eq!(t.outcome.as_deref(), Some("Free up a stuck port"));
+        assert!(t.featured);
     }
 
     #[test]

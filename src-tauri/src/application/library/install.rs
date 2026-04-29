@@ -85,7 +85,7 @@ pub async fn install(tool: &CatalogTool, root: &Path) -> Result<Installed> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::domain::Permissions;
+    use crate::domain::{FilesAccess, NetworkAccess, Permissions, SystemAccess};
     use tempfile::tempdir;
 
     fn shell_tool() -> CatalogTool {
@@ -97,10 +97,16 @@ mod tests {
             category: "dev".into(),
             params: vec![],
             permissions: Permissions {
-                network: false,
-                fs_read: vec![],
-                fs_write: vec![],
+                network: NetworkAccess::None,
+                files: FilesAccess::None,
+                system: SystemAccess::None,
+                sentences: vec![],
             },
+            outcome: None,
+            audience: vec![],
+            examples: vec![],
+            featured: false,
+            added_at: None,
             platforms: Default::default(),
             script: Some("#!/bin/sh\necho hi\n".into()),
             min_pier_version: None,

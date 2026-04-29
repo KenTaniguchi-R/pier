@@ -92,7 +92,7 @@ pub fn library_commit_remove(config_path: &Path, tool_id: &str) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::domain::Permissions;
+    use crate::domain::{FilesAccess, NetworkAccess, Permissions, SystemAccess};
     use std::io::Write;
     use tempfile::NamedTempFile;
 
@@ -105,10 +105,16 @@ mod tests {
             category: "dev".into(),
             params: vec![],
             permissions: Permissions {
-                network: false,
-                fs_read: vec![],
-                fs_write: vec![],
+                network: NetworkAccess::None,
+                files: FilesAccess::None,
+                system: SystemAccess::None,
+                sentences: vec![],
             },
+            outcome: None,
+            audience: vec![],
+            examples: vec![],
+            featured: false,
+            added_at: None,
             platforms: Default::default(),
             script: None,
             min_pier_version: None,
