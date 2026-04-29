@@ -1,9 +1,12 @@
 fn main() {
     println!("cargo:rerun-if-env-changed=PIER_LIBRARY_PUBKEY");
     if std::env::var("PIER_LIBRARY_PUBKEY").is_err() {
-        // Dev fallback — replace with the real pubkey before v0.2 release.
+        // Default to the production minisign pubkey (matches `tauri.conf.json`'s
+        // updater pubkey — same key signs both the app bundle and the library
+        // catalog). CI may override via the env var if a separate key is ever
+        // introduced for the library.
         println!(
-            "cargo:rustc-env=PIER_LIBRARY_PUBKEY=DEV_PLACEHOLDER_PUBKEY_REPLACE_BEFORE_RELEASE"
+            "cargo:rustc-env=PIER_LIBRARY_PUBKEY=RWSlgE5C8ZwbEezbD+2yceWhKF2T3eUZN+aVsb2tgKSgESYfCzUadT6T"
         );
     }
     tauri_build::build()
