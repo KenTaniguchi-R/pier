@@ -105,7 +105,12 @@ export function HomePage() {
     if (!tool) return;
     let cancelled = false;
     previewAdd(tool).then(p => {
-      if (!cancelled) setDetailPreview({ toolId: id, previewJson: p.after });
+      if (!cancelled) {
+        setDetailPreview({
+          toolId: id,
+          previewJson: JSON.stringify(p.newTool, null, 2),
+        });
+      }
     }).catch(() => {
       if (!cancelled) setDetailPreview({ toolId: id, previewJson: "" });
     });
