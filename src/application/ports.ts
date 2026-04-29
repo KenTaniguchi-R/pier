@@ -90,3 +90,17 @@ export interface UpdateChecker {
   onWindowVisibilityChange(cb: (visible: boolean) => void): () => void;
   isWindowVisible(): Promise<boolean>;
 }
+
+import type { Catalog, CatalogTool } from "../domain/library";
+
+export interface LibraryAddPreview {
+  /** Full updated tools.json string. Pass back to commitAdd to write it. */
+  after: string;
+}
+
+export interface LibraryClient {
+  fetchCatalog(): Promise<Catalog>;
+  installAndPreview(tool: CatalogTool): Promise<LibraryAddPreview>;
+  commitAdd(after: string): Promise<void>;
+  commitRemove(toolId: string): Promise<void>;
+}

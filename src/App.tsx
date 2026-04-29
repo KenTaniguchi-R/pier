@@ -15,28 +15,32 @@ import { defaultUrlOpener } from "./infrastructure/tauriUrlOpener";
 import { tauriHistoryReader } from "./infrastructure/tauriHistoryReader";
 import { defaultSettingsAdapter } from "./infrastructure/tauriSettings";
 import { defaultUpdateChecker } from "./infrastructure/tauriUpdateChecker";
+import { LibraryProvider } from "./state/LibraryContext";
+import { tauriLibraryClient } from "./infrastructure/tauriLibraryClient";
 
 export default function App() {
   return (
     <AppProvider>
-      <RunnerProvider runner={tauriCommandRunner}>
-        <HistoryProvider history={tauriHistoryReader}>
-          <FilePickerProvider picker={tauriFilePicker}>
-            <OpenerProvider opener={defaultUrlOpener}>
-              <SettingsProvider adapter={defaultSettingsAdapter}>
-                <FavoritesProvider>
-                  <UpdaterProvider checker={defaultUpdateChecker}>
-                    <UpdaterControllerHost>
-                      <HomePage />
-                      <UpdateToast />
-                    </UpdaterControllerHost>
-                  </UpdaterProvider>
-                </FavoritesProvider>
-              </SettingsProvider>
-            </OpenerProvider>
-          </FilePickerProvider>
-        </HistoryProvider>
-      </RunnerProvider>
+      <LibraryProvider client={tauriLibraryClient}>
+        <RunnerProvider runner={tauriCommandRunner}>
+          <HistoryProvider history={tauriHistoryReader}>
+            <FilePickerProvider picker={tauriFilePicker}>
+              <OpenerProvider opener={defaultUrlOpener}>
+                <SettingsProvider adapter={defaultSettingsAdapter}>
+                  <FavoritesProvider>
+                    <UpdaterProvider checker={defaultUpdateChecker}>
+                      <UpdaterControllerHost>
+                        <HomePage />
+                        <UpdateToast />
+                      </UpdaterControllerHost>
+                    </UpdaterProvider>
+                  </FavoritesProvider>
+                </SettingsProvider>
+              </OpenerProvider>
+            </FilePickerProvider>
+          </HistoryProvider>
+        </RunnerProvider>
+      </LibraryProvider>
     </AppProvider>
   );
 }

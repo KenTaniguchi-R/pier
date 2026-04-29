@@ -192,6 +192,16 @@ pub struct Tool {
     pub env_file: Option<String>,
     #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
     pub env: std::collections::HashMap<String, String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source: Option<ToolSource>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct ToolSource {
+    pub catalog: String,
+    pub version: String,
+    pub sha256: String,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]

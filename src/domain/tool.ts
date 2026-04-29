@@ -47,6 +47,7 @@ export interface Tool {
   category?: string;
   envFile?: string;
   env?: Record<string, string>;
+  source?: { catalog: string; version: string; sha256: string };
 }
 
 export interface Defaults {

@@ -6,7 +6,7 @@ interface Props {
   subtitle?: string;
   tools: Tool[];
   onPick: (id: string) => void;
-  emptyHint?: string;
+  emptyHint: string;
   runningToolIds?: ReadonlySet<string>;
 }
 
@@ -24,22 +24,21 @@ export function ToolBrowser({ title, subtitle, tools, onPick, emptyHint, running
         )}
       </header>
 
-      {tools.length === 0 ? (
-        <div className="p-8 text-center text-ink-3 text-[14px]">
-          {emptyHint ?? "No tools match."}
-        </div>
-      ) : (
-        <div className="grid gap-3 grid-cols-[repeat(auto-fill,minmax(280px,1fr))]">
-          {tools.map(t => (
-            <ToolCard
-              key={t.id}
-              tool={t}
-              onClick={() => onPick(t.id)}
-              running={runningToolIds?.has(t.id) ?? false}
-            />
-          ))}
+      {tools.length === 0 && (
+        <div className="p-4 text-center text-ink-3 text-[14px]">
+          {emptyHint}
         </div>
       )}
+      <div className="grid gap-3 grid-cols-[repeat(auto-fill,minmax(280px,1fr))]">
+        {tools.map(t => (
+          <ToolCard
+            key={t.id}
+            tool={t}
+            onClick={() => onPick(t.id)}
+            running={runningToolIds?.has(t.id) ?? false}
+          />
+        ))}
+      </div>
     </div>
   );
 }

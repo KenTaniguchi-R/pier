@@ -13,7 +13,7 @@ interface Props {
   browserSub?: string;
   onPick: (id: string) => void;
   runningToolIds?: ReadonlySet<string>;
-  emptyHint?: string;
+  emptyHint: string;
 }
 
 /** Composes the strips + tool grid for the Home/All-tools view. */

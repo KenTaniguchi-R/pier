@@ -122,3 +122,54 @@ pub fn set_tray_badge_cmd(app: tauri::AppHandle, has_update: bool) -> Result<(),
 pub fn notify_update_ready_cmd(app: tauri::AppHandle, version: String) -> Result<(), String> {
     update_app::notify_update_ready(&app, &version).map_err(|e| e.to_string())
 }
+
+use crate::application::library::{add_to_config, fetch as lib_fetch, install as lib_install};
+use crate::domain::{Catalog, CatalogTool};
+
+const CATALOG_URL: &str = "https://pier.benree.tech/catalog.json";
+const CATALOG_SIG_URL: &str = "https://pier.benree.tech/catalog.json.minisig";
+const CATALOG_PUBKEY: &str = env!("PIER_LIBRARY_PUBKEY");
+
+#[tauri::command]
+pub async fn library_fetch_catalog() -> Result<Catalog, String> {
+    let cache = crate::application::library::cache::cache_path();
+    lib_fetch::fetch(lib_fetch::FetchOpts {
+        url: CATALOG_URL,
+        minisign_pubkey: CATALOG_PUBKEY,
+        signature_url: CATALOG_SIG_URL,
+        cache_path: &cache,
+    })
+    .await
+    .map_err(|e| e.to_string())
+}
+
+#[derive(serde::Serialize)]
+pub struct LibraryAddPreview {
+    /// Full updated tools.json contents to write on commit. The UI ships this
+    /// back as-is to `library_commit_add` after the user confirms.
+    pub after: String,
+}
+
+#[tauri::command]
+pub async fn library_install_and_preview(tool: CatalogTool) -> Result<LibraryAddPreview, String> {
+    let installed = lib_install::install(&tool, &lib_install::install_root())
+        .await
+        .map_err(|e| e.to_string())?;
+    let entry =
+        add_to_config::build_tool_entry("pier-tools", &tool, installed.command, installed.sha256);
+    let cfg_path = std::path::PathBuf::from(config_path());
+    let p = add_to_config::preview(&cfg_path, entry).map_err(|e| e.to_string())?;
+    Ok(LibraryAddPreview { after: p.after })
+}
+
+#[tauri::command]
+pub fn library_commit_add(after: String) -> Result<(), String> {
+    let cfg_path = std::path::PathBuf::from(config_path());
+    add_to_config::commit(&cfg_path, &after).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn library_commit_remove(tool_id: String) -> Result<(), String> {
+    let cfg_path = std::path::PathBuf::from(config_path());
+    add_to_config::library_commit_remove(&cfg_path, &tool_id).map_err(|e| e.to_string())
+}
