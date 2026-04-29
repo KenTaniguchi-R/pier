@@ -1,5 +1,6 @@
 use crate::domain::{CatalogTool, Tool, ToolSource, ToolsConfig};
 use anyhow::{bail, Context, Result};
+use serde_json::Value;
 use std::path::Path;
 
 #[derive(Debug)]
@@ -60,6 +61,34 @@ pub fn commit(config_path: &Path, after: &str) -> Result<()> {
     Ok(())
 }
 
+/// Pure: remove the tool with the given id from a tools.json string.
+/// Returns the new JSON string (with trailing newline), or an error if the id was
+/// not present.
+pub fn remove_tool_from_config_str(json: &str, id: &str) -> Result<String, String> {
+    let mut v: Value = serde_json::from_str(json).map_err(|e| e.to_string())?;
+    let tools = v
+        .get_mut("tools")
+        .and_then(|t| t.as_array_mut())
+        .ok_or_else(|| "tools.json is missing the `tools` array".to_string())?;
+    let before_len = tools.len();
+    tools.retain(|t| t.get("id").and_then(|x| x.as_str()) != Some(id));
+    if tools.len() == before_len {
+        return Err(format!("tool `{id}` not found"));
+    }
+    let mut out = serde_json::to_string_pretty(&v).map_err(|e| e.to_string())?;
+    out.push('\n');
+    Ok(out)
+}
+
+/// Use case: read tools.json, remove `tool_id`, write back atomically.
+/// Mirrors the file I/O pattern used by [`commit`].
+pub fn library_commit_remove(config_path: &Path, tool_id: &str) -> Result<()> {
+    let original = std::fs::read_to_string(config_path).context("read tools.json")?;
+    let next =
+        remove_tool_from_config_str(&original, tool_id).map_err(|e| anyhow::anyhow!("{e}"))?;
+    commit(config_path, &next)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -103,6 +132,41 @@ mod tests {
             after.contains("\"sha256\": \"abc\""),
             "missing sha256 in source; got: {after}"
         );
+    }
+
+    #[test]
+    fn library_commit_remove_strips_matching_tool() {
+        let before = r#"{"schemaVersion":"1.0","tools":[
+          {"id":"a","name":"A","command":"/bin/true"},
+          {"id":"b","name":"B","command":"/bin/true"}
+        ]}"#;
+        let after = remove_tool_from_config_str(before, "a").unwrap();
+        assert!(!after.contains("\"id\": \"a\""), "still has a; got: {after}");
+        assert!(after.contains("\"id\": \"b\""), "missing b; got: {after}");
+    }
+
+    #[test]
+    fn library_commit_remove_errors_when_id_missing() {
+        let before = r#"{"schemaVersion":"1.0","tools":[]}"#;
+        let err = remove_tool_from_config_str(before, "missing").unwrap_err();
+        assert!(
+            err.to_lowercase().contains("not found"),
+            "got: {err}"
+        );
+    }
+
+    #[test]
+    fn library_commit_remove_writes_file() {
+        let mut f = NamedTempFile::new().unwrap();
+        write!(
+            f,
+            r#"{{"schemaVersion":"1.0","tools":[{{"id":"a","name":"A","command":"/bin/true"}},{{"id":"b","name":"B","command":"/bin/true"}}]}}"#
+        )
+        .unwrap();
+        library_commit_remove(f.path(), "a").unwrap();
+        let after = std::fs::read_to_string(f.path()).unwrap();
+        assert!(!after.contains("\"id\": \"a\""), "got: {after}");
+        assert!(after.contains("\"id\": \"b\""), "got: {after}");
     }
 
     #[test]

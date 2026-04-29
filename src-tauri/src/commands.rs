@@ -171,3 +171,9 @@ pub fn library_commit_add(after: String) -> Result<(), String> {
     let cfg_path = std::path::PathBuf::from(config_path());
     add_to_config::commit(&cfg_path, &after).map_err(|e| e.to_string())
 }
+
+#[tauri::command]
+pub fn library_commit_remove(tool_id: String) -> Result<(), String> {
+    let cfg_path = std::path::PathBuf::from(config_path());
+    add_to_config::library_commit_remove(&cfg_path, &tool_id).map_err(|e| e.to_string())
+}

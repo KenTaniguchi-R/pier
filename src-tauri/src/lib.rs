@@ -102,6 +102,7 @@ pub fn run() {
             commands::library_fetch_catalog,
             commands::library_install_and_preview,
             commands::library_commit_add,
+            commands::library_commit_remove,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
