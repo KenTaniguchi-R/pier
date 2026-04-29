@@ -6,7 +6,11 @@ import { Sidebar, type Selection } from "../organisms/Sidebar";
 import { HomeAllTools } from "../organisms/HomeAllTools";
 import { ToolDetail } from "../organisms/ToolDetail";
 import { SkillGuide } from "../organisms/SkillGuide";
-import { LibraryBrowser } from "../organisms/LibraryBrowser";
+import { LibraryLandingPage } from "./LibraryLandingPage";
+import { LibraryAllPage } from "./LibraryAllPage";
+import { LibraryToolDetailPage } from "./LibraryToolDetailPage";
+import { useCatalog, useAddTool, useRemoveTool } from "../../application/useLibrary";
+import type { CatalogTool } from "../../domain/library";
 import { SettingsPage } from "./SettingsPage";
 import { loadConfig } from "../../application/loadConfig";
 import { tauriConfigLoader } from "../../infrastructure/tauriConfigLoader";
@@ -83,6 +87,31 @@ export function HomePage() {
       ? `${filteredTools.length} match${filteredTools.length === 1 ? "" : "es"}`
       : `${filteredTools.length} tool${filteredTools.length === 1 ? "" : "s"}`;
 
+  const { catalog } = useCatalog();
+  const { previewAdd, commit: commitAdd, busy: addBusy } = useAddTool();
+  const { remove: commitRemove, busy: removeBusy } = useRemoveTool();
+  const installedIds = useMemo(() => new Set(state.tools.map(t => t.id)), [state.tools]);
+
+  const [detailPreview, setDetailPreview] = useState<{ toolId: string; previewJson: string } | null>(null);
+
+  useEffect(() => {
+    if (selection.kind !== "library" || selection.view !== "detail") {
+      setDetailPreview(null);
+      return;
+    }
+    const id = selection.toolId;
+    if (detailPreview?.toolId === id) return;
+    const tool = catalog?.tools.find(t => t.id === id);
+    if (!tool) return;
+    let cancelled = false;
+    previewAdd(tool).then(p => {
+      if (!cancelled) setDetailPreview({ toolId: id, previewJson: p.after });
+    }).catch(() => {
+      if (!cancelled) setDetailPreview({ toolId: id, previewJson: "" });
+    });
+    return () => { cancelled = true; };
+  }, [selection, catalog, previewAdd, detailPreview]);
+
   let main;
   if (state.configErrors.length) {
     main = (
@@ -100,7 +129,65 @@ export function HomePage() {
   } else if (selection.kind === "help") {
     main = <SkillGuide />;
   } else if (selection.kind === "library") {
-    main = <LibraryBrowser />;
+    const libTools = catalog?.tools ?? [];
+    if (selection.view === "landing") {
+      main = (
+        <LibraryLandingPage
+          tools={libTools}
+          installedIds={installedIds}
+          onSelectTool={(t: CatalogTool) =>
+            setSelection({ kind: "library", view: "detail", toolId: t.id })
+          }
+          onSeeAll={() => setSelection({ kind: "library", view: "all" })}
+        />
+      );
+    } else if (selection.view === "all") {
+      main = (
+        <LibraryAllPage
+          tools={libTools}
+          installedIds={installedIds}
+          onSelectTool={(t: CatalogTool) =>
+            setSelection({ kind: "library", view: "detail", toolId: t.id })
+          }
+          onBack={() => setSelection({ kind: "library", view: "landing" })}
+        />
+      );
+    } else {
+      const tool = libTools.find(t => t.id === selection.toolId);
+      if (!tool) {
+        main = (
+          <div className="px-8 py-6 text-ink-3">
+            That tool isn't in the catalog anymore.
+            <button
+              type="button"
+              className="ml-2 underline"
+              onClick={() => setSelection({ kind: "library", view: "landing" })}
+            >
+              Back to Library
+            </button>
+          </div>
+        );
+      } else {
+        main = (
+          <LibraryToolDetailPage
+            tool={tool}
+            installed={installedIds.has(tool.id)}
+            previewJson={detailPreview?.previewJson ?? ""}
+            busy={addBusy || removeBusy}
+            onAdd={async () => {
+              const preview = await previewAdd(tool);
+              await commitAdd(preview.after);
+              await reload();
+            }}
+            onRemove={async () => {
+              await commitRemove(tool.id);
+              await reload();
+            }}
+            onBack={() => setSelection({ kind: "library", view: "landing" })}
+          />
+        );
+      }
+    }
   } else if (selection.kind === "settings") {
     main = <SettingsPage />;
   } else if (selectedTool) {
