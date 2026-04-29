@@ -46,3 +46,22 @@ export function useAddTool() {
 
   return { busy, previewAdd: client.installAndPreview, commit };
 }
+
+export function useRemoveTool() {
+  const client = useLibraryClient();
+  const [busy, setBusy] = useState(false);
+
+  const remove = useCallback(
+    async (toolId: string) => {
+      setBusy(true);
+      try {
+        await client.commitRemove(toolId);
+      } finally {
+        setBusy(false);
+      }
+    },
+    [client],
+  );
+
+  return { busy, remove };
+}

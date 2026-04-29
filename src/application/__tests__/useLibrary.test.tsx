@@ -1,8 +1,8 @@
-import { describe, it, expect } from "vitest";
-import { renderHook, waitFor } from "@testing-library/react";
+import { describe, it, expect, vi } from "vitest";
+import { renderHook, act, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { LibraryProvider } from "../../state/LibraryContext";
-import { useCatalog } from "../useLibrary";
+import { useCatalog, useRemoveTool } from "../useLibrary";
 import type { LibraryClient } from "../ports";
 
 const fake: LibraryClient = {
@@ -29,5 +29,25 @@ describe("useCatalog", () => {
     const { result } = renderHook(() => useCatalog(), { wrapper });
     await waitFor(() => expect(result.current.status).toBe("ready"));
     expect(result.current.catalog?.tools[0].id).toBe("k");
+  });
+});
+
+function wrapWith(client: LibraryClient) {
+  return ({ children }: { children: ReactNode }) => (
+    <LibraryProvider client={client}>{children}</LibraryProvider>
+  );
+}
+
+describe("useRemoveTool", () => {
+  it("calls client.commitRemove with the tool id", async () => {
+    const client: LibraryClient = {
+      fetchCatalog: vi.fn(),
+      installAndPreview: vi.fn(),
+      commitAdd: vi.fn(),
+      commitRemove: vi.fn().mockResolvedValue(undefined),
+    } as unknown as LibraryClient;
+    const { result } = renderHook(() => useRemoveTool(), { wrapper: wrapWith(client) });
+    await act(async () => { await result.current.remove("kill-port"); });
+    expect(client.commitRemove).toHaveBeenCalledWith("kill-port");
   });
 });
