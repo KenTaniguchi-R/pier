@@ -1,14 +1,14 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useApp } from "../../state/AppContext";
-import { useAddTool, useCatalog, useRemoveTool } from "../../application/useLibrary";
+import { useCatalog } from "../../application/useLibrary";
 import type { CatalogTool } from "../../domain/library";
 import type { LibrarySelection } from "./Sidebar";
 import { LibraryLandingPage } from "../pages/LibraryLandingPage";
 import { LibraryAllPage } from "../pages/LibraryAllPage";
-import { LibraryToolDetailPage } from "../pages/LibraryToolDetailPage";
 import { LibraryLandingSkeleton } from "./LibraryLandingSkeleton";
 import { LibraryAllSkeleton } from "./LibraryAllSkeleton";
 import { LibraryToolDetailSkeleton } from "./LibraryToolDetailSkeleton";
+import { LibraryToolDetail } from "./LibraryToolDetail";
 import { LibraryErrorState } from "../molecules/LibraryErrorState";
 
 interface Props {
@@ -18,14 +18,11 @@ interface Props {
   onConfigChanged: () => Promise<void> | void;
 }
 
-/** Routes between the three Library surfaces and orchestrates Add / Remove
- *  through the application ports. The page components stay pure presentation. */
+/** Routes between the three Library surfaces. Per-tool action state lives in
+ *  LibraryToolDetail so it resets naturally as the user navigates. */
 export function LibraryRoute({ selection, onNavigate, onConfigChanged }: Props) {
   const { state } = useApp();
   const { status, catalog, error, retry } = useCatalog();
-  const { previewAdd, commit: commitAdd, busy: addBusy } = useAddTool();
-  const { remove: commitRemove, busy: removeBusy } = useRemoveTool();
-  const [actionError, setActionError] = useState<string | null>(null);
 
   const tools = catalog?.tools ?? [];
   const installedIds = useMemo(
@@ -74,30 +71,11 @@ export function LibraryRoute({ selection, onNavigate, onConfigChanged }: Props) 
   if (!tool) return <ToolNotFound onBack={openLanding} />;
 
   return (
-    <LibraryToolDetailPage
+    <LibraryToolDetail
+      key={tool.id}
       tool={tool}
       installed={installedIds.has(tool.id)}
-      busy={addBusy || removeBusy}
-      error={actionError}
-      onAdd={async () => {
-        setActionError(null);
-        try {
-          const preview = await previewAdd(tool);
-          await commitAdd(preview.after);
-          await onConfigChanged();
-        } catch (e) {
-          setActionError(e instanceof Error ? e.message : String(e));
-        }
-      }}
-      onRemove={async () => {
-        setActionError(null);
-        try {
-          await commitRemove(tool.id);
-          await onConfigChanged();
-        } catch (e) {
-          setActionError(e instanceof Error ? e.message : String(e));
-        }
-      }}
+      onConfigChanged={onConfigChanged}
       onBack={openLanding}
     />
   );
