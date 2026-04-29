@@ -20,7 +20,7 @@ export function CatalogCard({ tool, installed, onSelect, style }: Props) {
       onClick={() => onSelect(tool)}
       style={style}
       className={`
-        relative group text-left
+        relative group text-left w-full
         bg-surface border border-line rounded-2 px-4 py-3.5
         flex flex-col gap-1.5
         transition-[border-color,box-shadow,transform] duration-150 ease-(--ease-smooth)
