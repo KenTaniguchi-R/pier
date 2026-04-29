@@ -96,6 +96,9 @@ mod tests {
             description: "x".into(),
             category: "dev".into(),
             params: vec![],
+            args: vec![],
+            confirm: None,
+            timeout: None,
             permissions: Permissions {
                 network: NetworkAccess::None,
                 files: FilesAccess::None,

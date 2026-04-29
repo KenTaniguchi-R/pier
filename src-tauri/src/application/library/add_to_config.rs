@@ -15,12 +15,12 @@ pub fn build_tool_entry(catalog: &str, src: &CatalogTool, command: String, sha25
         id: src.id.clone(),
         name: src.name.clone(),
         command,
-        args: Vec::new(),
-        parameters: Vec::new(),
+        args: src.args.clone(),
+        parameters: src.params.clone(),
         description: Some(src.description.clone()),
         icon: None,
-        timeout: None,
-        confirm: None,
+        timeout: src.timeout,
+        confirm: src.confirm,
         shell: None,
         cwd: None,
         category: Some(src.category.clone()),
@@ -104,6 +104,9 @@ mod tests {
             description: "d".into(),
             category: "dev".into(),
             params: vec![],
+            args: vec![],
+            confirm: None,
+            timeout: None,
             permissions: Permissions {
                 network: NetworkAccess::None,
                 files: FilesAccess::None,
@@ -173,6 +176,41 @@ mod tests {
         let after = std::fs::read_to_string(f.path()).unwrap();
         assert!(!after.contains("\"id\": \"a\""), "got: {after}");
         assert!(after.contains("\"id\": \"b\""), "got: {after}");
+    }
+
+    #[test]
+    fn build_tool_entry_propagates_invocation_contract() {
+        // The catalog declares the (parameters, args, confirm, timeout) tuple that
+        // arg_template + run_tool consume — the installer must not drop any of them,
+        // otherwise tools like kill-port can never receive their inputs.
+        use crate::domain::tool::{NumberParam, Parameter, ParameterBase};
+        let mut src = cat_tool();
+        src.params = vec![Parameter::Number(NumberParam {
+            base: ParameterBase {
+                id: "port".into(),
+                label: "Port".into(),
+                help: None,
+                optional: None,
+                advanced: None,
+                default: None,
+                flag: None,
+                secret: None,
+            },
+            min: Some(1.0),
+            max: Some(65535.0),
+            step: None,
+        })];
+        src.args = vec!["{port}".into()];
+        src.confirm = Some(true);
+        src.timeout = Some(10);
+
+        let t = build_tool_entry("pier-tools", &src, "/bin/x".into(), "abc".into());
+
+        assert_eq!(t.parameters.len(), 1);
+        assert_eq!(t.parameters[0].id(), "port");
+        assert_eq!(t.args, vec!["{port}".to_string()]);
+        assert_eq!(t.confirm, Some(true));
+        assert_eq!(t.timeout, Some(10));
     }
 
     #[test]

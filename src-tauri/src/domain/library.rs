@@ -96,6 +96,12 @@ pub struct CatalogTool {
     pub category: String,
     #[serde(default)]
     pub params: Vec<crate::domain::tool::Parameter>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub args: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub confirm: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub timeout: Option<u64>,
     pub permissions: Permissions,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub outcome: Option<String>,
@@ -201,6 +207,32 @@ mod tests {
         assert_eq!(t.permissions.sentences.len(), 2);
         assert_eq!(t.outcome.as_deref(), Some("Free up a stuck port"));
         assert!(t.featured);
+    }
+
+    #[test]
+    fn parses_invocation_contract_fields() {
+        // Catalog tools must publish a typed param + arg template + run knobs
+        // so the installed Tool has enough to render a form and spawn argv.
+        let json = r##"{
+            "catalogSchemaVersion": 1,
+            "publishedAt": "2026-05-15T00:00:00Z",
+            "tools": [{
+                "id": "kill-port", "name": "Kill port", "version": "1.0.0",
+                "description": "Free a port.", "category": "dev",
+                "params": [{"id":"port","label":"Port","type":"number","required":true}],
+                "args": ["{port}"],
+                "confirm": true,
+                "timeout": 10,
+                "permissions": { "network": "none", "files": "none", "system": "kills-processes" },
+                "script": "x"
+            }]
+        }"##;
+        let cat: Catalog = serde_json::from_str(json).unwrap();
+        let t = &cat.tools[0];
+        assert_eq!(t.params.len(), 1);
+        assert_eq!(t.args, vec!["{port}".to_string()]);
+        assert_eq!(t.confirm, Some(true));
+        assert_eq!(t.timeout, Some(10));
     }
 
     #[test]
