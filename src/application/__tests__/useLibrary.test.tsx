@@ -12,7 +12,7 @@ const fake: LibraryClient = {
     tools: [{
       id: "k", name: "K", version: "1.0.0", description: "d",
       category: "dev",
-      permissions: { network: false, fsRead: [], fsWrite: [] },
+      permissions: { network: "none", files: "none", system: "none", sentences: [] },
       script: "echo",
     }],
   }),
