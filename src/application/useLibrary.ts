@@ -10,7 +10,7 @@ export function useCatalog() {
   const [catalog, setCatalog] = useState<Catalog | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const load = useCallback(() => {
     setStatus("loading");
     setError(null);
     client
@@ -20,12 +20,16 @@ export function useCatalog() {
         setStatus("ready");
       })
       .catch((e) => {
-        setError(String(e));
+        setError(e instanceof Error ? e.message : String(e));
         setStatus("error");
       });
   }, [client]);
 
-  return { status, catalog, error };
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  return { status, catalog, error, retry: load };
 }
 
 export function useAddTool() {
