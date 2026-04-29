@@ -1,36 +1,9 @@
-import { useCallback, useEffect, useState } from "react";
-import { useLibraryClient } from "../state/LibraryContext";
-import type { Catalog } from "../domain/library";
+import { useCallback, useState } from "react";
+import { useCatalogState, useLibraryClient } from "../state/LibraryContext";
 
-type Status = "idle" | "loading" | "ready" | "error";
-
-export function useCatalog() {
-  const client = useLibraryClient();
-  const [status, setStatus] = useState<Status>("idle");
-  const [catalog, setCatalog] = useState<Catalog | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  const load = useCallback(() => {
-    setStatus("loading");
-    setError(null);
-    client
-      .fetchCatalog()
-      .then((c) => {
-        setCatalog(c);
-        setStatus("ready");
-      })
-      .catch((e) => {
-        setError(e instanceof Error ? e.message : String(e));
-        setStatus("error");
-      });
-  }, [client]);
-
-  useEffect(() => {
-    load();
-  }, [load]);
-
-  return { status, catalog, error, retry: load };
-}
+/** Catalog state is owned by the provider so re-entering Library is a no-op
+ *  fetch; this hook is just a thin re-export. */
+export const useCatalog = useCatalogState;
 
 export function useAddTool() {
   const client = useLibraryClient();

@@ -1,7 +1,7 @@
 import type { CatalogPermissions } from "../../domain/library";
 import {
   NETWORK_LABELS, FILES_LABELS, SYSTEM_LABELS, SENTENCE_TEXT,
-} from "./permissionLabels";
+} from "../../domain/permissionLabels";
 
 interface Props {
   permissions: CatalogPermissions;

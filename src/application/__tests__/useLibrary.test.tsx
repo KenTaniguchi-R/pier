@@ -16,7 +16,7 @@ const fake: LibraryClient = {
       script: "echo",
     }],
   }),
-  installAndPreview: async () => ({ before: "", after: "", newTool: {} as any }),
+  installAndPreview: async () => ({ after: "" }),
   commitAdd: async () => {},
   commitRemove: async () => {},
 };
@@ -41,11 +41,15 @@ function wrapWith(client: LibraryClient) {
 describe("useRemoveTool", () => {
   it("calls client.commitRemove with the tool id", async () => {
     const client: LibraryClient = {
-      fetchCatalog: vi.fn(),
+      fetchCatalog: vi.fn().mockResolvedValue({
+        catalogSchemaVersion: 1,
+        publishedAt: "2026-05-15T00:00:00Z",
+        tools: [],
+      }),
       installAndPreview: vi.fn(),
       commitAdd: vi.fn(),
       commitRemove: vi.fn().mockResolvedValue(undefined),
-    } as unknown as LibraryClient;
+    };
     const { result } = renderHook(() => useRemoveTool(), { wrapper: wrapWith(client) });
     await act(async () => { await result.current.remove("kill-port"); });
     expect(client.commitRemove).toHaveBeenCalledWith("kill-port");

@@ -1,3 +1,4 @@
+use crate::infrastructure::atomic_write::atomic_write;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
@@ -16,26 +17,15 @@ pub fn cache_path() -> PathBuf {
 }
 
 pub fn load(path: &std::path::Path) -> Result<Option<CachedCatalog>> {
-    if !path.exists() {
-        return Ok(None);
+    match std::fs::read_to_string(path) {
+        Ok(s) => Ok(Some(serde_json::from_str(&s)?)),
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(None),
+        Err(e) => Err(e.into()),
     }
-    let s = std::fs::read_to_string(path)?;
-    Ok(Some(serde_json::from_str(&s)?))
 }
 
 pub fn save(path: &std::path::Path, c: &CachedCatalog) -> Result<()> {
-    if let Some(parent) = path.parent() {
-        std::fs::create_dir_all(parent)?;
-    }
-    // Unique tmp suffix per call to avoid collisions if two writers race.
-    let nanos = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .map(|d| d.as_nanos())
-        .unwrap_or(0);
-    let tmp = path.with_extension(format!("tmp.{}.{}", std::process::id(), nanos));
-    std::fs::write(&tmp, serde_json::to_string(c)?)?;
-    std::fs::rename(&tmp, path)?;
-    Ok(())
+    atomic_write(path, serde_json::to_string(c)?.as_bytes(), None)
 }
 
 #[cfg(test)]

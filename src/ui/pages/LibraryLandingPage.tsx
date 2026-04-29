@@ -21,24 +21,23 @@ function isWithinDays(addedAt: string | undefined, now: Date, days: number): boo
 }
 
 export function LibraryLandingPage({ tools, installedIds, now, onSelectTool, onSeeAll }: Props) {
-  const reference = now ?? new Date();
+  // Stabilize the default `new Date()` so dependent memos don't churn each render.
+  const reference = useMemo(() => now ?? new Date(), [now]);
 
-  const featured = useMemo(() => tools.filter((t) => t.featured), [tools]);
-  const fresh = useMemo(
-    () => tools.filter((t) => isWithinDays(t.addedAt, reference, 7)),
-    [tools, reference],
-  );
-  const developer = useMemo(
-    () => tools.filter((t) => t.audience?.includes("developer")),
-    [tools],
-  );
-  const popular = useMemo(() => {
+  const rows = useMemo(() => {
+    const featured = tools.filter((t) => t.featured);
+    const fresh = tools.filter((t) => isWithinDays(t.addedAt, reference, 7));
+    const developer = tools.filter((t) => t.audience?.includes("developer"));
     const shown = new Set<string>();
-    for (const t of featured) shown.add(t.id);
-    for (const t of fresh) shown.add(t.id);
-    for (const t of developer) shown.add(t.id);
-    return tools.filter((t) => !shown.has(t.id));
-  }, [tools, featured, fresh, developer]);
+    for (const t of [...featured, ...fresh, ...developer]) shown.add(t.id);
+    const popular = tools.filter((t) => !shown.has(t.id));
+    return [
+      { title: "Featured", tools: featured },
+      { title: "New this week", tools: fresh },
+      { title: "For developers", tools: developer },
+      { title: "Popular", tools: popular },
+    ];
+  }, [tools, reference]);
 
   return (
     <div className="flex flex-col gap-8 px-8 py-6">
@@ -52,34 +51,16 @@ export function LibraryLandingPage({ tools, installedIds, now, onSelectTool, onS
         </p>
       </header>
 
-      <CatalogRow
-        title="Featured"
-        tools={featured}
-        installedIds={installedIds}
-        onSelectTool={onSelectTool}
-        onSeeAll={onSeeAll}
-      />
-      <CatalogRow
-        title="New this week"
-        tools={fresh}
-        installedIds={installedIds}
-        onSelectTool={onSelectTool}
-        onSeeAll={onSeeAll}
-      />
-      <CatalogRow
-        title="For developers"
-        tools={developer}
-        installedIds={installedIds}
-        onSelectTool={onSelectTool}
-        onSeeAll={onSeeAll}
-      />
-      <CatalogRow
-        title="Popular"
-        tools={popular}
-        installedIds={installedIds}
-        onSelectTool={onSelectTool}
-        onSeeAll={onSeeAll}
-      />
+      {rows.map((row) => (
+        <CatalogRow
+          key={row.title}
+          title={row.title}
+          tools={row.tools}
+          installedIds={installedIds}
+          onSelectTool={onSelectTool}
+          onSeeAll={onSeeAll}
+        />
+      ))}
     </div>
   );
 }

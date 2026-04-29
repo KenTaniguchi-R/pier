@@ -1,13 +1,14 @@
 use crate::domain::{CatalogTool, Tool, ToolSource, ToolsConfig};
+use crate::infrastructure::atomic_write::atomic_write;
 use anyhow::{bail, Context, Result};
 use serde_json::Value;
 use std::path::Path;
 
+/// Rendered tools.json contents that, if written, would add `new_tool`.
+/// Kept as a string round-trip so the UI can ship it back unchanged for commit.
 #[derive(Debug)]
 pub struct AddPreview {
-    pub before: String,
     pub after: String,
-    pub new_tool: Tool,
 }
 
 pub fn build_tool_entry(catalog: &str, src: &CatalogTool, command: String, sha256: String) -> Tool {
@@ -35,30 +36,18 @@ pub fn build_tool_entry(catalog: &str, src: &CatalogTool, command: String, sha25
 }
 
 pub fn preview(config_path: &Path, new_tool: Tool) -> Result<AddPreview> {
-    let before = std::fs::read_to_string(config_path).context("read tools.json")?;
-    let mut cfg: ToolsConfig = serde_json::from_str(&before).context("parse tools.json")?;
+    let raw = std::fs::read_to_string(config_path).context("read tools.json")?;
+    let mut cfg: ToolsConfig = serde_json::from_str(&raw).context("parse tools.json")?;
     if cfg.tools.iter().any(|t| t.id == new_tool.id) {
         bail!("tool id '{}' already exists in tools.json", new_tool.id);
     }
-    cfg.tools.push(new_tool.clone());
+    cfg.tools.push(new_tool);
     let after = serde_json::to_string_pretty(&cfg)? + "\n";
-    Ok(AddPreview {
-        before,
-        after,
-        new_tool,
-    })
+    Ok(AddPreview { after })
 }
 
 pub fn commit(config_path: &Path, after: &str) -> Result<()> {
-    // Atomic write — same pattern as cache.rs / install.rs (unique tmp suffix).
-    let nanos = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .map(|d| d.as_nanos())
-        .unwrap_or(0);
-    let tmp = config_path.with_extension(format!("tmp.{}.{}", std::process::id(), nanos));
-    std::fs::write(&tmp, after)?;
-    std::fs::rename(&tmp, config_path)?;
-    Ok(())
+    atomic_write(config_path, after.as_bytes(), None)
 }
 
 /// Pure: remove the tool with the given id from a tools.json string.

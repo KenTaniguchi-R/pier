@@ -1,4 +1,5 @@
 use anyhow::{anyhow, Context, Result};
+use std::sync::OnceLock;
 use std::time::Duration;
 
 pub struct FetchResult {
@@ -7,12 +8,22 @@ pub struct FetchResult {
     pub body: String,
 }
 
+/// Shared client so connection pooling + TLS state survive across catalog/asset
+/// fetches. The 60s timeout is tuned for binary downloads; catalog JSON returns
+/// well inside it.
+fn client() -> &'static reqwest::Client {
+    static CLIENT: OnceLock<reqwest::Client> = OnceLock::new();
+    CLIENT.get_or_init(|| {
+        reqwest::Client::builder()
+            .timeout(Duration::from_secs(60))
+            .user_agent(concat!("pier/", env!("CARGO_PKG_VERSION")))
+            .build()
+            .expect("build reqwest client")
+    })
+}
+
 pub async fn get_with_etag(url: &str, prev_etag: Option<&str>) -> Result<FetchResult> {
-    let client = reqwest::Client::builder()
-        .timeout(Duration::from_secs(10))
-        .user_agent(concat!("pier/", env!("CARGO_PKG_VERSION")))
-        .build()?;
-    let mut req = client.get(url);
+    let mut req = client().get(url);
     if let Some(e) = prev_etag {
         req = req.header("If-None-Match", e);
     }
@@ -35,11 +46,7 @@ pub async fn get_with_etag(url: &str, prev_etag: Option<&str>) -> Result<FetchRe
 }
 
 pub async fn download_bytes(url: &str) -> Result<Vec<u8>> {
-    let client = reqwest::Client::builder()
-        .timeout(Duration::from_secs(60)) // larger than catalog fetch — binaries can be 50MB+
-        .user_agent(concat!("pier/", env!("CARGO_PKG_VERSION")))
-        .build()?;
-    let resp = client
+    let resp = client()
         .get(url)
         .send()
         .await
