@@ -5,7 +5,6 @@ import { PermissionPanel } from "../organisms/PermissionPanel";
 interface Props {
   tool: CatalogTool;
   installed: boolean;
-  previewJson: string;
   busy: boolean;
   onAdd: () => void;
   onRemove: () => void;
@@ -15,7 +14,6 @@ interface Props {
 export function LibraryToolDetailPage({
   tool,
   installed,
-  previewJson,
   busy,
   onAdd,
   onRemove,
@@ -95,17 +93,6 @@ export function LibraryToolDetailPage({
         <span aria-hidden>·</span>
         <span>Verified</span>
       </footer>
-
-      {previewJson.trim() !== "" && (
-        <details className="border border-line rounded-2">
-          <summary className="px-4 py-2 cursor-pointer text-[12px] text-ink-3 font-mono uppercase tracking-wider">
-            Advanced — tools.json preview
-          </summary>
-          <pre className="px-4 py-3 font-mono text-[12px] leading-relaxed text-ink-2 whitespace-pre overflow-auto bg-bg-2/50">
-            {previewJson}
-          </pre>
-        </details>
-      )}
     </div>
   );
 }

@@ -92,31 +92,6 @@ export function HomePage() {
   const { remove: commitRemove, busy: removeBusy } = useRemoveTool();
   const installedIds = useMemo(() => new Set(state.tools.map(t => t.id)), [state.tools]);
 
-  const [detailPreview, setDetailPreview] = useState<{ toolId: string; previewJson: string } | null>(null);
-
-  useEffect(() => {
-    if (selection.kind !== "library" || selection.view !== "detail") {
-      setDetailPreview(null);
-      return;
-    }
-    const id = selection.toolId;
-    if (detailPreview?.toolId === id) return;
-    const tool = catalog?.tools.find(t => t.id === id);
-    if (!tool) return;
-    let cancelled = false;
-    previewAdd(tool).then(p => {
-      if (!cancelled) {
-        setDetailPreview({
-          toolId: id,
-          previewJson: JSON.stringify(p.newTool, null, 2),
-        });
-      }
-    }).catch(() => {
-      if (!cancelled) setDetailPreview({ toolId: id, previewJson: "" });
-    });
-    return () => { cancelled = true; };
-  }, [selection, catalog, previewAdd, detailPreview]);
-
   let main;
   if (state.configErrors.length) {
     main = (
@@ -177,7 +152,6 @@ export function HomePage() {
           <LibraryToolDetailPage
             tool={tool}
             installed={installedIds.has(tool.id)}
-            previewJson={detailPreview?.previewJson ?? ""}
             busy={addBusy || removeBusy}
             onAdd={async () => {
               const preview = await previewAdd(tool);

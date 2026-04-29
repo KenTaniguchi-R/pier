@@ -27,7 +27,6 @@ describe("LibraryToolDetailPage", () => {
       <LibraryToolDetailPage
         tool={tool}
         installed={false}
-        previewJson={"{ \"id\": \"kill-port\" }"}
         busy={false}
         onAdd={() => {}}
         onRemove={() => {}}
@@ -46,7 +45,6 @@ describe("LibraryToolDetailPage", () => {
       <LibraryToolDetailPage
         tool={tool}
         installed={false}
-        previewJson="{}"
         busy={false}
         onAdd={onAdd}
         onRemove={() => {}}
@@ -63,7 +61,6 @@ describe("LibraryToolDetailPage", () => {
       <LibraryToolDetailPage
         tool={tool}
         installed={true}
-        previewJson="{}"
         busy={false}
         onAdd={() => {}}
         onRemove={onRemove}
@@ -75,21 +72,18 @@ describe("LibraryToolDetailPage", () => {
     expect(onRemove).toHaveBeenCalled();
   });
 
-  it("Advanced disclosure is collapsed by default", () => {
+  it("does not render an Advanced disclosure", () => {
     render(
       <LibraryToolDetailPage
         tool={tool}
         installed={false}
-        previewJson={'{"id":"kill-port"}'}
         busy={false}
         onAdd={() => {}}
         onRemove={() => {}}
         onBack={() => {}}
       />
     );
-    const details = screen.getByText(/advanced/i).closest("details");
-    expect(details).not.toBeNull();
-    expect((details as HTMLDetailsElement).open).toBe(false);
+    expect(screen.queryByText(/advanced/i)).not.toBeInTheDocument();
   });
 
   it("calls onBack when Back is clicked", async () => {
@@ -98,7 +92,6 @@ describe("LibraryToolDetailPage", () => {
       <LibraryToolDetailPage
         tool={tool}
         installed={false}
-        previewJson="{}"
         busy={false}
         onAdd={() => {}}
         onRemove={() => {}}
