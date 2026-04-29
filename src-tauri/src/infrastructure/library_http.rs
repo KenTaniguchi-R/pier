@@ -33,3 +33,16 @@ pub async fn get_with_etag(url: &str, prev_etag: Option<&str>) -> Result<FetchRe
     };
     Ok(FetchResult { status, etag, body })
 }
+
+pub async fn download_bytes(url: &str) -> Result<Vec<u8>> {
+    let client = reqwest::Client::builder()
+        .timeout(Duration::from_secs(60)) // larger than catalog fetch — binaries can be 50MB+
+        .user_agent(concat!("pier/", env!("CARGO_PKG_VERSION")))
+        .build()?;
+    let resp = client.get(url).send().await.with_context(|| format!("GET {url}"))?;
+    let status = resp.status().as_u16();
+    if status >= 400 {
+        return Err(anyhow!("HTTP {status} for {url}"));
+    }
+    Ok(resp.bytes().await?.to_vec())
+}

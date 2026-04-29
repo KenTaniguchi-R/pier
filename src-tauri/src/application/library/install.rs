@@ -1,5 +1,5 @@
 use crate::domain::CatalogTool;
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{anyhow, bail, Result};
 use sha2::{Digest, Sha256};
 use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
@@ -30,17 +30,38 @@ pub struct Installed {
     pub version: String,
 }
 
+fn validate_path_component(s: &str) -> Result<()> {
+    anyhow::ensure!(
+        !s.is_empty() && !s.contains('/') && !s.contains('\\') && s != ".." && s != ".",
+        "unsafe path component: {s:?}"
+    );
+    Ok(())
+}
+
+fn atomic_install(dest: &Path, bytes: &[u8]) -> Result<()> {
+    let nanos = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_nanos())
+        .unwrap_or(0);
+    let tmp = dest.with_extension(format!("tmp.{}.{}", std::process::id(), nanos));
+    std::fs::write(&tmp, bytes)?;
+    std::fs::set_permissions(&tmp, std::fs::Permissions::from_mode(0o755))?;
+    std::fs::rename(&tmp, dest)?;
+    Ok(())
+}
+
 pub async fn install(tool: &CatalogTool, root: &Path) -> Result<Installed> {
+    validate_path_component(&tool.id)?;
+    validate_path_component(&tool.version)?;
     let dest_dir = root.join(&tool.id).join(&tool.version);
     std::fs::create_dir_all(&dest_dir)?;
 
     if let Some(script) = &tool.script {
         let path = dest_dir.join(format!("{}.sh", tool.id));
-        std::fs::write(&path, script)?;
-        std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o755))?;
+        atomic_install(&path, script.as_bytes())?;
         return Ok(Installed {
             command: path.to_string_lossy().into_owned(),
-            sha256: sha256_of(&path)?,
+            sha256: format!("{:x}", Sha256::digest(script.as_bytes())),
             version: tool.version.clone(),
         });
     }
@@ -50,29 +71,18 @@ pub async fn install(tool: &CatalogTool, root: &Path) -> Result<Installed> {
         .platforms
         .get(plat)
         .ok_or_else(|| anyhow!("no asset for platform {plat}"))?;
-    let bytes = reqwest::get(&asset.url)
-        .await
-        .with_context(|| format!("GET {}", asset.url))?
-        .error_for_status()?
-        .bytes()
-        .await?;
+    let bytes = crate::infrastructure::library_http::download_bytes(&asset.url).await?;
     let actual = format!("{:x}", Sha256::digest(&bytes));
     if actual != asset.sha256.to_lowercase() {
         bail!("sha256 mismatch: expected {}, got {}", asset.sha256, actual);
     }
     let path = dest_dir.join(&tool.id);
-    std::fs::write(&path, &bytes)?;
-    std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o755))?;
+    atomic_install(&path, &bytes)?;
     Ok(Installed {
         command: path.to_string_lossy().into_owned(),
         sha256: actual,
         version: tool.version.clone(),
     })
-}
-
-fn sha256_of(p: &Path) -> Result<String> {
-    let bytes = std::fs::read(p)?;
-    Ok(format!("{:x}", Sha256::digest(&bytes)))
 }
 
 #[cfg(test)]
@@ -129,5 +139,14 @@ mod tests {
         let d = tempdir().unwrap();
         let err = install(&t, d.path()).await.unwrap_err();
         assert!(err.to_string().contains("sha256 mismatch"));
+    }
+
+    #[tokio::test]
+    async fn rejects_path_traversal_in_id() {
+        let mut t = shell_tool();
+        t.id = "../evil".into();
+        let d = tempdir().unwrap();
+        let err = install(&t, d.path()).await.unwrap_err();
+        assert!(err.to_string().contains("unsafe path component"), "got: {err}");
     }
 }
