@@ -99,6 +99,9 @@ pub fn run() {
             commands::is_translocated_cmd,
             commands::set_tray_badge_cmd,
             commands::notify_update_ready_cmd,
+            commands::library_fetch_catalog,
+            commands::library_install_and_preview,
+            commands::library_commit_add,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

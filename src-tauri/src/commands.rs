@@ -122,3 +122,54 @@ pub fn set_tray_badge_cmd(app: tauri::AppHandle, has_update: bool) -> Result<(),
 pub fn notify_update_ready_cmd(app: tauri::AppHandle, version: String) -> Result<(), String> {
     update_app::notify_update_ready(&app, &version).map_err(|e| e.to_string())
 }
+
+use crate::application::library::{add_to_config, fetch as lib_fetch, install as lib_install};
+use crate::domain::{Catalog, CatalogTool};
+
+const CATALOG_URL: &str = "https://library.pier.app/catalog.json";
+const CATALOG_SIG_URL: &str = "https://library.pier.app/catalog.json.minisig";
+const CATALOG_PUBKEY: &str = env!("PIER_LIBRARY_PUBKEY");
+
+#[tauri::command]
+pub async fn library_fetch_catalog() -> Result<Catalog, String> {
+    let cache = crate::application::library::cache::cache_path();
+    lib_fetch::fetch(lib_fetch::FetchOpts {
+        url: CATALOG_URL,
+        minisign_pubkey: CATALOG_PUBKEY,
+        signature_url: CATALOG_SIG_URL,
+        cache_path: &cache,
+    })
+    .await
+    .map_err(|e| e.to_string())
+}
+
+#[derive(serde::Serialize)]
+pub struct LibraryAddPreview {
+    pub before: String,
+    pub after: String,
+    pub new_tool: crate::domain::Tool,
+}
+
+#[tauri::command]
+pub async fn library_install_and_preview(
+    tool: CatalogTool,
+) -> Result<LibraryAddPreview, String> {
+    let installed = lib_install::install(&tool, &lib_install::install_root())
+        .await
+        .map_err(|e| e.to_string())?;
+    let entry = add_to_config::build_tool_entry(
+        "pier-tools",
+        &tool,
+        installed.command,
+        installed.sha256,
+    );
+    let cfg_path = std::path::PathBuf::from(config_path());
+    let p = add_to_config::preview(&cfg_path, entry).map_err(|e| e.to_string())?;
+    Ok(LibraryAddPreview { before: p.before, after: p.after, new_tool: p.new_tool })
+}
+
+#[tauri::command]
+pub fn library_commit_add(after: String) -> Result<(), String> {
+    let cfg_path = std::path::PathBuf::from(config_path());
+    add_to_config::commit(&cfg_path, &after).map_err(|e| e.to_string())
+}
