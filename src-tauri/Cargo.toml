@@ -34,10 +34,15 @@ notify = "6"
 strip-ansi-escapes = "0.2.1"
 tauri-plugin-updater = "2"
 tauri-plugin-notification = "2"
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }
+sha2 = "0.10"
+minisign-verify = "0.2"
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 objc2-service-management = "0.3"
 
 [dev-dependencies]
 tempfile = "3"
+httpmock = "0.7"
 

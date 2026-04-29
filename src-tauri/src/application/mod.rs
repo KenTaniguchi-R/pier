@@ -4,6 +4,7 @@ pub mod autostart;
 pub mod env_resolver;
 pub mod history;
 pub mod history_admin;
+pub mod library;
 pub mod load_config;
 pub mod path_resolver;
 pub mod run_tool;
