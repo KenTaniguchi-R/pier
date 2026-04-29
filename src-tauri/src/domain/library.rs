@@ -9,6 +9,7 @@ pub enum Tier {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
 pub struct PlatformAsset {
     pub url: String,
     pub sha256: String,
@@ -22,7 +23,7 @@ pub struct Permissions {
     pub fs_write: Vec<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CatalogTool {
     pub id: String,
@@ -32,7 +33,7 @@ pub struct CatalogTool {
     pub category: String,
     pub tier: Tier,
     #[serde(default)]
-    pub params: Vec<serde_json::Value>,
+    pub params: Vec<crate::domain::tool::Parameter>,
     pub permissions: Permissions,
     #[serde(default)]
     pub platforms: HashMap<String, PlatformAsset>,
@@ -104,6 +105,11 @@ mod tests {
     fn rejects_unknown_schema_version() {
         let json = r#"{"catalogSchemaVersion": 99, "publishedAt": "x", "tools": []}"#;
         let res: Result<Catalog, _> = serde_json::from_str(json);
-        assert!(res.is_err(), "must reject schema versions we don't understand");
+        let err = res.unwrap_err().to_string();
+        assert!(
+            err.contains("unsupported catalogSchemaVersion"),
+            "expected schema-version error, got: {}",
+            err,
+        );
     }
 }
