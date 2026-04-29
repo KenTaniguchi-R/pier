@@ -126,8 +126,8 @@ pub fn notify_update_ready_cmd(app: tauri::AppHandle, version: String) -> Result
 use crate::application::library::{add_to_config, fetch as lib_fetch, install as lib_install};
 use crate::domain::{Catalog, CatalogTool};
 
-const CATALOG_URL: &str = "https://library.pier.app/catalog.json";
-const CATALOG_SIG_URL: &str = "https://library.pier.app/catalog.json.minisig";
+const CATALOG_URL: &str = "https://pier.benree.tech/catalog.json";
+const CATALOG_SIG_URL: &str = "https://pier.benree.tech/catalog.json.minisig";
 const CATALOG_PUBKEY: &str = env!("PIER_LIBRARY_PUBKEY");
 
 #[tauri::command]
