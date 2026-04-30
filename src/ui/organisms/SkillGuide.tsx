@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { CopyButton } from "../molecules/CopyButton";
 
-const EXAMPLE = `Add yt-dlp to Pier as a tile that takes a URL.`;
+const EXAMPLE = `Add my ~/scripts/resize.sh to Pier so I can drop an image on it instead of running it from the terminal.`;
 const INSTALL_STEPS = [
   {
     label: "1. Add the marketplace",
@@ -14,9 +14,10 @@ const INSTALL_STEPS = [
 ];
 
 const MORE_EXAMPLES = [
-  `Make a Pier tile for ffmpeg that converts a .mov to .mp4.`,
+  `Wrap my ~/bin/backup.py as a tile with a folder picker for the source.`,
+  `Add a tile for the ffmpeg command I keep retyping: convert .mov to .mp4.`,
+  `Turn my one-liner 'pbpaste | jq .' into a tile I can click.`,
   `Remove the screenshot tool.`,
-  `Add a bitrate field to the ffmpeg tile, mark it advanced.`,
 ];
 
 export function SkillGuide() {
