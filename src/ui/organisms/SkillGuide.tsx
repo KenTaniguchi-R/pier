@@ -2,7 +2,16 @@ import { useState } from "react";
 import { CopyButton } from "../molecules/CopyButton";
 
 const EXAMPLE = `Add yt-dlp to Pier as a tile that takes a URL.`;
-const INSTALL = `claude plugin install ./plugin`;
+const INSTALL_STEPS = [
+  {
+    label: "1. Add the marketplace",
+    cmd: "/plugin marketplace add KenTaniguchi-R/pier",
+  },
+  {
+    label: "2. Install the skill",
+    cmd: "/plugin install pier@pier",
+  },
+];
 
 const MORE_EXAMPLES = [
   `Make a Pier tile for ffmpeg that converts a .mov to .mp4.`,
@@ -43,12 +52,22 @@ export function SkillGuide() {
         <span className="font-mono text-[10.5px] uppercase tracking-[0.18em] text-ink-4">
           One-time setup
         </span>
-        <div className="flex items-center justify-between gap-3 rounded-[12px] border border-line bg-surface px-4 py-3">
-          <code className="font-mono text-[13px] text-ink truncate">{INSTALL}</code>
-          <CopyButton getText={() => INSTALL} className="flex-none" />
+        <p className="font-body text-[12px] leading-[1.5] text-ink-4">
+          Run these inside Claude Code.
+        </p>
+        <div className="flex flex-col gap-2">
+          {INSTALL_STEPS.map(step => (
+            <div key={step.cmd} className="flex flex-col gap-1">
+              <span className="font-body text-[11.5px] text-ink-4">{step.label}</span>
+              <div className="flex items-center justify-between gap-3 rounded-[12px] border border-line bg-surface px-4 py-3">
+                <code className="font-mono text-[13px] text-ink truncate">{step.cmd}</code>
+                <CopyButton getText={() => step.cmd} className="flex-none" />
+              </div>
+            </div>
+          ))}
         </div>
         <p className="font-body text-[12px] leading-[1.5] text-ink-4">
-          Run from the Pier repo. After this, Claude Code knows the skill.
+          After this, Claude Code knows the skill. Run <span className="font-mono">/reload-plugins</span> if it doesn't appear right away.
         </p>
       </section>
 
