@@ -1,41 +1,108 @@
+<div align="center">
+
+<img src="src-tauri/icons/128x128@2x.png" width="96" alt="Pier logo" />
+
 # Pier
 
-A macOS menu-bar launcher for command-line tools.
+**Drag-drop launcher for the CLI tools you and Claude Code build together.**
 
-Pier surfaces the small CLI tools you (or Claude Code) generate as drag-drop tiles. Tools are declared in a single JSON file Claude Code can edit directly — no UI work, no per-tool scripting.
+[![Release](https://img.shields.io/github/v/release/KenTaniguchi-R/pier?style=flat-square)](https://github.com/KenTaniguchi-R/pier/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/KenTaniguchi-R/pier/total?style=flat-square)](https://github.com/KenTaniguchi-R/pier/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
+[![macOS](https://img.shields.io/badge/macOS-12%2B-black?style=flat-square&logo=apple)](#install)
 
-## Status
+<img src="docs/assets/hero.png" width="820" alt="Pier window with tools organized by category" />
 
-Personal-use alpha. macOS only. Releases (v0.1.2+) are signed with a Developer ID Application certificate (Benri LLC) and notarized by Apple, so installs open without Gatekeeper warnings. The in-app updater handles every future version silently.
+</div>
 
-## Install (macOS)
+---
 
-1. Grab the latest **`Pier_x.y.z_universal.dmg`** from the [Releases page](https://github.com/KenTaniguchi-R/pier/releases/latest).
-2. Open the DMG and drag **Pier.app** to **Applications**.
-3. Launch Pier from Applications. It lives in your menu bar — click the icon to open the window.
+## Why Pier
 
-Future updates download silently in the background and prompt you to install + restart — no DMG dance.
+You ask Claude Code to write a quick CLI tool — transcribe a video, rename a folder of photos, dub a clip into Japanese. It works. Then it lives in `~/scripts/` and you forget the flags by Tuesday.
 
-### Build from source (developers only)
+Pier turns those scripts into **tiles in your menu bar**. Click a tile, fill in its inputs (drop a file, pick a folder, type a value), hit Run. Output streams back live.
+
+The whole catalog is one JSON file (`~/.pier/tools.json`) — so **Claude Code adds, edits, and removes tools by talking to the file directly**. No UI work, no per-tool scripting, no electron-app-per-task graveyard.
+
+## Install
+
+Grab the latest **`Pier_x.y.z_universal.dmg`** from [Releases](https://github.com/KenTaniguchi-R/pier/releases/latest), drag **Pier.app** to **Applications**, launch.
+
+Builds are codesigned (Developer ID: Benri LLC) and notarized by Apple — no Gatekeeper warnings. Future updates download silently and prompt to install on quit.
+
+## 60-second tour
+
+**1. Define a tool** — ask Claude Code, or edit `~/.pier/tools.json` directly:
+
+```json
+{
+  "id": "transcribe",
+  "name": "Transcribe",
+  "icon": "▸",
+  "command": "/usr/local/bin/whisper",
+  "args": ["{input}", "--model", "{model}"],
+  "parameters": [
+    { "id": "input", "type": "file", "accepts": [".mp4", ".m4a", ".mp3"] },
+    { "id": "model", "type": "select", "options": ["tiny", "base", "small"], "default": "base" }
+  ]
+}
+```
+
+**2. Pier hot-reloads** within a second. A new tile appears.
+
+**3. Click the tile** to open its run dialog. Drop a file into the input zone, fill any other parameters, hit Run.
+
+<div align="center">
+<img src="docs/assets/run-dialog.png" width="720" alt="Tool run dialog with file drop zone and parameters" />
+</div>
+
+**4. Watch stdout stream in live.** Stop, re-run, or open past runs from the History panel.
+
+<div align="center">
+<img src="docs/assets/run-streaming.png" width="720" alt="Live streaming output from a running tool" />
+</div>
+
+Every run is appended to `~/.pier/audit.log` (JSONL) for forensics.
+
+## Working with Claude Code
+
+Pier ships a [bundled skill](docs/skill.md) so Claude Code knows the schema and the `~/.pier/tools.json` location. Drop it in once and ask things like:
+
+> *"Add a tool that resizes any image I drop on it to 1080p, using the ffmpeg in `/opt/homebrew/bin`."*
+
+Claude writes the JSON entry, Pier hot-reloads, the tile is live.
+
+## Features
+
+- **One-tile-per-tool** for any CLI binary or script, with file/folder drag-drop on input fields
+- **Typed parameters** — `file`, `folder`, `text`, `url`, `select`, `boolean`, `number`, `multiselect`, `slider`, `date`
+- **Hot-reloading config** — edit JSON, tiles update in place
+- **Categories, favorites, recents, and search** — stay fast as the catalog grows
+- **Long-running processes** with live streaming output and a Stop button (dev servers, watchers, etc.)
+- **Secrets, done right** — `${keychain:NAME}` pulls from macOS Keychain; audit log records *which* vars came from where, never the values
+- **Run history** — re-open past output blobs from `~/.pier/runs/`
+- **Library** — one-click install curated tools from [pier-tools](https://github.com/KenTaniguchi-R/pier-tools)
+- **Auto-update** with minisign-verified bundles
+- **Launch at login** via `SMAppService`
+- **Menu-bar native** — true tray app, signed + notarized
+
+## Build from source
 
 ```bash
 git clone https://github.com/KenTaniguchi-R/pier
 cd pier
 npm install
-npm run tauri build
+npm run tauri:dev      # run the app
+npm run tauri build    # produce a local DMG
 ```
 
-Output: `src-tauri/target/release/bundle/dmg/Pier_*.dmg`.
+Output: `src-tauri/target/release/bundle/dmg/Pier_*.dmg`. See [`CLAUDE.md`](CLAUDE.md) for the architecture map.
 
-## Usage
+## More
 
-On first launch, Pier creates `~/.pier/tools.json` with two starter tools. Click the menu-bar icon to open the window. Drag a file onto a tile, click Run.
-
-## Adding a tool
-
-Edit `~/.pier/tools.json` (or ask Claude Code to — see [`docs/skill.md`](docs/skill.md) for the bundled skill that adds, edits, and removes tools). Pier hot-reloads within a second.
-
-Schema (abbreviated):
+<details>
+<summary><b>Full <code>tools.json</code> schema</b></summary>
 
 ```json
 {
@@ -56,22 +123,25 @@ Schema (abbreviated):
 }
 ```
 
-Parameter types: `file`, `folder`, `text`, `url`, `select`, `boolean`, `number`. Args reference parameters with `{paramId}`.
+Args reference parameters with `{paramId}`. `cwd` sets the working directory; `envFile` loads a `.env` relative to `cwd`; `env` supports `${keychain:NAME}` and `${env:NAME}` interpolation. See [`examples/tools.json`](examples/tools.json).
 
-Environment: `cwd` sets the working directory; `envFile` loads a `.env` (path relative to `cwd`); `env` provides inline overrides with `${keychain:NAME}` (macOS Keychain) and `${env:NAME}` (host env) interpolation. The audit log records *which* vars came from where, never their values (except for plain `envFile` entries).
+</details>
 
-See `examples/tools.json` for a full example.
+<details>
+<summary><b>Architecture</b></summary>
 
-## Architecture
+Tauri 2 + React 19 + TypeScript. Clean architecture on both sides:
 
-Tauri 2 + React + TypeScript. Clean architecture on both sides:
+- **Frontend**: `domain/` → `application/` → `infrastructure/` → `ui/` (atomic) + `state/` (Context + reducer)
+- **Backend**: `domain/` → `application/` → `infrastructure/` + thin `commands.rs`
 
-- Frontend: `domain/` → `application/` → `infrastructure/` → `ui/` (atomic design) + `state/` (Context+reducer)
-- Backend: `domain/` → `application/` → `infrastructure/` + thin `commands.rs`
+Full map in [`CLAUDE.md`](CLAUDE.md).
 
-## Audit log
+</details>
 
-Every run is logged to `~/.pier/audit.log` (append-only JSONL). Useful for forensics if a malicious tools.json gets pasted.
+## Status
+
+v0.x, actively developed. macOS only for now (Linux/Windows on the table once the macOS UX settles).
 
 ## License
 
