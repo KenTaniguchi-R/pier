@@ -35,7 +35,7 @@ strip-ansi-escapes = "0.2.1"
 tauri-plugin-updater = "2"
 tauri-plugin-notification = "2"
 reqwest = { version = "0.13", default-features = false, features = ["rustls"] }
-sha2 = "0.10"
+sha2 = "0.11"
 minisign-verify = "0.2"
 
 [target.'cfg(target_os = "macos")'.dependencies]
